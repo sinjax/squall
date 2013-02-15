@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.openimaj</groupId>
+	<artifactId>squall</artifactId>
+	<packaging>pom</packaging>
+	<version>1.0.0-SNAPSHOT</version>
+	<name>squall</name>
+	<url>https://github.com/sinjax/squall</url>
+	<inceptionYear>2012</inceptionYear>
+	<description></description>
+	<licenses>
+		<license>
+			<name>New BSD</name>
+			<url>http://www.openimaj.org/LICENSE.txt</url>
+			<distribution>repo,manual</distribution>
+			<comments>The New BSD License</comments>
+		</license>
+	</licenses>
+	<organization>
+		<name>The University of Southampton</name>
+		<url>http://www.soton.ac.uk</url>
+	</organization>
+	<developers>
+		<developer>
+			<id>sinjax</id>
+			<name>Sina Samangooei</name>
+			<email>ss@ecs.soton.ac.uk</email>
+			<url>http://www.ecs.soton.ac.uk/people/ss</url>
+			<organization>The University of Southampton</organization>
+			<organizationUrl>http://www.soton.ac.uk</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>0</timezone>
+		</developer>
+		<developer>
+			<id>davidmonks</id>
+			<name>David Monks</name>
+			<email>davidlmonks@gmail.com</email>
+			<url>http://www.ecs.soton.ac.uk/people/dm11g08</url>
+			<organization>The University of Southampton</organization>
+			<organizationUrl>http://www.soton.ac.uk</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>0</timezone>
+		</developer>
+	</developers>
+	<ciManagement>
+		<system>jenkins</system>
+		<url>http://jenkins.ecs.soton.ac.uk/job/squal</url>
+	</ciManagement>
+	<issueManagement>
+		<system>JIRA</system>
+		<url>http://jira.squall.org</url>
+	</issueManagement>
+	<modules>
+		<module>tools</module>
+		<module>core</module>
+		<module>sandbox</module>
+	</modules>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9</version>
+				<configuration>
+					<header><![CDATA[
+						<div style="display:none">
+							<link rel="stylesheet" type="text/css" href="/css/reference.css" />
+							<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+							<script type="text/javascript" src="/js/reference.js"></script>
+						</div>
+						]]></header>
+					<linksource>true</linksource>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.mycila.maven-license-plugin</groupId>
+				<artifactId>maven-license-plugin</artifactId>
+				<version>1.9.0</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.1</version>
+				<configuration>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+				</configuration>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-eclipse-plugin</artifactId>
+					<version>2.9</version>
+					<configuration>
+						<downloadSources>true</downloadSources>
+						<downloadJavadocs>true</downloadJavadocs>
+						<workspaceCodeStylesURL>http://users.ecs.soton.ac.uk/jsh2/openimaj-formatter.xml</workspaceCodeStylesURL>
+						<additionalConfig>
+							<file>
+								<name>.settings/org.eclipse.jdt.core.prefs</name>
+								<content><![CDATA[
+org.eclipse.jdt.core.compiler.doc.comment.support=enabled
+org.eclipse.jdt.core.compiler.problem.invalidJavadoc=warning
+org.eclipse.jdt.core.compiler.problem.invalidJavadocTags=enabled
+org.eclipse.jdt.core.compiler.problem.invalidJavadocTagsDeprecatedRef=enabled
+org.eclipse.jdt.core.compiler.problem.invalidJavadocTagsNotVisibleRef=enabled
+org.eclipse.jdt.core.compiler.problem.invalidJavadocTagsVisibility=public
+org.eclipse.jdt.core.compiler.problem.missingJavadocComments=warning
+org.eclipse.jdt.core.compiler.problem.missingJavadocCommentsOverriding=disabled
+org.eclipse.jdt.core.compiler.problem.missingJavadocCommentsVisibility=public
+org.eclipse.jdt.core.compiler.problem.missingJavadocTagDescription=return_tag
+org.eclipse.jdt.core.compiler.problem.missingJavadocTags=warning
+org.eclipse.jdt.core.compiler.problem.missingJavadocTagsOverriding=disabled
+org.eclipse.jdt.core.compiler.problem.missingJavadocTagsVisibility=public
+									]]></content>
+							</file>
+						</additionalConfig>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+	<repositories>
+		<repository>
+			<id>openimaj-maven</id>
+			<url>http://maven.openimaj.org/</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>openimaj-maven</id>
+			<url>http://maven.openimaj.org</url>
+			<layout>default</layout>
+		</pluginRepository>
+	</pluginRepositories>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
+	<scm>
+		<connection>scm:svn:svn://svn.code.sf.net/p/openimaj/code/trunk</connection>
+		<developerConnection>scm:svn:svn+ssh://svn.code.sf.net/p/openimaj/code/trunk</developerConnection>
+		<url>https://sourceforge.net/p/openimaj/code</url>
+	</scm>
+</project>
