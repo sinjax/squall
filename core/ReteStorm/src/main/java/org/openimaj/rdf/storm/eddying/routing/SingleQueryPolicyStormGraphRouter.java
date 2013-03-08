@@ -7,12 +7,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMQueue;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
+import org.openimaj.util.pair.IndependentPair;
 
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
@@ -49,7 +51,7 @@ public class SingleQueryPolicyStormGraphRouter extends StormGraphRouter {
 	}
 	
 	private int varCount;
-	private TriplePattern[] pattern;
+	private List<TriplePattern> pattern;
 	private Map<TripleMatch,Integer> stemStats;
 	private Map<TripleMatch,Integer> stemRefs;
 	
@@ -59,7 +61,7 @@ public class SingleQueryPolicyStormGraphRouter extends StormGraphRouter {
 		stemRefs = new HashMap<TripleMatch,Integer>();
 		try{
 			int count = 0;
-			pattern = (TriplePattern[]) rule.getBody();
+			pattern = Arrays.asList((TriplePattern[]) rule.getBody());
 			for (TriplePattern tp : pattern){
 				stemStats.put(tp.asTripleMatch(), count++);
 				if (stemRefs.containsKey(tp.asTripleMatch()))
@@ -74,10 +76,140 @@ public class SingleQueryPolicyStormGraphRouter extends StormGraphRouter {
 	protected long routingTimestamp(long stamp1, long stamp2){
 		return stamp1 > stamp2 ? stamp1 : -1;
 	}
+	
+	private Node[] setEnvByVarNode(Node[] env, Node var, Node val){
+		env[((Node_RuleVariable) var).getIndex()] = val;
+		return env;
+	}
 
 	@Override
 	public void routeGraph(Tuple anchor, Action action, boolean isAdd, Graph g,
 						   long timestamp) {
+		Map<TripleMatch,List<Integer>> possibleProbes = new HashMap<TripleMatch,List<Integer>>();
+		
+		List<IndependentPair<List<TriplePattern>,Node[]>> previousSSQs = null;
+		List<IndependentPair<List<TriplePattern>,Node[]>> satisfiedSubQueries = null;
+		
+		ExtendedIterator<Triple> triples = g.find(null,null,null);
+graphLoop:
+		for (Triple t = triples.next(); triples.hasNext(); t = triples.next()){
+			satisfiedSubQueries = new ArrayList<IndependentPair<List<TriplePattern>,Node[]>>();
+patternLoop:
+			for (TriplePattern current : pattern)
+				
+				if ((current.getSubject().isVariable() || current.getSubject().sameValueAs(t.getSubject()))
+						&& (current.getPredicate().isVariable() || current.getPredicate().sameValueAs(t.getPredicate()))
+						&& (current.getObject().isVariable() || current.getObject().sameValueAs(t.getObject()))){
+					Node[] env = new Node[varCount];
+					
+					if (current.getSubject().isVariable()){
+						setEnvByVarNode(env, current.getSubject(), t.getSubject());
+						
+						if (current.getPredicate().isVariable()){
+							if (((Node_RuleVariable) current.getSubject()).getIndex() != ((Node_RuleVariable) current.getPredicate()).getIndex())
+								setEnvByVarNode(env, current.getPredicate(), t.getPredicate());
+							else if (!t.getSubject().sameValueAs(t.getPredicate()))
+								continue patternLoop;
+							
+							if (current.getObject().isVariable()){
+								if (((Node_RuleVariable) current.getPredicate()).getIndex() != ((Node_RuleVariable) current.getObject()).getIndex())
+									setEnvByVarNode(env, current.getObject(), t.getObject());
+								else if (!t.getPredicate().sameValueAs(t.getObject()))
+									continue patternLoop;
+							}
+							
+						}else if (current.getObject().isVariable()){
+							if (((Node_RuleVariable) current.getSubject()).getIndex() != ((Node_RuleVariable) current.getObject()).getIndex())
+								setEnvByVarNode(env, current.getObject(), t.getObject());
+							else if (!t.getSubject().sameValueAs(t.getObject()))
+								continue patternLoop;
+						}
+						
+					}else if (current.getPredicate().isVariable()){
+						setEnvByVarNode(env, current.getPredicate(), t.getPredicate());
+						
+						if (current.getObject().isVariable()){
+							if (((Node_RuleVariable) current.getPredicate()).getIndex() != ((Node_RuleVariable) current.getObject()).getIndex())
+								setEnvByVarNode(env, current.getObject(), t.getObject());
+							else if (!t.getPredicate().sameValueAs(t.getObject()))
+								continue patternLoop;
+						}
+						
+					}else if (current.getObject().isVariable())
+						setEnvByVarNode(env, current.getObject(), t.getObject());
+					
+					try {
+						for (IndependentPair<List<TriplePattern>,Node[]> entry : previousSSQs){
+							Node[] otherEnv = entry.getSecondObject();
+							boolean passed = true;
+							for (int i = 0; i < otherEnv.length; i++){
+								if (env[i] != null){
+									if (otherEnv[i] == null)
+										otherEnv[i] = env[i];
+									else
+										passed &= env[i].sameValueAs(otherEnv[i]);
+								}
+							}
+							if (passed){
+								entry.getFirstObject().add(current);
+								satisfiedSubQueries.add(entry);
+							}
+						}
+					} catch (NullPointerException e) {
+						List<TriplePattern> graph = new ArrayList<TriplePattern>();
+						graph.add(current);
+						satisfiedSubQueries.add(new IndependentPair<List<TriplePattern>,Node[]>(graph,env));
+					}
+				}
+			if (satisfiedSubQueries.isEmpty()){
+				/*
+				 * partial graph does not match this query, so stop evaluating it.
+				 */
+				break graphLoop;
+			}
+			previousSSQs = satisfiedSubQueries;
+		}
+		/*
+		 * Any subQueries in the nextSSQs list are subQueries satisfied by the whole of the graph to be routed.
+		 */
+		for (int i = 0; i < satisfiedSubQueries.size(); i++){
+			IndependentPair<List<TriplePattern>,Node[]> entry = satisfiedSubQueries.get(i);
+			for (TriplePattern tp : pattern)
+				if (!entry.getFirstObject().contains(tp)){
+					Node[] env = entry.getSecondObject();
+					Node subject = tp.getSubject().isVariable()
+									? env[((Node_RuleVariable) tp.getSubject()).getIndex()]
+									: tp.getSubject(),
+						 predicate = tp.getPredicate().isVariable()
+						 			? env[((Node_RuleVariable) tp.getPredicate()).getIndex()]
+						 			: tp.getPredicate(),
+						 object = tp.getObject().isVariable()
+						 			? env[((Node_RuleVariable) tp.getObject()).getIndex()]
+						 			: tp.getObject();
+					TripleMatch boundTM = new Triple(subject,predicate,object);
+					List<Integer> ssqList = possibleProbes.get(boundTM);
+					try {
+						ssqList.add(i);
+					} catch (NullPointerException e) {
+						ssqList = new ArrayList<Integer>();
+						ssqList.add(i);
+						possibleProbes.put(boundTM,ssqList);
+					}
+				}
+		}
+		/*
+		 * In Multiquery policies, clear the "network" of the results of the last query.
+		 */
+//		previousSSQs = null;
+		
+		while (!possibleProbes.keySet().isEmpty()){
+			/* 
+			 * Use a metric related to observed selectivity, observed window size and reference counting.
+			 * Remove queries fulfilled by such routing from the reference counting map.
+			 * Send probe to appropriate SteM for selected triple match.
+			 */
+		}
+		
 		/*
 		 * Use the Rete algorithm in reverse:
 		 * 		Form an unoptimised Rete-like network from the Graph g.  Joins are arbitrary in terms of network structure.
@@ -113,7 +245,7 @@ public class SingleQueryPolicyStormGraphRouter extends StormGraphRouter {
 		
 		
 		
-		PriorityQueue<TriplePattern> stemQueue = new PriorityQueue<TriplePattern>(this.pattern.length, new Comparator<TriplePattern>(){
+		PriorityQueue<TriplePattern> stemQueue = new PriorityQueue<TriplePattern>(this.pattern.size(), new Comparator<TriplePattern>(){
 			@Override
 			public int compare(TriplePattern arg0, TriplePattern arg1) {
 				return SingleQueryPolicyStormGraphRouter.this.stemStats.get(arg0.asTripleMatch())
@@ -185,7 +317,7 @@ public class SingleQueryPolicyStormGraphRouter extends StormGraphRouter {
 		// By this stage the probing graph has been verified against the current pattern for all environments.
 		// Check to see if the probing graph matches the current pattern completely
 		// (only requires checking that the graph and the pattern are the same size)
-		if (g.size() == pattern.length) {
+		if (g.size() == pattern.size()) {
 			this.reportCompletePattern(envs);
 			return;
 		}
