@@ -78,6 +78,41 @@ public class SingleQueryPolicyStormGraphRouter extends StormGraphRouter {
 	@Override
 	public void routeGraph(Tuple anchor, Action action, boolean isAdd, Graph g,
 						   long timestamp) {
+		/*
+		 * Use the Rete algorithm in reverse:
+		 * 		Form an unoptimised Rete-like network from the Graph g.  Joins are arbitrary in terms of network structure.
+		 * 		Pass the triple patterns into the network, each with an associated binding environment as long as the highest
+		 * 			index it is aware of.  Filtering happens in reverse, so every triple pattern matched by a given triple in
+		 * 			g enters the network at that location (as well as any others matched by it).  Variables are bound in the
+		 * 			environments at this stage.
+		 * 		Meaningful joins occur when two subgraph patterns from the same query share a variable(s).  The values stored
+		 * 			in their environments are compared.  If they match then the largest any other bindings from the smaller
+		 * 			environment are added to the larger, and the combined graph pattern is passed on to the next join node.
+		 * 			If there is no match then the patterns are retained at that node in case there is an alternate completion
+		 * 			available.
+		 *		Other joins simply combine two unrelated subgraph patterns and pass the result to the next node.  Incongruities
+		 *			will be caught by meaningful joins higher up the tree.
+		 *		If unchecked queries remain, clear the network (except the output patterns and binding environments) and repeat
+		 *			with the next query.
+		 * If there are no query instantiations that match at the final join, stop processing, emit no new probes.
+		 * Otherwise, find the set of triple patterns left unmatched:
+		 * 		Remove all triple patterns in the first successful joining from the set of triple patterns in the respective query.
+		 * End ---> If all triple patterns are accounted for by the joining, report a successful query completion and start
+		 * 			loop again with next successful joining.
+		 * 		Populate the remaining triple patterns from the successful binding environment.
+		 * 		Add populated triple patterns to a reference counting map.
+		 * 		Repeat for all successful joinings of all queries.
+		 * If there are no triple patterns in the reference counting map, stop processing, emit no new probes.
+		 * Otherwise, find the optimal SteM(s) to route to, and with what data.
+		 * 		Use a metric related to observed selectivity, observed window size and reference counting.
+		 * 		Remove queries fulfilled by such routing from the reference counting map.
+		 * 		Send probe to selected SteM.
+		 * 		Repeat for as long as there are triple patterns in the reference counting map.
+		 */
+		
+		
+		
+		
 		PriorityQueue<TriplePattern> stemQueue = new PriorityQueue<TriplePattern>(this.pattern.length, new Comparator<TriplePattern>(){
 			@Override
 			public int compare(TriplePattern arg0, TriplePattern arg1) {
