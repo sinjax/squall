@@ -1,19 +1,20 @@
 package org.openimaj.rdf.storm.eddying.routing;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+import org.openimaj.rdf.storm.eddying.stems.StormSteMQueue;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
+import org.openimaj.util.pair.IndependentPair;
 
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
@@ -25,7 +26,6 @@ import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.reasoner.TriplePattern;
-import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
@@ -35,253 +35,343 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  *
  */
 public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
+
+	private static final long serialVersionUID = 4342744138230718341L;
+	protected final static Logger logger = Logger.getLogger(MultiQueryPolicyStormGraphRouter.class);
+	protected static int[] FACTORIALS = {0,1,2,6,24,120,720};
 	
-	private List<String> queryStrings;
+
+	private String[] queries;
 	
 	/**
-	 * @param qs
+	 * @param q
 	 */
-	public MultiQueryPolicyStormGraphRouter(List<String> qs){
-		this.queryStrings = qs;
+	public MultiQueryPolicyStormGraphRouter(String[] q){
+		this.queries = q;
 	}
 	
-	private Map<TripleMatch,List<TriplePattern[]>> stems;
+	private int[] varCount;
+	private List<TriplePattern>[] patterns;
 	private Map<TripleMatch,Integer> stemStats;
-	private Map<TriplePattern[],Map<TripleMatch,Integer>> stemRefsByPattern;
-	private Map<TriplePattern[],Integer> varCountByPattern;
+	private Map<TripleMatch,Integer> stemRefs;
 	
 	protected void prepare(){
-		stems = new HashMap<TripleMatch,List<TriplePattern[]>>();
 		stemStats = new HashMap<TripleMatch,Integer>();
-		stemRefsByPattern = new HashMap<TriplePattern[],Map<TripleMatch,Integer>>();
-		varCountByPattern = new HashMap<TriplePattern[],Integer>();
-		// TODO: proper SteM metrics.
-		int count = 0;
-		for (String query : queryStrings){
+		stemRefs = new HashMap<TripleMatch,Integer>();
+		for (int i = 0; i < queries.length; i++){
+			Rule rule = Rule.parseRule(queries[i]);
+			varCount[i] = rule.getNumVars();
 			try{
-				Rule rule = Rule.parseRule(query);
-				TriplePattern[] pattern = (TriplePattern[]) rule.getBody();
-				varCountByPattern.put(pattern, rule.getNumVars());
-				Map<TripleMatch,Integer> stemCounts = stemRefsByPattern.get(pattern);
-				for (TriplePattern tp : pattern){
-					Integer stemCount;
-					try {
-						stemCount = stemCounts.get(tp.asTripleMatch());
-						if (stemCount == null) stemCount = 0;
-					} catch (NullPointerException e) {
-						stemCounts = new HashMap<TripleMatch,Integer>();
-						stemRefsByPattern.put(pattern, stemCounts);
-						stemCount = 0;
-					}
-					stemCounts.put(tp.asTripleMatch(), stemCount + 1);
-					
-					List<TriplePattern[]> involvedIn = stems.get(tp.asTripleMatch());
-					try {
-						involvedIn.add(pattern);
-					} catch (NullPointerException e) {
-						involvedIn = new ArrayList<TriplePattern[]>();
-						stems.put(tp.asTripleMatch(), involvedIn);
-						// TODO: proper SteM metrics.
-						stemStats.put(tp.asTripleMatch(),count++);
-						involvedIn.add(pattern);
-					}
+				int count = 0;
+				patterns[i] = Arrays.asList((TriplePattern[]) rule.getBody());
+				for (TriplePattern tp : patterns[i]){
+					stemStats.put(tp.asTripleMatch(), count++);
+					if (stemRefs.containsKey(tp.asTripleMatch()))
+						stemRefs.put(tp.asTripleMatch(), stemRefs.get(tp.asTripleMatch()) + 1);
+					else
+						stemRefs.put(tp.asTripleMatch(), 1);
 				}
 			} catch (ClassCastException e){}
 		}
 	}
 	
-	/**
-	 * Construct a duplicate SteM usage map.
-	 * 
-	 * This one can be edited down to the {@link TriplePattern} level, i.e. entries in the Map can be safely removed or changed,
-	 * {@link TriplePattern} arrays can be removed from the {@link List} or edited, but {@link TriplePattern}s within the arrays must be
-	 * replaced rather than edited directly.
-	 * @return a copy of the router's SteM map.
-	 */
-	private Map<TripleMatch,List<TriplePattern[]>> cloneSteMMap(){
-		Map<TripleMatch,List<TriplePattern[]>> stems = new HashMap<TripleMatch,List<TriplePattern[]>>();
-		Map<TriplePattern[],TriplePattern[]> patterns = new HashMap<TriplePattern[],TriplePattern[]>();
-		for (TripleMatch tm : this.stems.keySet()){
-			List<TriplePattern[]> involvedIn = new ArrayList<TriplePattern[]>();
-			for (TriplePattern[] oldPattern : this.stems.get(tm)) {
-				TriplePattern[] newPattern = patterns.get(oldPattern);
-				if (newPattern == null){
-					newPattern = new TriplePattern[oldPattern.length];
-					for (int i = 0; i < oldPattern.length; i++)
-						newPattern[i] = oldPattern[i];
-					patterns.put(oldPattern, newPattern);
-				}
-				involvedIn.add(newPattern);
-			}
-			stems.put(tm, involvedIn);
-		}
-		return stems;
-	}
-	
-	/**
-	 * Produces a full map of patterns to sets of query environments.
-	 * @return map of patterns and initial binding environments;
-	 */
-	private Map<TriplePattern[],List<Node[]>> generateInitialQueryEnvironments(){
-		Map<TriplePattern[],List<Node[]>> toReturn = new HashMap<TriplePattern[],List<Node[]>>();
-		for (TriplePattern[] tpa : varCountByPattern.keySet()){
-			List<Node[]> nodeList = new ArrayList<Node[]>();
-			nodeList.add(new Node[varCountByPattern.get(tpa)]);
-			toReturn.put(tpa, nodeList);
-		}
-		return toReturn;
-	}
-	
-//	/**
-//	 * Construct a duplicate SteM reference map, noted per graph pattern.
-//	 * @return a copy of the router's SteM reference count map.
-//	 */
-//	private Map<TriplePattern[],Map<TripleMatch,Integer>> cloneSteMRefs(){
-//		Map<TriplePattern[],Map<TripleMatch,Integer>> stemCounts = new HashMap<TriplePattern[],Map<TripleMatch,Integer>>();
-//		for (TriplePattern[] pattern : this.stemRefsByPattern.keySet()){
-//			Map<TripleMatch,Integer> involvedIn = new HashMap<TripleMatch,Integer>();
-//			for (TripleMatch tm : this.stemRefsByPattern.get(pattern).keySet()) {
-//				involvedIn.put(tm, stemRefsByPattern.get(pattern).get(tm));
-//			}
-//			stemCounts.put(pattern, involvedIn);
-//		}
-//		return stemCounts;
-//	}
-	
 	@Override
 	protected long routingTimestamp(long stamp1, long stamp2){
 		return stamp1 > stamp2 ? stamp1 : -1;
+	}
+	
+	private Node[] setEnvByVarNode(Node[] env, Node var, Node val){
+		env[((Node_RuleVariable) var).getIndex()] = val;
+		return env;
 	}
 
 	@Override
 	public void routeGraph(Tuple anchor, Action action, boolean isAdd, Graph g,
 						   long timestamp) {
-		// Construct a duplicate SteM usage map and map of environments.
-		Map<TripleMatch,List<TriplePattern[]>> tempSteMs = cloneSteMMap();
-		Map<TriplePattern[],List<Node[]>> envs = generateInitialQueryEnvironments();
+		Map<TripleMatch,List<Integer>> possibleProbeRefs = new HashMap<TripleMatch,List<Integer>>();
+		Map<TripleMatch,TripleMatch> possibleProbeSteMs = new HashMap<TripleMatch,TripleMatch>();
 		
-		Iterator<TriplePattern[]> patterns = envs.keySet().iterator();
-		// Iterate over all graph patterns managed by this Eddy.
-		patternLoop:
-			for (TriplePattern[] pattern = patterns.next(); patterns.hasNext(); pattern = patterns.next()){
-				// Initialise a map of probing graph triples to boolean flags, to denote that the triple has been matched in the current pattern. 
-				Map<Triple,Boolean> probeMatched = new HashMap<Triple,Boolean>();
-				ExtendedIterator<Triple> it = g.find(null,null,null);
-				for (Triple t = it.next(); it.hasNext(); t = it.next())
-					// Initialise flag to state the current triple has not yet matched against the current graph pattern in any environment
-					probeMatched.put(t, false);
-				// Declare a list of environments, representing the environments resulting from the matching of the next triple pattern.
-				List<Node[]> newEnvs;
-				// Iterate over all triple patterns in the current graph pattern
-				for (TriplePattern current : pattern){
-					// Initialise the list of new environments.
-					newEnvs = new ArrayList<Node[]>();
-					// evaluate the current triple pattern in all applicable environments for the current graph pattern
-					for (Node[] env : envs.get(pattern)){
-						// Initialise subject, object and predicate according to the current environment.
-						Node subject = current.getSubject().isVariable() ? env[((Node_RuleVariable) current.getSubject()).getIndex()] : current.getSubject(),
-							 predicate = current.getPredicate().isVariable() ? env[((Node_RuleVariable) current.getPredicate()).getIndex()] : current.getPredicate(),
-							 object = current.getObject().isVariable() ? env[((Node_RuleVariable) current.getObject()).getIndex()] : current.getObject();
-						// Initialise a variable describing SteM uses unaccounted for with regards to this triple pattern in the current graph pattern
-						int count = stemRefsByPattern.get(pattern).get(current.asTripleMatch());
-						// Iterate over all triples in the graph that match the SteM of the current triple pattern.
-						it = g.find(current.asTripleMatch());
-						for (Triple t = it.next(); it.hasNext(); t = it.next()){
-							// If the current triple matches the triple pattern within the binding environment, then create a new environment with the relevant, previously
-							// empty bindings bound with the new values in the triple.
-							if ((subject == null || t.getSubject().equals(subject))
-									&& (predicate == null || t.getPredicate().equals(predicate))
-									&& (object == null || t.getObject().equals(object))){
-								Node[] newEnv = Arrays.copyOf(env, varCountByPattern.get(pattern));
-								if (subject == null){
-									newEnv[((Node_RuleVariable) current.getSubject()).getIndex()] = t.getSubject();
+		List<IndependentPair<List<TriplePattern>,Node[]>> previousSSQs = null;
+		List<IndependentPair<List<TriplePattern>,Node[]>> satisfiedSubQueries = null;
+		
+queryLoop:
+		for (int patternNumber = 0; patternNumber < patterns.length; patternNumber++){
+			List<TriplePattern> pattern = patterns[patternNumber];
+			// For each triple in the partial graph (the "filter nodes" of the inverse Rete network)...
+			ExtendedIterator<Triple> triples = g.find(null,null,null);
+graphLoop:
+			for (Triple t = triples.next(); triples.hasNext(); t = triples.next()){
+				// ... create a list of sub-queries to be populated with the sub-queries satisfied by the new triple combined with those previously tested,
+				// then loop through all triple patterns in the current query...
+				satisfiedSubQueries = new ArrayList<IndependentPair<List<TriplePattern>,Node[]>>();
+patternLoop:
+				for (TriplePattern current : pattern)
+					// ... checking if the filter triple matches the current triple pattern, irrespective of intra-triple pattern joins.
+					if ((current.getSubject().isVariable() || current.getSubject().sameValueAs(t.getSubject()))
+							&& (current.getPredicate().isVariable() || current.getPredicate().sameValueAs(t.getPredicate()))
+							&& (current.getObject().isVariable() || current.getObject().sameValueAs(t.getObject()))){
+						// If the triple matches, then create a new environment for the node, then...
+						Node[] env = new Node[varCount[patternNumber]];
+						// ... populate it, whilst simultaneously checking for intra-triple pattern joins.
+						if (current.getSubject().isVariable()){
+							// Found a new variable, bind it in the environment.
+							setEnvByVarNode(env, current.getSubject(), t.getSubject());
+							
+							if (current.getPredicate().isVariable()){
+								if (((Node_RuleVariable) current.getSubject()).getIndex() != ((Node_RuleVariable) current.getPredicate()).getIndex())
+									// Found a new variable, bind it in the environment.
+									setEnvByVarNode(env, current.getPredicate(), t.getPredicate());
+								else if (!t.getSubject().sameValueAs(t.getPredicate()))
+									// Failed on intra-triple pattern join, stop processing of this triple pattern. 
+									continue patternLoop;
+								
+								if (current.getObject().isVariable()){
+									if (((Node_RuleVariable) current.getPredicate()).getIndex() != ((Node_RuleVariable) current.getObject()).getIndex())
+										// Found a new variable, bind it in the environment.
+										setEnvByVarNode(env, current.getObject(), t.getObject());
+									else if (!t.getPredicate().sameValueAs(t.getObject()))
+										// Failed on intra-triple pattern join, stop processing of this triple pattern.
+										continue patternLoop;
 								}
-								if (predicate == null){
-									newEnv[((Node_RuleVariable) current.getPredicate()).getIndex()] = t.getPredicate();
-								}
-								if (object == null){
-									newEnv[((Node_RuleVariable) current.getObject()).getIndex()] = t.getObject();
-								}
-								// Add the new environment to the list of new environments
-								newEnvs.add(newEnv);
-								probeMatched.put(t, true);
+								
+							}else if (current.getObject().isVariable()){
+								if (((Node_RuleVariable) current.getSubject()).getIndex() != ((Node_RuleVariable) current.getObject()).getIndex())
+									// Found a new variable, bind it in the environment.
+									setEnvByVarNode(env, current.getObject(), t.getObject());
+								else if (!t.getSubject().sameValueAs(t.getObject()))
+									// Failed on intra-triple pattern join, stop processing of this triple pattern.
+									continue patternLoop;
 							}
-							// Whether the triple matched within the environment or not, decrement the count of unaccounted for SteM uses.
-							count--;
-						}
-						if (count > 0){
-							// If there are unaccounted for uses of the SteM, create a new environment that does not fill this triple pattern.
-							newEnvs.add(env);
-						}else{
-							// If there are no unaccounted for uses of the SteM, remove the graph pattern from the list of patterns in which the SteM is involved.
-							// This is because this pattern can gain nothing from further probing into this SteM.
-							tempSteMs.get(current.asTripleMatch()).remove(pattern);
+							
+						}else if (current.getPredicate().isVariable()){
+							// Found a new variable, bind it in the environment.
+							setEnvByVarNode(env, current.getPredicate(), t.getPredicate());
+							
+							if (current.getObject().isVariable()){
+								if (((Node_RuleVariable) current.getPredicate()).getIndex() != ((Node_RuleVariable) current.getObject()).getIndex())
+									// Found a new variable, bind it in the environment.
+									setEnvByVarNode(env, current.getObject(), t.getObject());
+								else if (!t.getPredicate().sameValueAs(t.getObject()))
+									// Failed on intra-triple pattern join, stop processing of this triple pattern.
+									continue patternLoop;
+							}
+							
+						}else if (current.getObject().isVariable())
+							// Found a new variable, bind it in the environment.
+							setEnvByVarNode(env, current.getObject(), t.getObject());
+						// Try to iterate through the satisfied sub queries produced from processing of triple patterns at the last "filter".
+						try {
+ssqLoop:
+							for (IndependentPair<List<TriplePattern>,Node[]> entry : previousSSQs){
+								/*
+								 *  Compare the environments of the previously satisfied sub queries with the new triple pattern and environment,
+								 *  performing an inter-triple pattern join.
+								 */
+								Node[] otherEnv = entry.getSecondObject();
+envLoop:
+								for (int i = 0; i < otherEnv.length; i++){
+									if (env[i] != null){
+										if (otherEnv[i] == null)
+											/*
+											 * When the new triple pattern environment contains bindings not in the existing environment, copy the binding to
+											 * the existing environment.
+											 */
+											otherEnv[i] = env[i];
+										else
+											/*
+											 * When the new triple pattern environment contains bindings in the existing environment, check that both sets of
+											 * bindings are the same.  If not, break out of evaluating the current satisfied sub query, as it cannot join. 
+											 */
+											if (!env[i].sameValueAs(otherEnv[i]))
+												continue ssqLoop;
+									}
+								}
+								/*
+								 * If the triple pattern and bindings match with the previously satisfied sub query, add the triple pattern to the
+								 * sub query and add it to the list of sub queries satisfied by this "filter" triple.
+								 */
+								entry.getFirstObject().add(current);
+								satisfiedSubQueries.add(entry);
+							}
+						} catch (NullPointerException e) {
+							/*
+							 * If there were no satisfied sub queries then there was no previous filter (as when there are no satisfied sub
+							 * queries part way through the evaluation of a query, then that query is discarded and the next one started, all
+							 * during the next step of processing, as annotated).
+							 * As such, add all triple patterns and environments that pass this "filter" to the list of satisfied sub queries.
+							 */
+							List<TriplePattern> graph = new ArrayList<TriplePattern>();
+							graph.add(current);
+							satisfiedSubQueries.add(new IndependentPair<List<TriplePattern>,Node[]>(graph,env));
 						}
 					}
-					if (newEnvs.size() > 0)
-						// If matching the probing graph with the current triple pattern has produced some updated binding environments,
-						// replace the old list of binding environments for the pattern with the updated environments.
-						envs.put(pattern, newEnvs);
-					else {
-						// If the matching process for the current triple pattern has produced no binding environments, the pattern has been invalidated,
-						// and is removed from the set of possible patterns in the lists of all SteMs involved in it, as well as the map of patterns to binding environments.
-						for (TripleMatch tm : tempSteMs.keySet())
-							tempSteMs.get(tm).remove(pattern);
-						patterns.remove();
-						// exit the current iteration of the loop through all patterns
-						continue patternLoop;
-					}
+				if (satisfiedSubQueries.isEmpty()){
+					/*
+					 * partial graph does not match this query, so stop evaluating it.
+					 */
+					break graphLoop;
 				}
-				// Iterate through the matched-flags of all probing graph triples, setting an "accounted for" flag to false if any has not been matched.
-				boolean accountedFor = true;
-				for (boolean flag : probeMatched.values())
-					accountedFor &= flag;
-				if (!accountedFor){
-					// If the matching process for the current graph pattern has left some triples from the probing graph unmatched, the pattern is invalid,
-					// and is removed from the set of possible patterns in the lists of all SteMs involved in it, as well as the map of patterns to binding environments.
-					for (TripleMatch tm : tempSteMs.keySet())
-						tempSteMs.get(tm).remove(pattern);
-					patterns.remove();
-					// exit the current iteration of the loop through all patterns
-					continue patternLoop;
-				}
-				
-				// By this stage the probing graph has been verified against the current pattern.
-				// Check to see if the probing graph matches the current pattern completely
-				// (only requires checking that the graph and the pattern are the same size).
-				// Report a completed pattern, then remove it from each of the SteMs involved in it and the map of binding environments. 
-				if (g.size() == pattern.length) {
-					this.reportCompletePattern(pattern, envs.get(pattern));
-					for (TripleMatch tm : tempSteMs.keySet())
-						tempSteMs.get(tm).remove(pattern);
-					patterns.remove();
-					// exit the current iteration of the loop through all patterns
-					continue patternLoop;
-				}
+				previousSSQs = satisfiedSubQueries;
 			}
+			/*
+			 * Any subQueries in the satisfied  list are subQueries satisfied by the whole of the graph to be routed.
+			 */
+			for (int i = 0; i < satisfiedSubQueries.size(); i++){
+				IndependentPair<List<TriplePattern>,Node[]> entry = satisfiedSubQueries.get(i);
+				boolean complete = true;
+				for (TriplePattern tp : pattern)
+					if (!entry.getFirstObject().contains(tp)){
+						complete = false;
+						Node[] env = entry.getSecondObject();
+						Node subject = tp.getSubject().isVariable()
+										? env[((Node_RuleVariable) tp.getSubject()).getIndex()]
+										: tp.getSubject(),
+							 predicate = tp.getPredicate().isVariable()
+							 			? env[((Node_RuleVariable) tp.getPredicate()).getIndex()]
+							 			: tp.getPredicate(),
+							 object = tp.getObject().isVariable()
+							 			? env[((Node_RuleVariable) tp.getObject()).getIndex()]
+							 			: tp.getObject();
+						TripleMatch boundTM = new Triple(subject,predicate,object);
+						
+						// add the current query satisfaction index to the list of indexes that find the current bound TripleMatch's query useful.
+						List<Integer> ssqList = possibleProbeRefs.get(boundTM);
+						try {
+							ssqList.add(i);
+						} catch (NullPointerException e) {
+							ssqList = new ArrayList<Integer>();
+							ssqList.add(i);
+							possibleProbeRefs.put(boundTM,ssqList);
+						}
+						
+						/*
+						 * TODO This last step in the loop is dependent on SteM handling
+						 */
+						// Incrementally discover the most selective SteM that could answer the bound TripleMatch's query.
+						TripleMatch newSteM = tp.asTripleMatch();
+						TripleMatch prevSteM = possibleProbeSteMs.get(boundTM);
+						try {
+							// If the previous SteM subsumes the new SteM, use the new, more selective SteM.
+							if ((prevSteM.getMatchSubject() == null || prevSteM.getMatchSubject().sameValueAs(newSteM.getMatchSubject()))
+									&& (prevSteM.getMatchPredicate() == null || prevSteM.getMatchPredicate().sameValueAs(newSteM.getMatchPredicate()))
+									&& (prevSteM.getMatchObject() == null || prevSteM.getMatchObject().sameValueAs(newSteM.getMatchObject()))){
+								possibleProbeSteMs.put(boundTM,newSteM);
+							}
+						} catch (NullPointerException e) {
+							// If no SteM has been chosen for the bound TripleMatch thus far, use the new SteM.
+							possibleProbeSteMs.put(boundTM,newSteM);
+						}
+					}
+				if (complete) reportCompletePattern(patternNumber,entry.getSecondObject());
+			}
+			/*
+			 * In Multiquery policies, clear the "network" of the results of the last query.
+			 */
+			previousSSQs = null;
+		}
 		
-		// TODO
-		// From the options, decide which SteM(s) to route the graph to.
-		// Use a metric involving predicted SteM selectivity, average processing time per SteM, as well as the
-		// number of queries each SteM is involved in.
-		// This metric is yet to be decided as yet.
-		// Once a SteM has been selected, delete the query patterns that SteM contributes to from all SteM lists,
-		// then select the best SteM from the updated set, remove its query patterns, and so on until all viable
-		// queries have been progressed.
+		while (!possibleProbeRefs.keySet().isEmpty()){
+			/* 
+			 * Use a metric related to observed selectivity, observed window size and reference counting.
+			 * Remove queries fulfilled by such routing from the reference counting map.
+			 * Send probe to appropriate SteM for selected triple match.
+			 */
+		}
+		
+		
+		// OLD CODE
+		
+//		PriorityQueue<TriplePattern> stemQueue = new PriorityQueue<TriplePattern>(this.pattern.size(), new Comparator<TriplePattern>(){
+//			@Override
+//			public int compare(TriplePattern arg0, TriplePattern arg1) {
+//				return SingleQueryPolicyStormGraphRouter.this.stemStats.get(arg0.asTripleMatch())
+//						- SingleQueryPolicyStormGraphRouter.this.stemStats.get(arg1.asTripleMatch());
+//			}
+//		});
+//		
+//		List<Node[]> envs = new ArrayList<Node[]>();
+//		List<Node[]> newEnvs;
+//		envs.add(new Node[varCount]);
+//		
+//		// TODO take into account strict triple patterns that could occlude relaxed triple patterns.  
+//		// Iterate over all triple patterns in the graph pattern
+//		for (TriplePattern current : this.pattern){
+//			newEnvs = new ArrayList<Node[]>();
+//			for (Node[] env : envs){
+//				//Iterate over all triples in the graph that match the SteM of the current triple pattern.
+//				ExtendedIterator<Triple> matchingTriples = g.find(current.asTripleMatch());
+//				boolean accountedFor = false;
+//				if (accountedFor = matchingTriples.hasNext()){
+//					//Initialise subject, object and predicate according to the current environment.
+//					Node subject = current.getSubject().isVariable() ? env[((Node_RuleVariable) current.getSubject()).getIndex()] : current.getSubject(),
+//						 predicate = current.getPredicate().isVariable() ? env[((Node_RuleVariable) current.getPredicate()).getIndex()] : current.getPredicate(),
+//						 object = current.getObject().isVariable() ? env[((Node_RuleVariable) current.getObject()).getIndex()] : current.getObject();
+//					//Initialise a variable describing SteM uses unaccounted for with regards to this triple pattern
+//					int count = stemRefs.get(current.asTripleMatch());
+//					//For each triple that fits the stem, see if it matches the triple pattern (including any previously fixed bindings in the current environment),
+//					//then subtract one from the number of unaccounted for uses.
+//					while (matchingTriples.hasNext()){
+//						Triple match = matchingTriples.next();
+//						//If the current triple matches the triple pattern within the binding environment, then create a new environment with the relevant, previously
+//						//empty bindings bound with the new values in the triple.
+//						if ((subject == null || match.getSubject().equals(subject))
+//								&& (predicate == null || match.getPredicate().equals(predicate))
+//								&& (object == null || match.getObject().equals(object))){
+//							Node[] newEnv = Arrays.copyOf(env, varCount);
+//							if (subject == null){
+//								newEnv[((Node_RuleVariable) current.getSubject()).getIndex()] = match.getSubject();
+//							}
+//							if (predicate == null){
+//								newEnv[((Node_RuleVariable) current.getPredicate()).getIndex()] = match.getPredicate();
+//							}
+//							if (object == null){
+//								newEnv[((Node_RuleVariable) current.getObject()).getIndex()] = match.getObject();
+//							}
+//							//Add the new environment to the list of new environments
+//							newEnvs.add(newEnv);
+//						}
+//						//Whether the triple matched within the environment or not, decrement the count of unaccounted for SteM uses.
+//						count--;
+//					}
+//					//If there are unaccounted for uses of the SteM, make a note of it.
+//					accountedFor = !(count > 0);
+//				}
+//				//If there are unaccounted for uses of the SteM, create a new environment that does not fill this triple pattern,
+//				//and add this triple pattern to the set of viable triple patterns to route to.
+//				if (!accountedFor){
+//					newEnvs.add(env);
+//					// TODO sort out SteM selection: need to store relevant environment, not just SteM.
+//					// TODO sort out SteM selection: need to fully qualify a pattern environment before deciding which SteMs are viable.
+//					stemQueue.add(current);
+//				}
+//			}
+//			//Make the new set of environments (those that have led to dead ends removed, new branches from the most recent triple pattern added)
+//			//the base set of environments.
+//			envs = newEnvs;
+//		}
+//		
+//		// By this stage the probing graph has been verified against the current pattern for all environments.
+//		// Check to see if the probing graph matches the current pattern completely
+//		// (only requires checking that the graph and the pattern are the same size)
+//		if (g.size() == pattern.size()) {
+//			for (Node[] env : envs)
+//				this.reportCompletePattern(env);
+//			return;
+//		}
+//		
+//		//TODO select a stem to send to, then send a probe request to it, satisfying as many environments as possible.
 	}
-
-	private void reportCompletePattern(TriplePattern[] pattern, List<Node[]> bindings) {
-		System.out.println(String.format("Pattern %s complete, with bindings:", (Object) pattern));
-		for (Node[] binding : bindings)
-			System.out.println(binding.toString());
+	
+	private void reportCompletePattern(int patternNumber, Node[] env) {
+		System.out.println(String.format("Pattern %s complete, with bindings:", (Object) patterns[patternNumber]));
+		System.out.println(env.toString());
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		Set<TripleMatch> stems = new HashSet<TripleMatch>();
-		// Iterate through all query strings
-		for (String query : queryStrings){
-			try{
+		try{
+			for (String query : queries){
 				// Convert query string to graph pattern
 				TriplePattern[] pattern = (TriplePattern[]) Rule.parseRule(query).getBody();
 				// Iterate through all triple patterns in the graph pattern
@@ -303,28 +393,38 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 												);
 					}
 				}
-			} catch (ClassCastException e){}
-		}
+			}
+		} catch (ClassCastException e){}
 	}
 	
 	// INNER CLASSES
 	
-		public static class MQPEddyStubStormGraphRouter extends EddyStubStormGraphRouter {
+	public static class MQPEddyStubStormGraphRouter extends EddyStubStormGraphRouter {
 
-			public MQPEddyStubStormGraphRouter(List<String> eddies) {
-				super(eddies);
-			}
-			
-			protected void prepare(){
-				
-			}
+		private static final long serialVersionUID = -1974101140071769900L;
 
-			@Override
-			protected void distributeToEddies(Tuple anchor, Values vals) {
-				for (String eddy : this.eddies)
-					this.collector.emit(eddy, anchor, vals);
-			}
+		public MQPEddyStubStormGraphRouter(List<String> eddies) {
+			super(eddies);
+		}
+		
+		protected void prepare(){
 			
 		}
+
+		@Override
+		protected void distributeToEddies(Tuple anchor, Values vals) {
+			String source = anchor.getSourceComponent();
+			if (this.eddies.contains(source)){
+				logger.debug(String.format("\nRouting back to Eddy %s for %s", source, vals.get(0).toString()));
+				this.collector.emit(source, anchor, vals);
+			}else
+				for (String eddy : this.eddies){
+					logger.debug(String.format("\nRouting on to Eddy %s for %s from %s", eddy, vals.get(0).toString(), source));
+					this.collector.emit(eddy, anchor, vals);
+				}
+			this.collector.ack(anchor);
+		}
+		
+	}
 
 }
