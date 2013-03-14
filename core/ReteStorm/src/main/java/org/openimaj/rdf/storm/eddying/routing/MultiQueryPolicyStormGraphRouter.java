@@ -12,6 +12,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.Action;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMQueue;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
 import org.openimaj.util.pair.IndependentPair;
@@ -271,11 +272,53 @@ envLoop:
 		}
 		
 		while (!possibleProbeRefs.keySet().isEmpty()){
-			/* 
-			 * Use a metric related to observed selectivity, observed window size and reference counting.
-			 * Remove queries fulfilled by such routing from the reference counting map.
-			 * Send probe to appropriate SteM for selected triple match.
+			/*
+			 * Use a metric related to observed selectivity, observed window size and reference counting to select a SteM and query pair.
+			 * TODO research a more sophisticated metric.
 			 */
+			TripleMatch selected = null;
+			for (TripleMatch potential : possibleProbeRefs.keySet()) try {
+				if (possibleProbeRefs.get(selected).size() < possibleProbeRefs.get(potential).size())
+					selected = potential;
+			} catch (NullPointerException e) {
+				selected = potential;
+			}
+			/*
+			 * Remove queries fulfilled by such routing from the reference counting map.
+			 */
+			Map<TripleMatch, List<Integer>> remainingProbeRefs = new HashMap<TripleMatch,List<Integer>>();
+TMLoop:
+			for (TripleMatch other : possibleProbeRefs.keySet()) {
+SSQLoop:
+				for (int ssq : possibleProbeRefs.get(selected)){
+					if (possibleProbeRefs.get(other).contains(ssq))
+						continue TMLoop;
+				}
+				remainingProbeRefs.put(other, possibleProbeRefs.get(other));
+			}
+			possibleProbeRefs = remainingProbeRefs;
+			/*
+			 * Send probe to appropriate SteM for selected triple match.
+			 * TODO provide some sort of triple match independent way to reference SteMs, probably by some sort of dictionary.
+			 */
+			String stemName = possibleProbeSteMs.get(selected).toString();
+			
+			Values vals = new Values();
+			vals.add(selected.getMatchSubject() == null ? Node.createVariable("s") : selected.getMatchSubject());
+			vals.add(selected.getMatchPredicate() == null ? Node.createVariable("p") : selected.getMatchPredicate());
+			vals.add(selected.getMatchObject() == null ? Node.createVariable("o") : selected.getMatchObject());
+			vals.add(Action.probe);
+			vals.add(isAdd);
+			vals.add(g);
+			vals.add(timestamp);
+			logger.debug(String.format("\nRouting triple: %s %s %s\nto SteM: %s",
+									   vals.get(0),
+									   vals.get(1),
+									   vals.get(2),
+									   stemName));
+			this.collector.emit(stemName, anchor, vals);
+			this.collector.ack(anchor);
+			return;
 		}
 		
 		
