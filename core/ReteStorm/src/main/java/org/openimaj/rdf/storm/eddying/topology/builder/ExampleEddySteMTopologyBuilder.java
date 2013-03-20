@@ -43,15 +43,16 @@ import backtype.storm.utils.Utils;
 
 public class ExampleEddySteMTopologyBuilder extends TopologyBuilder {
 	
-	public static final int SLEEP = 5;
+	public static final int SLEEP = 3;
 	public static final int STEMSIZE = 1000;
-	public static final long STEMDELAY = 500;
+	public static final long STEMDELAY = 1000;
 	public static final TimeUnit STEMUNIT = TimeUnit.MILLISECONDS;
 	
-	private String[] subjects = {"0","1","2","3","4","5","6","7","8","9"},
+	private String[] subjects = {"0","1","2","3","4"/*,"5","6","7","8","9"*/},
 					 predicates = {"pred0",
 								   "pred1",
 								   "pred2"};
+	private String queries = "[ (?a, 'pred0', ?b), (?b, 'pred1', ?c), (?c, 'pred2', ?d) -> (?a, 'pred3', ?d) ]";
 	
 	public Config initialiseConfig(){
 		Config conf = new Config();
@@ -93,11 +94,11 @@ public class ExampleEddySteMTopologyBuilder extends TopologyBuilder {
  			stems[i] = new StormSteMBolt(stemprefix+i,new MQPEddyStubStormGraphRouter(eddies)
  ,3,STEMSIZE,STEMDELAY,STEMUNIT
  );
-			stemMap.put(stemprefix+i, ","+predicates[i]+",");
+			stemMap.put(",\""+predicates[i]+"\",", stemprefix+i);
 		}
 		
 		// Eddy
-		StormEddyBolt eddy = new StormEddyBolt(new ExampleStormGraphRouter(stemMap));
+		StormEddyBolt eddy = new StormEddyBolt(new MultiQueryPolicyStormGraphRouter(stemMap,queries));
 		BoltDeclarer eddyDeclarer = this.setBolt(eddyname, eddy);
 		
 		// Construct Topology
@@ -106,8 +107,8 @@ public class ExampleEddySteMTopologyBuilder extends TopologyBuilder {
 			this.setBolt(alphaprefix+i, filters[i]).shuffleGrouping(spoutname);
 			this.setBolt(transprefix+i, translators[i]).shuffleGrouping(alphaprefix+i);
 			// TODO sort out what to do about field groupings.
-			this.setBolt(stemprefix+i, stems[i]).fieldsGrouping(eddyname, stemprefix+i, new Fields("s","p","o"))
-												.fieldsGrouping(transprefix+i, new Fields("s","p","o"));
+			this.setBolt(stemprefix+i, stems[i],1).shuffleGrouping(eddyname, stemprefix+i)
+												.shuffleGrouping(transprefix+i);
 			eddyDeclarer.shuffleGrouping(stemprefix+i,eddyname);
 		}
 	}

@@ -27,6 +27,7 @@ import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.reasoner.TriplePattern;
+import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
@@ -42,38 +43,54 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 	protected static int[] FACTORIALS = {0,1,2,6,24,120,720};
 	
 
-	private String[] queries;
+	private String queries;
+	private Map<String,String> stemMap;
 	
 	/**
 	 * @param q
 	 */
-	public MultiQueryPolicyStormGraphRouter(String[] q){
+	public MultiQueryPolicyStormGraphRouter(Map<String,String> s, String q){
 		this.queries = q;
+		this.stemMap = s;
 	}
 	
 	private int[] varCount;
-	private List<TriplePattern>[] patterns;
+	private List<List<TriplePattern>> patterns;
 	private Map<TripleMatch,Integer> stemStats;
 	private Map<TripleMatch,Integer> stemRefs;
 	
 	protected void prepare(){
 		stemStats = new HashMap<TripleMatch,Integer>();
 		stemRefs = new HashMap<TripleMatch,Integer>();
-		for (int i = 0; i < queries.length; i++){
-			Rule rule = Rule.parseRule(queries[i]);
+		List<Rule> rules = Rule.parseRules(queries);
+		varCount = new int[rules.size()];
+		patterns = new ArrayList<List<TriplePattern>>();
+		for (int i = 0; i < rules.size(); i++){
+			Rule rule = rules.get(i);
 			varCount[i] = rule.getNumVars();
 			try{
 				int count = 0;
-				patterns[i] = Arrays.asList((TriplePattern[]) rule.getBody());
-				for (TriplePattern tp : patterns[i]){
+				List<TriplePattern> l = new ArrayList<TriplePattern>();
+				for (ClauseEntry ce : rule.getBody()){
+					TriplePattern tp = (TriplePattern) ce;
+					l.add(tp);
 					stemStats.put(tp.asTripleMatch(), count++);
 					if (stemRefs.containsKey(tp.asTripleMatch()))
 						stemRefs.put(tp.asTripleMatch(), stemRefs.get(tp.asTripleMatch()) + 1);
 					else
 						stemRefs.put(tp.asTripleMatch(), 1);
 				}
-			} catch (ClassCastException e){}
+				patterns.add(l);
+			} catch (ClassCastException e){
+				e.printStackTrace();
+				System.exit(1);
+			} catch (NullPointerException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
 		}
+		logger.debug(String.format("\nInitial Patterns: %s",
+				   patterns.toString()));
 	}
 	
 	@Override
@@ -89,6 +106,8 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 	@Override
 	public void routeGraph(Tuple anchor, Action action, boolean isAdd, Graph g,
 						   long timestamp) {
+		this.collector.ack(anchor);
+		
 		Map<TripleMatch,List<Integer>> possibleProbeRefs = new HashMap<TripleMatch,List<Integer>>();
 		Map<TripleMatch,TripleMatch> possibleProbeSteMs = new HashMap<TripleMatch,TripleMatch>();
 		
@@ -96,17 +115,20 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 		List<IndependentPair<List<TriplePattern>,Node[]>> satisfiedSubQueries = null;
 		
 queryLoop:
-		for (int patternNumber = 0; patternNumber < patterns.length; patternNumber++){
-			List<TriplePattern> pattern = patterns[patternNumber];
+		for (int patternNumber = 0; patternNumber < patterns.size(); patternNumber++){
+			List<TriplePattern> pattern = patterns.get(patternNumber);
+			logger.debug(String.format("\nChecking received graph against pattern:\n%s\n%s",
+					   g.toString(),
+					   pattern.toString()));
 			// For each triple in the partial graph (the "filter nodes" of the inverse Rete network)...
-			ExtendedIterator<Triple> triples = g.find(null,null,null);
 graphLoop:
-			for (Triple t = triples.next(); triples.hasNext(); t = triples.next()){
+			for (ExtendedIterator<Triple> triples = g.find(null,null,null); triples.hasNext();){
+				Triple t = triples.next();
 				// ... create a list of sub-queries to be populated with the sub-queries satisfied by the new triple combined with those previously tested,
 				// then loop through all triple patterns in the current query...
 				satisfiedSubQueries = new ArrayList<IndependentPair<List<TriplePattern>,Node[]>>();
 patternLoop:
-				for (TriplePattern current : pattern)
+				for (TriplePattern current : pattern){
 					// ... checking if the filter triple matches the current triple pattern, irrespective of intra-triple pattern joins.
 					if ((current.getSubject().isVariable() || current.getSubject().sameValueAs(t.getSubject()))
 							&& (current.getPredicate().isVariable() || current.getPredicate().sameValueAs(t.getPredicate()))
@@ -206,6 +228,7 @@ envLoop:
 							satisfiedSubQueries.add(new IndependentPair<List<TriplePattern>,Node[]>(graph,env));
 						}
 					}
+				}
 				if (satisfiedSubQueries.isEmpty()){
 					/*
 					 * partial graph does not match this query, so stop evaluating it.
@@ -214,6 +237,8 @@ envLoop:
 				}
 				previousSSQs = satisfiedSubQueries;
 			}
+			logger.debug(String.format("\nSatisfied Sub Queries: %s",
+					   satisfiedSubQueries.toString()));
 			/*
 			 * Any subQueries in the satisfied  list are subQueries satisfied by the whole of the graph to be routed.
 			 */
@@ -225,13 +250,19 @@ envLoop:
 						complete = false;
 						Node[] env = entry.getSecondObject();
 						Node subject = tp.getSubject().isVariable()
-										? env[((Node_RuleVariable) tp.getSubject()).getIndex()]
+										? env[((Node_RuleVariable) tp.getSubject()).getIndex()] == null
+								 			? Node.ANY
+										 	: env[((Node_RuleVariable) tp.getSubject()).getIndex()]
 										: tp.getSubject(),
 							 predicate = tp.getPredicate().isVariable()
-							 			? env[((Node_RuleVariable) tp.getPredicate()).getIndex()]
+							 			? env[((Node_RuleVariable) tp.getPredicate()).getIndex()] == null
+								 			? Node.ANY
+										 	: env[((Node_RuleVariable) tp.getPredicate()).getIndex()]
 							 			: tp.getPredicate(),
 							 object = tp.getObject().isVariable()
-							 			? env[((Node_RuleVariable) tp.getObject()).getIndex()]
+							 			? env[((Node_RuleVariable) tp.getObject()).getIndex()] == null
+							 				? Node.ANY
+							 				: env[((Node_RuleVariable) tp.getObject()).getIndex()]
 							 			: tp.getObject();
 						TripleMatch boundTM = new Triple(subject,predicate,object);
 						
@@ -301,7 +332,12 @@ SSQLoop:
 			 * Send probe to appropriate SteM for selected triple match.
 			 * TODO provide some sort of triple match independent way to reference SteMs, probably by some sort of dictionary.
 			 */
-			String stemName = possibleProbeSteMs.get(selected).toString();
+			TripleMatch stem = possibleProbeSteMs.get(selected);
+			String stemName = stemMap.get(String.format("%s,%s,%s",
+															stem.getMatchSubject() == null ? "" : stem.getMatchSubject().toString(),
+															stem.getMatchPredicate() == null ? "" : stem.getMatchPredicate().toString(),
+															stem.getMatchObject() == null ? "" : stem.getMatchObject().toString()
+														));
 			
 			Values vals = new Values();
 			vals.add(selected.getMatchSubject() == null ? Node.createVariable("s") : selected.getMatchSubject());
@@ -317,7 +353,6 @@ SSQLoop:
 									   vals.get(2),
 									   stemName));
 			this.collector.emit(stemName, anchor, vals);
-			this.collector.ack(anchor);
 			return;
 		}
 		
@@ -406,27 +441,33 @@ SSQLoop:
 	}
 	
 	private void reportCompletePattern(int patternNumber, Node[] env) {
-		System.out.println(String.format("Pattern %s complete, with bindings:", (Object) patterns[patternNumber]));
-		System.out.println(env.toString());
+		String e = "[ ";
+		for (Node n : env){
+			e += n == null ? "null" : n.toString();
+			e += ", ";
+		}
+		e += "]";
+		System.out.println(String.format("Pattern %s complete, with bindings:\n%s", (Object) patterns.get(patternNumber),e));
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		Set<TripleMatch> stems = new HashSet<TripleMatch>();
 		try{
-			for (String query : queries){
+			for (Rule rule : Rule.parseRules(queries)){
 				// Convert query string to graph pattern
-				TriplePattern[] pattern = (TriplePattern[]) Rule.parseRule(query).getBody();
+				ClauseEntry[] pattern = rule.getBody();
 				// Iterate through all triple patterns in the graph pattern
-				for (TriplePattern tp : pattern){
+				for (ClauseEntry ce : pattern){
+					TriplePattern tp = (TriplePattern) ce;
 					// If the stem that provides for the current query pattern hasn't been seen before
 					TripleMatch tm = tp.asTripleMatch();
 					if (stems.add(tm)){
-						declarer.declareStream(String.format("%s,%s,%s",
-																tm.getMatchSubject() == null ? "" : tm.getMatchSubject().toString(),
-																tm.getMatchPredicate() == null ? "" : tm.getMatchPredicate().toString(),
-																tm.getMatchObject() == null ? "" : tm.getMatchObject().toString()
-															),
+						declarer.declareStream(stemMap.get(String.format("%s,%s,%s",
+																			tm.getMatchSubject() == null ? "" : tm.getMatchSubject().toString(),
+																			tm.getMatchPredicate() == null ? "" : tm.getMatchPredicate().toString(),
+																			tm.getMatchObject() == null ? "" : tm.getMatchObject().toString()
+																		)),
 													new Fields("s","p","o",
 																Component.action.toString(),
 																Component.isAdd.toString(),
@@ -437,7 +478,10 @@ SSQLoop:
 					}
 				}
 			}
-		} catch (ClassCastException e){}
+		} catch (ClassCastException e){
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}
 	
 	// INNER CLASSES
