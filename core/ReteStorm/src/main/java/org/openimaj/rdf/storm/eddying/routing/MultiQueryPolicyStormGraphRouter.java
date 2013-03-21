@@ -294,7 +294,7 @@ envLoop:
 							possibleProbeSteMs.put(boundTM,newSteM);
 						}
 					}
-				if (complete) reportCompletePattern(patternNumber,entry.getSecondObject());
+				if (complete) reportCompletePattern(patternNumber,g,timestamp);
 			}
 			/*
 			 * In Multiquery policies, clear the "network" of the results of the last query.
@@ -440,14 +440,15 @@ SSQLoop:
 //		//TODO select a stem to send to, then send a probe request to it, satisfying as many environments as possible.
 	}
 	
-	private void reportCompletePattern(int patternNumber, Node[] env) {
-		String e = "[ ";
-		for (Node n : env){
-			e += n == null ? "null" : n.toString();
-			e += ", ";
-		}
-		e += "]";
-		System.out.println(String.format("Pattern %s complete, with bindings:\n%s", (Object) patterns.get(patternNumber),e));
+	int complete = 0;
+	
+	private void reportCompletePattern(int patternNumber, Graph g, long timestamp) {
+		complete++;
+		System.out.println(String.format("Pattern %s complete, with bindings:\n%s triggered at %d\n%d complete patterns",
+											(Object) patterns.get(patternNumber),
+											g.toString(),
+											timestamp,
+											complete));
 	}
 
 	@Override
