@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.Action;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMQueue;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
+import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.TriplePart;
 import org.openimaj.util.pair.IndependentPair;
 
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -40,7 +41,7 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 
 	private static final long serialVersionUID = 4342744138230718341L;
 	protected final static Logger logger = Logger.getLogger(MultiQueryPolicyStormGraphRouter.class);
-	protected static int[] FACTORIALS = {0,1,2,6,24,120,720};
+//	protected static int[] FACTORIALS = {0,1,2,6,24,120,720};
 	
 
 	private String queries;
@@ -94,6 +95,14 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 	}
 	
 	@Override
+	public void cleanup(){
+		varCount = null;
+		patterns = null;
+		stemStats = null;
+		stemRefs = null;
+	}
+	
+	@Override
 	protected long routingTimestamp(long stamp1, long stamp2){
 		return stamp1 > stamp2 ? stamp1 : -1;
 	}
@@ -101,6 +110,44 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 	private Node[] setEnvByVarNode(Node[] env, Node var, Node val){
 		env[((Node_RuleVariable) var).getIndex()] = val;
 		return env;
+	}
+	
+	@Override
+	public void routeTriple(Tuple anchor, Action action, boolean isAdd, Graph g,
+						   long timestamp) {
+		this.collector.ack(anchor);
+		// TODO update when hierarchical SteM filtering is fully implemented
+		Triple selected = g.find(null,null,null).next();
+		Values vals = new Values();
+		vals.add(selected.getSubject());
+		vals.add(selected.getPredicate());
+		vals.add(selected.getObject());
+		vals.add(action);
+		vals.add(isAdd);
+		vals.add(g);
+		vals.add(timestamp);
+		
+		if (stemMap.values().contains(anchor.getSourceComponent())) {
+			logger.debug(String.format("\nSending triple %s, %s, %s to %s from %s for %s",
+					   selected.getSubject(),
+					   selected.getPredicate(),
+					   selected.getObject(),
+					   anchor.getSourceComponent(),
+					   this.collector.getName(),
+					   action.toString()));
+			this.collector.emit(anchor.getSourceComponent(),anchor,vals);
+		} else {
+			for (String stem : stemMap.values()) {
+				logger.debug(String.format("\nSending triple %s, %s, %s to %s from %s for %s",
+										   selected.getSubject(),
+										   selected.getPredicate(),
+										   selected.getObject(),
+										   stem,
+										   this.collector.getName(),
+										   action.toString()));
+				this.collector.emit(stem, anchor,vals);
+			}
+		}
 	}
 
 	@Override
@@ -353,7 +400,6 @@ SSQLoop:
 									   vals.get(2),
 									   stemName));
 			this.collector.emit(stemName, anchor, vals);
-			return;
 		}
 	}
 	
@@ -386,11 +432,13 @@ SSQLoop:
 																			tm.getMatchPredicate() == null ? "" : tm.getMatchPredicate().toString(),
 																			tm.getMatchObject() == null ? "" : tm.getMatchObject().toString()
 																		)),
-													new Fields("s","p","o",
-																Component.action.toString(),
-																Component.isAdd.toString(),
-																Component.graph.toString(),
-																Component.timestamp.toString()
+													new Fields(TriplePart.subject.toString(),
+															   TriplePart.predicate.toString(),
+															   TriplePart.object.toString(),
+															   Component.action.toString(),
+															   Component.isAdd.toString(),
+															   Component.graph.toString(),
+															   Component.timestamp.toString()
 															)
 												);
 					}
@@ -404,30 +452,47 @@ SSQLoop:
 	
 	// INNER CLASSES
 	
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 */
 	public static class MQPEddyStubStormGraphRouter extends EddyStubStormGraphRouter {
 
 		private static final long serialVersionUID = -1974101140071769900L;
 
+		/**
+		 * @param eddies
+		 */
 		public MQPEddyStubStormGraphRouter(List<String> eddies) {
 			super(eddies);
 		}
 		
+		@Override
 		protected void prepare(){
-			
+			// No preparation needed.
+		}
+		
+		@Override
+		public void cleanup(){
+			// No preparation to undo.
 		}
 
 		@Override
 		protected void distributeToEddies(Tuple anchor, Values vals) {
-			String source = anchor.getSourceComponent();
-			if (this.eddies.contains(source)){
-				logger.debug(String.format("\nRouting back to Eddy %s for %s", source, vals.get(0).toString()));
-				this.collector.emit(source, anchor, vals);
-			}else
-				for (String eddy : this.eddies){
-					logger.debug(String.format("\nRouting on to Eddy %s for %s from %s", eddy, vals.get(0).toString(), source));
-					this.collector.emit(eddy, anchor, vals);
+			String source;
+			try {
+				source = anchor.getSourceComponent();
+				if (this.eddies.contains(source)){
+					logger.debug(String.format("\nRouting back to Eddy %s for %s", source, vals.get(0).toString()));
+					this.collector.emit(source, anchor, vals);
+					return;
 				}
-			this.collector.ack(anchor);
+			} catch (NullPointerException e) {
+				source = "no source";
+			}
+			for (String eddy : this.eddies){
+				logger.debug(String.format("\nRouting on to Eddy %s for %s from %s", eddy, vals.get(0).toString(), source));
+				this.collector.emit(eddy, anchor, vals);
+			}
 		}
 		
 	}

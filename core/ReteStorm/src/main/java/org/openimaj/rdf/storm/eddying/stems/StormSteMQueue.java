@@ -71,9 +71,6 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 	/** A time-prioritised and size limited sliding window of Tuples */
 	private final CircularPriorityWindow<Tuple> window;
 
-	/** The age of the oldest tuple in the queue */
-	private long timestampLimit;
-
 	/** A count of {@link Fields} which should match between the two inputs */
 	private int varCount;
 
@@ -96,7 +93,6 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 						  OutputCollector oc) {
 		this.varCount = vars;
 		this.window = new CircularPriorityWindow<Tuple>(this, size, delay, unit);
-		this.timestampLimit = Long.MAX_VALUE;
 		if (logging)
 			this.logStream = new LoggerBolt.LogEmitter(oc);
 	}
@@ -139,17 +135,15 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 	 *            the time at which the triple was added from the stream
 	 */
 	public void build(Tuple env, boolean isAdd, long timestamp) {
-		if (isAdd) {
+		if (isAdd)
 			// Store the new token in this store
 			this.window.offer(env);
-			if (timestamp < this.timestampLimit)
-				this.timestampLimit = timestamp;
-		} else
+		else
 			// Remove any existing instances of the token from this store
 			this.window.remove(env);
-		this.router.routeGraph(env, Action.check, isAdd,
+		this.router.routeGraph(env, Action.probe, isAdd,
 							   (Graph) env.getValueByField(StormSteMBolt.Component.graph.toString()),
-							   (Long) env.getValueByField(StormSteMBolt.Component.timestamp.toString()));
+							   timestamp);
 	}
 	
 	/**

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.openimaj.rdf.storm.eddying.EddyingBolt;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMQueue;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
 
@@ -32,14 +33,19 @@ public abstract class StormGraphRouter implements Serializable {
 	public static enum Action {
 
 		/**
+		 *
+		 */
+		check
+		,
+		/**
 		 * 
 		 */
 		build
 		,
 		/**
-		 *
+		 * 
 		 */
-		check
+		cancelBuild
 		,
 		/**
 		 *
@@ -63,15 +69,20 @@ public abstract class StormGraphRouter implements Serializable {
 		}
 	}
 
-	protected OutputCollector collector;
+	protected EddyingBolt collector;
 	
 	protected abstract void prepare();
 	
 	/**
 	 * 
+	 */
+	public abstract void cleanup();
+	
+	/**
+	 * 
 	 * @param c
 	 */
-	public void setOutputCollector(OutputCollector c){
+	public void setOutputCollector(EddyingBolt c){
 		this.collector = c;
 		this.prepare();
 	}
@@ -106,6 +117,16 @@ public abstract class StormGraphRouter implements Serializable {
 	
 	/**
 	 * 
+	 * @param anchor 
+	 * @param g
+	 * @param action 
+	 * @param isAdd
+	 * @param timestamp
+	 */
+	public abstract void routeTriple(Tuple anchor, Action action, boolean isAdd, Graph g, long timestamp);
+	
+	/**
+	 * 
 	 * @param declarer
 	 */
 	public abstract void declareOutputFields(OutputFieldsDeclarer declarer);
@@ -135,10 +156,49 @@ public abstract class StormGraphRouter implements Serializable {
 		protected long routingTimestamp(long stamp1, long stamp2){
 			return stamp1 > stamp2 ? stamp1 : -1;
 		}
+		
+		@Override
+		public void routeTriple(Tuple anchor, Action action, boolean isAdd, Graph g,
+				   long timestamp) {
+			try {
+				this.collector.ack(anchor);
+			} catch (UnsupportedOperationException e) {
+			}
+			
+			Values vals = new Values();
+			for (Component c : Component.values()) {
+				switch (c) {
+				case action:
+					// set whether this Tuple is intended for probing or building into other SteMs
+					vals.add(action);
+					break;
+				case isAdd:
+					// insert this Tuple's value of isAdd to be passed onto subscribing Bolts.
+					vals.add(isAdd);
+					break;
+				case graph:
+					// insert the new graph into the array of Values
+					vals.add(g);
+					break;
+				case timestamp:
+					vals.add(timestamp);
+					break;
+				default:
+					break;
+				}
+			}
+			
+			distributeToEddies(anchor, vals);
+		}
 
 		@Override
 		public void routeGraph(Tuple anchor, Action action, boolean isAdd, Graph g,
 							   long timestamp) {
+			try {
+				this.collector.ack(anchor);
+			} catch (UnsupportedOperationException e) {
+			}
+			
 			Values vals = new Values();
 			for (Component c : Component.values()) {
 				switch (c) {

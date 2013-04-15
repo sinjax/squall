@@ -8,26 +8,23 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import org.openimaj.rdf.storm.eddying.EddyingBolt;
 import org.openimaj.rdf.storm.eddying.eddies.StormEddyBolt;
-import org.openimaj.rdf.storm.eddying.routing.ExampleStormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.MultiQueryPolicyStormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.MultiQueryPolicyStormGraphRouter.MQPEddyStubStormGraphRouter;
+import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.Action;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
 import org.openimaj.rdf.storm.topology.bolt.StormReteBolt;
-import org.openimaj.rdf.storm.topology.bolt.StormReteFilterBolt;
 import org.openimaj.rdf.storm.utils.JenaStormUtils;
 import org.openimaj.storm.spout.SimpleSpout;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.mem.GraphMem;
-import com.hp.hpl.jena.reasoner.TriplePattern;
-import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
-import com.hp.hpl.jena.reasoner.rulesys.Rule;
-
 import backtype.storm.Config;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.OutputCollector;
@@ -65,72 +62,63 @@ public class ExampleEddySteMTopologyBuilder extends TopologyBuilder {
 	public void build(){
 		final String spoutname = "spout";
 		final String eddyname = "eddy";
-		final String alphaprefix = "alpha";
-		final String transprefix = "trans";
 		final String stemprefix = "stem";
 		
 		// Spout
-		SimpleSpout spout = new ExampleNTriplesSpout(subjects,predicates);
-		
-		// Alpha Network
-		StormReteFilterBolt[] filters = new StormReteFilterBolt[predicates.length];
-		AlphaToStemTranslatorBolt[] translators = new AlphaToStemTranslatorBolt[predicates.length];
-		for (int i = 0; i < filters.length; i++){
-			List<ClauseEntry> clause= new ArrayList<ClauseEntry>();
-			ClauseEntry triple = new TriplePattern(Node.createVariable("A"),
-												   Node.createLiteral(predicates[i]),
-												   Node.createVariable("B"));
-			clause.add(triple);
-			filters[i] = new StormReteFilterBolt(new Rule(clause, clause));
-			translators[i] = new AlphaToStemTranslatorBolt();
-		}
-		
+		List<String> eddies = new ArrayList<String>();
+		eddies.add(eddyname);
+		SimpleSpout spout = new ExampleNTriplesSpout(spoutname,subjects,predicates,new MQPEddyStubStormGraphRouter(eddies));
+
 		// SteMs
 		Map<String,String> stemMap = new HashMap<String,String>();
 		StormSteMBolt[] stems = new StormSteMBolt[predicates.length];
 		for (int i = 0; i < stems.length; i++) {
-			List<String> eddies = new ArrayList<String>();
+			String tm = String.format("(?a,  'pred%d', ?b) -> ('woot',  'woot', 'woot') .",i);
+			eddies = new ArrayList<String>();
 			eddies.add(eddyname);
- 			stems[i] = new StormSteMBolt(stemprefix+i,new MQPEddyStubStormGraphRouter(eddies)
+ 			stems[i] = new StormSteMBolt(stemprefix+i,tm,new MQPEddyStubStormGraphRouter(eddies)
  ,3,STEMSIZE,STEMDELAY,STEMUNIT
  );
 			stemMap.put(",\""+predicates[i]+"\",", stemprefix+i);
 		}
 		
 		// Eddy
-		StormEddyBolt eddy = new StormEddyBolt(new MultiQueryPolicyStormGraphRouter(stemMap,queries));
-		BoltDeclarer eddyDeclarer = this.setBolt(eddyname, eddy);
+		StormEddyBolt eddy = new StormEddyBolt(eddyname,new MultiQueryPolicyStormGraphRouter(stemMap,queries));
 		
 		// Construct Topology
-		this.setSpout(spoutname, spout);
+		this.setSpout(spoutname, spout, 1);
+		BoltDeclarer eddyDeclarer = this.setBolt(eddyname, eddy, 10).shuffleGrouping(spoutname,eddyname);
 		for (int i = 0; i < predicates.length; i++){
-			this.setBolt(alphaprefix+i, filters[i]).shuffleGrouping(spoutname);
-			this.setBolt(transprefix+i, translators[i]).shuffleGrouping(alphaprefix+i);
+			this.setBolt(stemprefix+i, stems[i],1).shuffleGrouping(eddyname, stemprefix+i);
 			// TODO sort out what to do about field groupings.
-			this.setBolt(stemprefix+i, stems[i],1).shuffleGrouping(eddyname, stemprefix+i)
-												.shuffleGrouping(transprefix+i);
-			eddyDeclarer.shuffleGrouping(stemprefix+i,eddyname);
+			eddyDeclarer.globalGrouping(stemprefix+i,eddyname);
 		}
 	}
 	
 }
 
-class ExampleNTriplesSpout extends SimpleSpout {
+class ExampleNTriplesSpout extends SimpleSpout implements EddyingBolt {
 
 	private static final long serialVersionUID = 57751357468487569L;
 
-	private Random random;
+	private String name;
 	private String[] subjects, predicates;
+	private StormGraphRouter router;
 	
-	public ExampleNTriplesSpout(String[] subs, String[] preds){
-		subjects = subs;
-		predicates = preds;
+	public ExampleNTriplesSpout(String name,String[] subs, String[] preds, StormGraphRouter sgr){
+		this.name = name;
+		this.subjects = subs;
+		this.predicates = preds;
+		this.router = sgr;
 	}
+
+	private Random random;
 	
 	@Override
 	public void open(@SuppressWarnings("rawtypes") Map conf, TopologyContext context,
 					 SpoutOutputCollector collector){
 		super.open(conf, context, collector);
+		this.router.setOutputCollector(this);
 		random = new Random();
 	}
 	
@@ -142,58 +130,32 @@ class ExampleNTriplesSpout extends SimpleSpout {
 							  Node.createLiteral(subjects[random.nextInt(subjects.length)]));
 		Graph graph = new GraphMem();
 		graph.add(t);
-		try {
-			this.collector.emit(StormReteBolt.asValues(true,graph,new Date().getTime()));
-		} catch (Exception e) {
-
-		}
+		this.router.routeTriple(null, Action.check, true, graph, new Date().getTime());
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(StormReteBolt.declaredFields(0));
+		this.router.declareOutputFields(declarer);
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public void emit(Tuple anchor, Values vals) {
+		this.collector.emit(vals);
 	}
 	
-}
-
-class AlphaToStemTranslatorBolt extends BaseRichBolt {
-
-	private static final long serialVersionUID = 527786537447539815L;
-	private OutputCollector collector;
-	
 	@Override
-	public void prepare(@SuppressWarnings("rawtypes") Map stormConf,
-						TopologyContext context,
-			OutputCollector collector) {
-		this.collector = collector;
+	public void emit(String name, Tuple anchor, Values vals) {
+		this.collector.emit(name,vals);
 	}
 
 	@Override
-	public void execute(Tuple input) {
-		Values vals = new Values();
-		Graph g = (Graph) input.getValueByField(Component.graph.toString());
-		Triple t = g.find(null,null,null).next();
-		
-		vals.add(t.getSubject());
-		vals.add(t.getPredicate());
-		vals.add(t.getObject());
-		
-		vals.add(Action.build);
-		vals.add(input.getBooleanByField(Component.isAdd.toString()));
-		vals.add(g);
-		vals.add(input.getLongByField(Component.timestamp.toString()));
-		
-		this.collector.emit(input, vals);
-		this.collector.ack(input);
-	}
-
-	@Override
-	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("s","p","o",
-									Component.action.toString(),
-									Component.isAdd.toString(),
-									Component.graph.toString(),
-									Component.timestamp.toString()));
+	public void ack(Tuple anchor) {
+		throw new UnsupportedOperationException("cannot emit back to previous bolt, this is a spout.");
 	}
 	
 }

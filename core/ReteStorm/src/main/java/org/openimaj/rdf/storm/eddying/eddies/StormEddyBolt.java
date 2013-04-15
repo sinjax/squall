@@ -32,36 +32,42 @@ package org.openimaj.rdf.storm.eddying.eddies;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.openimaj.rdf.storm.eddying.EddyingBolt;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.Action;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
+import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.TriplePart;
 
 import com.hp.hpl.jena.graph.Graph;
+import com.hp.hpl.jena.graph.Node;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
 
 /**
  * @author davidlmonks
  *
  */
-public class StormEddyBolt implements IRichBolt {
+public class StormEddyBolt implements IRichBolt, EddyingBolt {
 
 	private static final long serialVersionUID = 1073714124183765931L;
 	private static Logger logger = Logger.getLogger(StormEddyBolt.class);
 
 	public static final String STREAM_TO_EDDY = "eddy stream";
 	
+	protected String name;
 	protected StormGraphRouter router;
 	
 	/**
 	 * @param sgr
 	 */
-	public StormEddyBolt(StormGraphRouter sgr){
+	public StormEddyBolt(String name, StormGraphRouter sgr){
+		this.name = name;
 		this.router = sgr;
 	}
 	
@@ -78,18 +84,44 @@ public class StormEddyBolt implements IRichBolt {
 		this.context = context;
 		this.collector = collector;
 		
-		this.router.setOutputCollector(collector);
+		this.router.setOutputCollector(this);
 	}
 
 	@Override
 	public void execute(Tuple input) {
-		this.router.routeGraph(
-					 /*anchor*/input,
-					 /*action*/(Action)input.getValueByField(Component.action.toString()),
-					  /*isAdd*/input.getBooleanByField(StormSteMBolt.Component.isAdd.toString()),
-					  /*graph*/(Graph)input.getValueByField(StormSteMBolt.Component.graph.toString()),
-				  /*timestamp*/input.getLongByField(Component.timestamp.toString())
-		);
+		long timestamp = input.getLongByField(Component.timestamp.toString());
+		boolean isAdd = input.getBooleanByField(Component.isAdd.toString());
+		Graph g = (Graph) input.getValueByField(Component.graph.toString());
+		Action action = (Action)input.getValueByField(Component.action.toString()); 
+		execute(input,action,isAdd,g,timestamp);
+	}
+	
+	private void execute(Tuple input, Action action, boolean isAdd, Graph g, Long timestamp){
+		switch (action){
+			case check:
+			case build:
+			case cancelBuild:
+				logger.debug(String.format("\nEddy %s routing triple %s", this.name, g.toString()));
+				this.router.routeTriple(
+							 /*anchor*/input,
+							   (Action)input.getValueByField(Component.action.toString()),
+							  /*isAdd*/input.getBooleanByField(StormSteMBolt.Component.isAdd.toString()),
+							    (Graph)input.getValueByField(StormSteMBolt.Component.graph.toString()),
+						  /*timestamp*/input.getLongByField(Component.timestamp.toString())
+				);
+				break;
+			case probe:
+				logger.debug(String.format("\nEddy %s routing graph%s", this.name, g.toString()));
+				this.router.routeGraph(
+							 /*anchor*/input,
+							 /*action*/(Action)input.getValueByField(Component.action.toString()),
+							  /*isAdd*/input.getBooleanByField(StormSteMBolt.Component.isAdd.toString()),
+							  /*graph*/(Graph)input.getValueByField(StormSteMBolt.Component.graph.toString()),
+						  /*timestamp*/input.getLongByField(Component.timestamp.toString())
+				);
+				break;
+			default:
+		}
 	}
 	
 	@Override
@@ -100,8 +132,23 @@ public class StormEddyBolt implements IRichBolt {
 	}
 
 	@Override
-	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		this.router.declareOutputFields(declarer);
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public void emit(Tuple anchor, Values vals) {
+		this.collector.emit(anchor,vals);
+	}
+	
+	@Override
+	public void emit(String name, Tuple anchor, Values vals) {
+			this.collector.emit(name,anchor,vals);
+	}
+
+	@Override
+	public void ack(Tuple anchor) {
+		this.collector.ack(anchor);
 	}
 
 	@Override
@@ -109,4 +156,9 @@ public class StormEddyBolt implements IRichBolt {
 		return conf;
 	}
 
+	@Override
+	public void declareOutputFields(OutputFieldsDeclarer declarer) {
+		this.router.declareOutputFields(declarer);
+	}
+	
 }
