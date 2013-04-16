@@ -34,8 +34,8 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
 import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 /**
+ * A StormGraphRouter implementation that routes graphs according to a policy incorporating potentially many distinct and/or overlapping queries/rules.
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
- *
  */
 public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 
@@ -48,7 +48,9 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 	private Map<String,String> stemMap;
 	
 	/**
-	 * @param q
+	 * Creates an new instance of a StormGraphRouter with the multi-query policy.
+	 * @param s - Map of {@link TripleMatch}es in string form to SteM names   
+	 * @param q - A string containing a set of Jena {@link Rule}s
 	 */
 	public MultiQueryPolicyStormGraphRouter(Map<String,String> s, String q){
 		this.queries = q;
@@ -158,12 +160,13 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 		Map<TripleMatch,List<Integer>> possibleProbeRefs = new HashMap<TripleMatch,List<Integer>>();
 		Map<TripleMatch,TripleMatch> possibleProbeSteMs = new HashMap<TripleMatch,TripleMatch>();
 		
-		List<IndependentPair<List<TriplePattern>,Node[]>> previousSSQs = null;
-		List<IndependentPair<List<TriplePattern>,Node[]>> satisfiedSubQueries = null;
-		
 queryLoop:
 		for (int patternNumber = 0; patternNumber < patterns.size(); patternNumber++){
 			List<TriplePattern> pattern = patterns.get(patternNumber);
+			
+			List<IndependentPair<List<TriplePattern>,Node[]>> previousSSQs = null;
+			List<IndependentPair<List<TriplePattern>,Node[]>> satisfiedSubQueries = null;
+			
 			logger.debug(String.format("\nChecking received graph against pattern:\n%s\n%s",
 					   g.toString(),
 					   pattern.toString()));
@@ -280,7 +283,7 @@ envLoop:
 					/*
 					 * partial graph does not match this query, so stop evaluating it.
 					 */
-					break graphLoop;
+					continue queryLoop;
 				}
 				previousSSQs = satisfiedSubQueries;
 			}
@@ -343,10 +346,6 @@ envLoop:
 					}
 				if (complete) reportCompletePattern(patternNumber,g,timestamp);
 			}
-			/*
-			 * In Multiquery policies, clear the "network" of the results of the last query.
-			 */
-			previousSSQs = null;
 		}
 		
 		while (!possibleProbeRefs.keySet().isEmpty()){
@@ -453,6 +452,7 @@ SSQLoop:
 	// INNER CLASSES
 	
 	/**
+	 * The stub StormGraphRouter that simply routes graphs back to a MultiQueryPolicyStormGraphRouter for intelligent routing.
 	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
 	 */
 	public static class MQPEddyStubStormGraphRouter extends EddyStubStormGraphRouter {
@@ -460,7 +460,8 @@ SSQLoop:
 		private static final long serialVersionUID = -1974101140071769900L;
 
 		/**
-		 * @param eddies
+		 * Creates a new stub router for routing data back to Eddies acting on a MultiQuery policy.
+		 * @param eddies - The list of eddies that this stub router can route to (usually only one, but could be many)
 		 */
 		public MQPEddyStubStormGraphRouter(List<String> eddies) {
 			super(eddies);
