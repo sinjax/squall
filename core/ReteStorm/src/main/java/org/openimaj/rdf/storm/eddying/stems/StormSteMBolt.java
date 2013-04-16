@@ -49,6 +49,7 @@ import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.tuple.MessageId;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
@@ -209,7 +210,7 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 	protected TripleMatch pattern;
 	
 	private static final int CHILDSTEMCOUNT = 1;
-	protected Map<Tuple,Integer> buildCount;
+	protected Map<MessageId,Integer> buildCount;
 	protected StormSteMQueue window;
 	
 	@SuppressWarnings("unchecked")
@@ -224,7 +225,7 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 		
 		this.pattern = ((TriplePattern)Rule.parseRule(patternString).getBody()[0]).asTripleMatch();
 		
-		this.buildCount = new HashMap<Tuple,Integer>();
+		this.buildCount = new HashMap<MessageId,Integer>();
 		this.window = new StormSteMQueue(vars, size, delay, unit, collector, router);
 	}
 	
@@ -277,12 +278,12 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 			case build:
 				int bc;
 				try {
-					bc = buildCount.get(input).intValue() + 1;
+					bc = buildCount.get(input.getMessageId()).intValue() + 1;
 				} catch (NullPointerException e) {
 					bc = 1;
 				}
 				if (bc < CHILDSTEMCOUNT /*TODO replace with real child-SteM lookup*/){
-					buildCount.put(input, bc);
+					buildCount.put(input.getMessageId(), bc);
 					break;
 				}
 				logger.debug(String.format("\nSteM %s building in triple: %s %s %s", this.name,
@@ -291,7 +292,7 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 						   input.getValueByField(TriplePart.object.toString()).toString()));
 				this.window.build(input, isAdd, timestamp);
 			case cancelBuild:
-				buildCount.remove(input);
+				buildCount.remove(input.getMessageId());
 				break;
 			case probe:
 				logger.debug(String.format("\nSteM %s being probed with triple: %s %s %s", this.name,
