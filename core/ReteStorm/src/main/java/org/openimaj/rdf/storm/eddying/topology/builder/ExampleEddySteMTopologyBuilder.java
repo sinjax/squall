@@ -15,25 +15,19 @@ import org.openimaj.rdf.storm.eddying.routing.MultiQueryPolicyStormGraphRouter.M
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.Action;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt;
-import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
-import org.openimaj.rdf.storm.topology.bolt.StormReteBolt;
 import org.openimaj.rdf.storm.utils.JenaStormUtils;
 import org.openimaj.storm.spout.SimpleSpout;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.mem.GraphMem;
 import backtype.storm.Config;
 import backtype.storm.spout.SpoutOutputCollector;
-import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.BoltDeclarer;
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.topology.base.BaseRichBolt;
-import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
@@ -45,7 +39,7 @@ public class ExampleEddySteMTopologyBuilder extends TopologyBuilder {
 	public static final long STEMDELAY = 1000;
 	public static final TimeUnit STEMUNIT = TimeUnit.MILLISECONDS;
 	
-	private String[] subjects = {"0","1","2","3","4"/*,"5","6","7","8","9"*/},
+	private String[] subjects = {"0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","28","39"},
 					 predicates = {"pred0",
 								   "pred1",
 								   "pred2"};
