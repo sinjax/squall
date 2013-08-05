@@ -128,6 +128,7 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 		vals.add(isAdd);
 		vals.add(g);
 		vals.add(timestamp);
+		vals.add((long)0);
 		
 		if (stemMap.values().contains(anchor.getSourceComponent())) {
 			logger.debug(String.format("\nSending triple %s, %s, %s to %s from %s for %s",
@@ -393,6 +394,7 @@ SSQLoop:
 			vals.add(isAdd);
 			vals.add(g);
 			vals.add(timestamp);
+			vals.add((long)600000);
 			logger.debug(String.format("\nRouting triple: %s %s %s\nto SteM: %s",
 									   vals.get(0),
 									   vals.get(1),
@@ -437,7 +439,8 @@ SSQLoop:
 															   Component.action.toString(),
 															   Component.isAdd.toString(),
 															   Component.graph.toString(),
-															   Component.timestamp.toString()
+															   Component.timestamp.toString(),
+															   Component.duration.toString()
 															)
 												);
 					}

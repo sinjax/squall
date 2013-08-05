@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.openimaj.rdf.storm.eddying.EddyingBolt;
 import org.openimaj.rdf.storm.eddying.eddies.StormEddyBolt;
+import org.openimaj.rdf.storm.eddying.routing.ExampleStormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.MultiQueryPolicyStormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.MultiQueryPolicyStormGraphRouter.MQPEddyStubStormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter;
@@ -54,9 +55,9 @@ public class ExampleEddySteMTopologyBuilder extends TopologyBuilder {
 	}
 	
 	public void build(){
-		final String spoutname = "spout";
-		final String eddyname = "eddy";
-		final String stemprefix = "stem";
+		final String spoutname = "data-spout";
+		final String eddyname = "data-eddy";
+		final String stemprefix = "data-stem";
 		
 		// Spout
 		List<String> eddies = new ArrayList<String>();
@@ -77,7 +78,7 @@ public class ExampleEddySteMTopologyBuilder extends TopologyBuilder {
 		}
 		
 		// Eddy
-		StormEddyBolt eddy = new StormEddyBolt(eddyname,new MultiQueryPolicyStormGraphRouter(stemMap,queries));
+		StormEddyBolt eddy = new StormEddyBolt(eddyname,new /*ExampleStormGraphRouter(stemMap)*/MultiQueryPolicyStormGraphRouter(stemMap,queries));
 		
 		// Construct Topology
 		this.setSpout(spoutname, spout, 1);

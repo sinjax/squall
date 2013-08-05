@@ -141,26 +141,79 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 		else
 			// Remove any existing instances of the token from this store
 			this.window.remove(env);
-		this.router.routeGraph(env, Action.probe, isAdd,
-							   (Graph) env.getValueByField(StormSteMBolt.Component.graph.toString()),
-							   timestamp);
 	}
 	
-	/**
-	 * Check a tuple against the SteM.
-	 * 
-	 * @param env
-	 *            a set of variable bindings for the rule being processed.
-	 * @param isAdd
-	 *            distinguishes between add and remove operations.
-	 * @param timestamp
-	 *            the time at which the triple was added from the stream
-	 */
-	public void check(Tuple env, boolean isAdd, long timestamp) {
-		// TODO: implement proper checking.
-		this.router.routeGraph(env, Action.probe, isAdd,
-							   (Graph) env.getValueByField(StormSteMBolt.Component.graph.toString()),
-							   timestamp);
+	private interface JoinDetector {
+		
+		public boolean compare(Node n1, Node n2);
+		
+	}
+	
+	private static class NotJoined implements JoinDetector {
+
+		@Override
+		public boolean compare(Node n1, Node n2) {
+			return ( !( n1.sameValueAs(n2) || n1.isVariable() ) );
+		}
+		
+	}
+	
+	private static class Joined implements JoinDetector {
+
+		@Override
+		public boolean compare(Node n1, Node n2) {
+			return n1.sameValueAs(n2);
+		}
+		
+	}
+	
+	protected static Graph joinSubGraphs(Tuple thisTuple, Tuple steMTuple) {
+		Polyadic newG = new MultiUnion();
+		newG.addGraph((Graph) thisTuple.getValueByField(Component.graph.toString()));
+		newG.addGraph((Graph) steMTuple.getValueByField(Component.graph.toString()));
+		return newG;
+	}
+	
+	private void probeImpl(Tuple env, boolean isAdd, long timestamp, long duration, JoinDetector failureCondition){
+		// Cross match new token against the entries in the sibling queue
+		List<Object> values = env.getValues();
+		logger.debug("\nChecking new tuple values: " + StormReteBolt.cleanString(values));
+		logger.debug("\nComparing new tuple to " + this.window.size() + " other tuples");
+		boolean matched = false;
+		for (Iterator<Tuple> i = this.window.iterator(); i.hasNext();) {
+			Tuple candidate = i.next();
+			long candStamp = candidate.getLongByField(StormSteMBolt.Component.timestamp.toString());
+			// If oldest remaining tuple is newer than the probing tuple, don't bother probing against the rest of the window.
+			if (timestamp < candStamp)
+				break;
+			// If oldest remaining tuple is not new enough to match the query being carried out, skip it.
+			if (candStamp + duration < timestamp)
+				continue;
+			boolean matchFailed = false;
+			for (int j = 0; j < this.varCount; j++) {
+				// If the queue match indices indicate there should be a match get the
+				// values of j in the queue and matchIndices[j] in the sibling
+				Node thisNode = (Node) values.get(j);
+				Node steMNode = (Node) candidate.getValue(j);
+				// If this pair of nodes meet the failure condition, set "matchFailed" to true, and don't bother checking the rest of the node pairs.
+				if (matchFailed = failureCondition.compare(thisNode, steMNode))
+					break;
+			}
+			// if the match succeeded, alert the probe operation that a successful match was found for the input tuple and route the output.
+			if (matchFailed == false) {
+				
+				matched = true;
+				
+				// Instantiate a new combined graph
+				Graph g = joinSubGraphs(env, candidate);
+				logger.debug("\nMatch Found! preparing for emit!\n"+g.toString());
+				// initiate graph routing
+				this.router.routeGraph(env, Action.probe, isAdd, g, timestamp, candStamp);
+			}
+		}
+		// if no match was found, report this fact
+		if (matched == false)
+			logger.debug(String.format("\nCould not match partially complete graph: %s\nTook %s milliseconds.", env.getValueByField(Component.graph.toString()).toString(), (new Date().getTime() - timestamp)));
 	}
 	
 	/**
@@ -172,58 +225,28 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 	 *            distinguishes between add and remove operations.
 	 * @param timestamp
 	 *            the time at which the triple was added from the stream
+	 * @param duration
+	 * 			  the age of the triples to be accepted 
 	 */
-	public void probe(Tuple env, boolean isAdd, long timestamp) {
-		// Cross match new token against the entries in the sibling queue
-		List<Object> values = env.getValues();
-		logger.debug("\nChecking new tuple values: " + StormReteBolt.cleanString(values));
-		logger.debug("\nComparing new tuple to " + this.window.size() + " other tuples");
-		boolean matched = false;
-		for (Iterator<Tuple> i = this.window.iterator(); i.hasNext();) {
-			Tuple candidate = i.next();
-			long candStamp = candidate.getLongByField(StormSteMBolt.Component.timestamp.toString());
-			if (timestamp < candStamp)
-				break;
-			boolean matchOK = true;
-			for (int j = 0; j < this.varCount; j++) {
-				// If the queue match indices indicate there should be a match get the
-				// values of j in the queue and matchIndices[j] in the sibling
-				Node thisNode = (Node) values.get(j);
-				Node steMNode = (Node) candidate.getValue(j);
-				if ( !( thisNode.sameValueAs(steMNode) || thisNode.isVariable() ) ) {
-					matchOK = false;
-					break;
-				}
-			}
-			if (matchOK) {
-				
-				matched = true;
-				
-				// Instantiate a new combined graph
-				Graph g = joinSubGraphs(env, candidate);
-				logger.debug("\nMatch Found! preparing for emit!\n"+g.toString());
-				// initiate graph routing
-				this.router.routeGraph(env, Action.probe, isAdd, g, timestamp,
-									   candidate.getLongByField(Component.timestamp.toString()));
-			}
-		}
-		if (!matched)
-			logger.debug(String.format("\nCould not match partially complete graph: %s\nTook %s milliseconds.", env.getValueByField(Component.graph.toString()).toString(), (new Date().getTime() - timestamp)));
-	}
-
-	protected static Graph joinSubGraphs(Tuple thisTuple, Tuple steMTuple) {
-		Polyadic newG = new MultiUnion();
-		newG.addGraph((Graph) thisTuple.getValueByField(Component.graph.toString()));
-		newG.addGraph((Graph) steMTuple.getValueByField(Component.graph.toString()));
-		return newG;
+	public void probe(Tuple env, boolean isAdd, long timestamp, long duration) {
+		probeImpl(env, isAdd, timestamp, duration, new NotJoined());
 	}
 	
-//	/**
-//	 * @return oldest timestamp
-//	 */
-//	public long getOldestTimestamp(){
-//		return this.window.getOldestTimestamp();
-//	}
+	/**
+	 * Probe a tuple negatively into this SteM.
+	 * 
+	 * @param env
+	 *            a set of variable bindings for the rule being processed.
+	 * @param isAdd
+	 *            distinguishes between add and remove operations.
+	 * @param timestamp
+	 *            the time at which the triple was added from the stream
+	 * @param duration
+	 * 			  the age of the triples to be accepted 
+	 */
+	public void negativeProbe(Tuple env, boolean isAdd, long timestamp, long duration) {
+		probeImpl(env, isAdd, timestamp, duration, new Joined());
+	}
 
 	@Override
 	public void handleCapacityOverflow(Tuple overflow) {

@@ -89,7 +89,12 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 		/**
 		 *
 		 */
-		timestamp;
+		timestamp
+		,
+		/**
+		 *
+		 */
+		duration;
 		private static String[] strings;
 		static {
 			Component[] vals = Component.values();
@@ -244,20 +249,25 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 
 	@Override
 	public void execute(Tuple input) {
-		long timestamp = input.getLongByField(Component.timestamp.toString());
-		boolean isAdd = input.getBooleanByField(Component.isAdd.toString());
-		Graph g = (Graph) input.getValueByField(Component.graph.toString());
-		Action action = (Action)input.getValueByField(Component.action.toString()); 
-		execute(input,
-				(Node)input.getValueByField(TriplePart.subject.toString()),
-				(Node)input.getValueByField(TriplePart.predicate.toString()),
-				(Node)input.getValueByField(TriplePart.object.toString()),
-				action,isAdd,g,timestamp);
+		switch (input.getSourceStreamId().charAt(0)) {
+			case 'c':
+			default:
+				long timestamp = input.getLongByField(Component.timestamp.toString());
+				long duration = input.getLongByField(Component.duration.toString());
+				boolean isAdd = input.getBooleanByField(Component.isAdd.toString());
+				Graph g = (Graph) input.getValueByField(Component.graph.toString());
+				Action action = (Action)input.getValueByField(Component.action.toString()); 
+				execute(input,
+						(Node)input.getValueByField(TriplePart.subject.toString()),
+						(Node)input.getValueByField(TriplePart.predicate.toString()),
+						(Node)input.getValueByField(TriplePart.object.toString()),
+						action,isAdd,g,timestamp,duration);
+		}
 	}
 	
 	private void execute(Tuple input,
 						 Node subject, Node predicate, Node object,
-						 Action action, boolean isAdd, Graph g, Long timestamp){
+						 Action action, boolean isAdd, Graph g, Long timestamp, Long duration){
 		switch (action){
 			case check:
 				logger.debug(String.format("\nSteM %s checking validity of triple: %s %s %s", this.name,
@@ -271,35 +281,25 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 							   subject.toString(),
 							   predicate.toString(),
 							   object.toString()));
-					//TODO Change to continue to check once proper hierarchical SteMs are produced.
+					//TODO Change to tree-select and build once proper hierarchical SteMs are produced.
 					this.router.routeTriple(input, Action.build, isAdd, g, timestamp);
 				}
 				break;	
 			case build:
-				int bc;
-				try {
-					bc = buildCount.get(input.getMessageId()).intValue() + 1;
-				} catch (NullPointerException e) {
-					bc = 1;
-				}
-				if (bc < CHILDSTEMCOUNT /*TODO replace with real child-SteM lookup*/){
-					buildCount.put(input.getMessageId(), bc);
-					break;
-				}
 				logger.debug(String.format("\nSteM %s building in triple: %s %s %s", this.name,
 						   subject.toString(),
 						   predicate.toString(),
 						   object.toString()));
 				this.window.build(input, isAdd, timestamp);
-			case cancelBuild:
-				buildCount.remove(input.getMessageId());
-				break;
+				this.router.routeGraph(input, Action.probe, isAdd,
+						   (Graph) input.getValueByField(StormSteMBolt.Component.graph.toString()),
+						   timestamp);
 			case probe:
 				logger.debug(String.format("\nSteM %s being probed with triple: %s %s %s", this.name,
 						   subject.toString(),
 						   predicate.toString(),
 						   object.toString()));
-				this.window.probe(input, isAdd, timestamp);
+				this.window.probe(input, isAdd, timestamp, duration);
 				break;
 			default:
 		}
@@ -325,7 +325,8 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 					(Action)vals.get(3),
 					(Boolean)vals.get(4),
 					(Graph)vals.get(5),
-					(Long)vals.get(6));
+					(Long)vals.get(6),
+					(Long)vals.get(7));
 		else
 			this.collector.emit(name,anchor,vals);
 	}

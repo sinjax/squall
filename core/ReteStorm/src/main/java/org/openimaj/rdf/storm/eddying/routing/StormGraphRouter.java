@@ -179,6 +179,9 @@ public abstract class StormGraphRouter implements Serializable {
 				case timestamp:
 					vals.add(timestamp);
 					break;
+				case duration:
+					vals.add((long)0);
+					break;
 				default:
 					break;
 				}
@@ -212,6 +215,9 @@ public abstract class StormGraphRouter implements Serializable {
 					break;
 				case timestamp:
 					vals.add(timestamp);
+					break;
+				case duration:
+					vals.add((long)0);
 					break;
 				default:
 					break;
