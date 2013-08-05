@@ -261,16 +261,16 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 		switch (action){
 			case check:
 				logger.debug(String.format("\nSteM %s checking validity of triple: %s %s %s", this.name,
-						   input.getValueByField(TriplePart.subject.toString()).toString(),
-						   input.getValueByField(TriplePart.predicate.toString()).toString(),
-						   input.getValueByField(TriplePart.object.toString()).toString()));
+						   subject.toString(),
+						   predicate.toString(),
+						   object.toString()));
 				if ((pattern.getMatchSubject() == null || pattern.getMatchSubject().sameValueAs(subject))
 						&& (pattern.getMatchPredicate() == null || pattern.getMatchPredicate().sameValueAs(predicate))
 						&& (pattern.getMatchObject() == null || pattern.getMatchObject().sameValueAs(object))){
 					logger.debug(String.format("\nSteM %s routing for further checking/building the triple: %s %s %s", this.name,
-							   input.getValueByField(TriplePart.subject.toString()).toString(),
-							   input.getValueByField(TriplePart.predicate.toString()).toString(),
-							   input.getValueByField(TriplePart.object.toString()).toString()));
+							   subject.toString(),
+							   predicate.toString(),
+							   object.toString()));
 					//TODO Change to continue to check once proper hierarchical SteMs are produced.
 					this.router.routeTriple(input, Action.build, isAdd, g, timestamp);
 				}
@@ -287,18 +287,18 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 					break;
 				}
 				logger.debug(String.format("\nSteM %s building in triple: %s %s %s", this.name,
-						   input.getValueByField(TriplePart.subject.toString()).toString(),
-						   input.getValueByField(TriplePart.predicate.toString()).toString(),
-						   input.getValueByField(TriplePart.object.toString()).toString()));
+						   subject.toString(),
+						   predicate.toString(),
+						   object.toString()));
 				this.window.build(input, isAdd, timestamp);
 			case cancelBuild:
 				buildCount.remove(input.getMessageId());
 				break;
 			case probe:
 				logger.debug(String.format("\nSteM %s being probed with triple: %s %s %s", this.name,
-						   input.getValueByField(TriplePart.subject.toString()).toString(),
-						   input.getValueByField(TriplePart.predicate.toString()).toString(),
-						   input.getValueByField(TriplePart.object.toString()).toString()));
+						   subject.toString(),
+						   predicate.toString(),
+						   object.toString()));
 				this.window.probe(input, isAdd, timestamp);
 				break;
 			default:
