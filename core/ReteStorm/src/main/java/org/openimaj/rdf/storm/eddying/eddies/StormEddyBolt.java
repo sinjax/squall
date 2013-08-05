@@ -100,7 +100,6 @@ public class StormEddyBolt implements IRichBolt, EddyingBolt {
 		switch (action){
 			case check:
 			case build:
-			case cancelBuild:
 				logger.debug(String.format("\nEddy %s routing triple %s", this.name, g.toString()));
 				this.router.routeTriple(
 							 /*anchor*/input,
@@ -114,9 +113,9 @@ public class StormEddyBolt implements IRichBolt, EddyingBolt {
 				logger.debug(String.format("\nEddy %s routing graph%s", this.name, g.toString()));
 				this.router.routeGraph(
 							 /*anchor*/input,
-							 /*action*/(Action)input.getValueByField(Component.action.toString()),
+							   (Action)input.getValueByField(Component.action.toString()),
 							  /*isAdd*/input.getBooleanByField(StormSteMBolt.Component.isAdd.toString()),
-							  /*graph*/(Graph)input.getValueByField(StormSteMBolt.Component.graph.toString()),
+							    (Graph)input.getValueByField(StormSteMBolt.Component.graph.toString()),
 						  /*timestamp*/input.getLongByField(Component.timestamp.toString())
 				);
 				break;
