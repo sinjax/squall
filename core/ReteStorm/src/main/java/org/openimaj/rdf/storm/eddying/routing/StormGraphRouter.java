@@ -44,11 +44,6 @@ public abstract class StormGraphRouter implements Serializable {
 		build
 		,
 		/**
-		 * 
-		 */
-		cancelBuild
-		,
-		/**
 		 *
 		 */
 		probe
