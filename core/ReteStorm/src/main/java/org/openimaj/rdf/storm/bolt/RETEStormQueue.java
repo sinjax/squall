@@ -60,8 +60,8 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.RETERuleContext;
  *         implementation by <a href="mailto:der@hplb.hpl.hp.com">Dave
  *         Reynolds</a>
  */
-public class RETEStormQueue implements CircularPriorityWindow.DurationOverflowHandler<Tuple>,
-		RETEStormSourceNode {
+public class RETEStormQueue implements CircularPriorityWindow.CapacityOverflowHandler<Tuple>,
+		CircularPriorityWindow.DurationOverflowHandler<Tuple>,RETEStormSourceNode {
 
 	protected final static Logger logger = Logger.getLogger(RETEStormQueue.class);
 	private static final boolean logging = false;
