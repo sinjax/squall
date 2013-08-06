@@ -20,7 +20,7 @@ import org.openimaj.rdf.storm.bolt.RETEStormNode;
 import org.openimaj.rdf.storm.topology.logging.LoggerBolt.LoggedEvent;
 import org.openimaj.rdf.storm.topology.logging.LoggerBolt.LoggedEvent.EventType;
 import org.openimaj.rdf.storm.utils.CircularPriorityWindow;
-import org.openimaj.rdf.storm.utils.CircularPriorityWindow.OverflowHandler;
+import org.openimaj.rdf.storm.utils.CircularPriorityWindow.CapacityOverflowHandler;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -166,7 +166,7 @@ public abstract class StormSPARQLReteConflictSetBolt extends StormSPARQLReteBolt
 
 	@Override
 	public void prepare() {
-		this.bindingsQueue = new CircularPriorityWindow<Binding>(new OverflowHandler<Binding>() {
+		this.bindingsQueue = new CircularPriorityWindow<Binding>(new CapacityOverflowHandler<Binding>() {
 			@Override
 			public void handleCapacityOverflow(Binding overflow) {
 				logStream.emit("Binding overflowing! Binding removed",overflow);
