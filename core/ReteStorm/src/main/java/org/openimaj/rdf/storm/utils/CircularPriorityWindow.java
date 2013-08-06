@@ -31,6 +31,7 @@ package org.openimaj.rdf.storm.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,6 +42,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
+
+import scala.actors.threadpool.Arrays;
 
 /**
  *
@@ -53,6 +56,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	protected Map<T, Count> queue;
 	protected final int capacity;
 	protected final long delay;
+	protected final TimeUnit unit;
 	protected final OverflowHandler<T> continuation;
 
 	/**
@@ -63,9 +67,10 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	 */
 	public CircularPriorityWindow(OverflowHandler<T> handler, int size, long delay, TimeUnit unit) {
 		this.capacity = size;
-		this.delay = TimeUnit.MILLISECONDS.convert(delay, unit);
-		this.clear();
+		this.unit = unit;
+		this.delay = delay;
 		this.continuation = handler;
+		this.clear();
 	}
 	
 	/**
@@ -103,7 +108,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 			public boolean hasNext() {
 				last = data.peek();
 				if(last == null) return false;
-				return last.getDelay(TimeUnit.MILLISECONDS) < 0;
+				return last.getDelay(CircularPriorityWindow.this.unit) < 0;
 			}
 			@Override
 			public TimeWrapped next() {
@@ -191,14 +196,14 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean remove(Object arg0) {
-		if (arg0 instanceof CircularPriorityWindow.Wrapped)
+		try {
 			return data.remove(arg0) && decrement(((Wrapped)arg0).getWrapped());
+		} catch (ClassCastException e) {}
 		try {
 			T arg = (T) arg0;
 			return data.remove(new Wrapped(arg)) && decrement(arg);
-		} catch (ClassCastException e) {
-			return false;
-		}
+		} catch (ClassCastException e) {}
+		return false;
 
 	}
 
@@ -243,17 +248,15 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 		return success;
 	}
 
-	/**
-	 * @param arg0
-	 * @return boolean
-	 */
-	public boolean add(TimeWrapped arg0){
+	private boolean add(TimeWrapped arg0){
 		prune();
-		if (arg0 == null) return false;
+		if (arg0.getWrapped() == null) return false;
 		if (data.size() >= capacity){
 			try {
-				continuation.handleCapacityOverflow(data.remove().getWrapped());
+				((CapacityOverflowHandler<T>)continuation).handleCapacityOverflow(data.remove().getWrapped());
 			} catch (NullPointerException e) {
+				data.remove();
+			} catch (ClassCastException e) {
 				data.remove();
 			}
 		}
@@ -263,26 +266,149 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 
 	@Override
 	public boolean add(T arg0) {
-		if (arg0 == null) return false;
-		return add(new TimeWrapped(arg0,(new Date()).getTime(),this.delay,TimeUnit.MILLISECONDS));
+		return add(arg0,(new Date()).getTime(),this.delay,this.unit);
 	}
-
+	
 	/**
+	 * Adds a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue (in milliseconds).
 	 * @param arg0
-	 * @return boolean
+	 * 		The datum
+	 * @param delay
+	 * 		a datum-specific life span, defined in the unit of the Window
+	 * @return
+	 * 		whether the add was successful
 	 */
-	public boolean offer(TimeWrapped arg0) {
-		try {
-			return add(arg0);
-		} catch (IllegalStateException e) {
-			return false;
-		}
+	public boolean add(T arg0, long delay) {
+		return add(arg0,(new Date()).getTime(),delay,this.unit);
+	}
+	
+	/**
+	 * Adds a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue (in milliseconds).
+	 * @param arg0
+	 * 		The datum
+	 * @param timestamp
+	 * 		an externally defined timestamp to be applied in the system.
+	 * @param delay
+	 * 		a datum-specific life span, defined in the unit of the Window
+	 * @return
+	 * 		whether the add was successful
+	 */
+	public boolean add(T arg0, long timestamp, long delay) {
+		return add(arg0,timestamp,delay,this.unit);
+	}
+	
+	/**
+	 * Adds a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue, given in the specified time unit.
+	 * @param arg0
+	 * 		The datum
+	 * @param delay
+	 * 		a datum-specific life span
+	 * @param unit
+	 * 		the time unit that the datum-specific life span is defined in
+	 * @return
+	 * 		whether the add was successful
+	 */
+	public boolean add(T arg0, long delay, TimeUnit unit) {
+		return add(arg0,(new Date()).getTime(),delay,unit);
+	}
+	
+	/**
+	 * Adds a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue, given in the specified time unit.
+	 * @param arg0
+	 * 		The datum
+	 * @param timestamp
+	 * 		an externally defined timestamp to be applied in the system.
+	 * @param delay
+	 * 		a datum-specific life span
+	 * @param unit
+	 * 		the time unit that the datum-specific life span is defined in
+	 * @return
+	 * 		whether the add was successful
+	 */
+	public boolean add(T arg0, long timestamp, long delay, TimeUnit unit) {
+		return add(new TimeWrapped(arg0,timestamp,delay,unit));
 	}
 
 	@Override
 	public boolean offer(T arg0) {
 		try {
 			return add(arg0);
+		} catch (IllegalStateException e) {
+			return false;
+		}
+	}
+	
+	/**
+	 * offers a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue (in milliseconds).
+	 * @param arg0
+	 * 		The datum
+	 * @param delay
+	 * 		a datum-specific life span, defined in the unit of the Window
+	 * @return
+	 * 		whether the add was successful
+	 */
+	public boolean offer(T arg0, long delay) {
+		try {
+			return add(arg0,delay);
+		} catch (IllegalStateException e) {
+			return false;
+		}
+	}
+	
+	/**
+	 * offers a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue (in milliseconds).
+	 * @param arg0
+	 * 		The datum
+	 * @param timestamp
+	 * 		an externally defined timestamp to be applied in the system.
+	 * @param delay
+	 * 		a datum-specific life span, defined in the unit of the Window
+	 * @return
+	 * 		whether the add was successful
+	 */
+	public boolean offer(T arg0, long timestamp, long delay) {
+		try {
+			return add(arg0, timestamp, delay);
+		} catch (IllegalStateException e) {
+			return false;
+		}
+	}
+	
+	/**
+	 * offers a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue, given in the specified time unit.
+	 * @param arg0
+	 * 		The datum
+	 * @param delay
+	 * 		a datum-specific life span
+	 * @param unit
+	 * 		the time unit that the datum-specific life span is defined in
+	 * @return
+	 * 		whether the add was successful
+	 */
+	public boolean offer(T arg0, long delay, TimeUnit unit) {
+		try {
+			return add(arg0, delay, unit);
+		} catch (IllegalStateException e) {
+			return false;
+		}
+	}
+	
+	/**
+	 * offers a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue, given in the specified time unit.
+	 * @param arg0
+	 * 		The datum
+	 * @param timestamp
+	 * 		an externally defined timestamp to be applied in the system.
+	 * @param delay
+	 * 		a datum-specific life span
+	 * @param unit
+	 * 		the time unit that the datum-specific life span is defined in
+	 * @return
+	 * 		whether the add was successful
+	 */
+	public boolean offer(T arg0, long timestamp, long delay, TimeUnit unit) {
+		try {
+			return add(arg0,timestamp,delay,unit);
 		} catch (IllegalStateException e) {
 			return false;
 		}
@@ -314,6 +440,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 
 	@Override
 	public T remove() {
+		prune();
 		T item = data.remove().getWrapped();
 		decrement(item);
 		return item;
@@ -322,28 +449,46 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	@Override
 	public Iterator <T> iterator() {
 		prune();
-		final PriorityQueue<TimeWrapped> dataclone = new PriorityQueue<TimeWrapped>();
-		dataclone.addAll(data);
-		return new Iterator<T>(){
-			TimeWrapped last;
-			@Override
-			public boolean hasNext() {
-				return dataclone.peek() != null;
-			}
-			@Override
-			public T next() {
-				return (last = dataclone.poll()).getWrapped();
-			}
-			@Override
-			public void remove() {
-				data.remove(last);
-				decrement(last.getWrapped());
-			}
-		};
+		try {
+			final List<TimeWrapped> dc = Arrays.asList(data.toArray());
+			Collections.sort(dc);
+			return new Iterator<T>(){
+				List<TimeWrapped> dataclone = dc;
+				int index = 0;
+				TimeWrapped last;
+				@Override
+				public boolean hasNext() {
+					return index < dataclone.size();
+				}
+				@Override
+				public T next() {
+					return (last = dataclone.get(index++)).getWrapped();
+				}
+				@Override
+				public void remove() {
+					data.remove(last);
+					decrement(last.getWrapped());
+				}
+			};
+		} catch (ClassCastException e) {
+			System.out.print(data.toString());
+			e.printStackTrace();
+			System.exit(1);
+		}
+		return null;
 	}
 
 
 
+	
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 * 
+	 * @param <E> 
+	 */
+	public interface OverflowHandler<E> {
+		// This is an empty interface serving as an abstract super-interface for both of the distinct (but not disjoint) forms of Overflow Handler.
+	}
 
 	
 	/**
@@ -351,7 +496,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	 *
 	 * @param <E>
 	 */
-	public interface OverflowHandler<E> {
+	public interface CapacityOverflowHandler<E> extends OverflowHandler<E> {
 		
 		/**
 		 * @param overflow
@@ -396,12 +541,13 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 
 		@Override
 		public boolean equals(Object obj){
-			if (obj.getClass().equals(Wrapped.class))
-				return this.wrapped.equals(Wrapped.class.cast(obj).getWrapped());
-			else if (obj.getClass().equals(this.wrapped.getClass()))
-				return this.wrapped.equals(obj);
-			else
-				return false;
+			try {
+				return this.wrapped.equals(((Wrapped)obj).getWrapped());
+			} catch (ClassCastException e) {}
+			try {
+				return this.wrapped.equals((T)obj);
+			} catch (ClassCastException ex) {}
+			return false;
 		}
 
 	}
@@ -421,7 +567,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 		@Override
 		public boolean equals(Object obj){
 			if (obj.getClass().equals(TimeWrapped.class))
-				return getDelay(TimeUnit.MILLISECONDS) == this.getClass().cast(obj).getDelay(TimeUnit.MILLISECONDS)
+				return getDelay(CircularPriorityWindow.this.unit) == this.getClass().cast(obj).getDelay(CircularPriorityWindow.this.unit)
 						&& getWrapped().equals(TimeWrapped.class.cast(obj).getWrapped());
 			else
 				return super.equals(obj);
