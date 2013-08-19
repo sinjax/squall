@@ -52,8 +52,8 @@ import scala.actors.threadpool.Arrays;
  */
 public class CircularPriorityWindow <T> implements Queue <T> {
 
-	protected PriorityQueue<TimeWrapped> data;
-	protected Map<T, Count> queue;
+	protected PriorityQueue<TimeWrapped> queue;
+	protected Map<T, Count> data;
 	protected final int capacity;
 	protected final long delay;
 	protected final TimeUnit unit;
@@ -97,8 +97,8 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 
 	@Override
 	public void clear() {
-		this.data = new PriorityQueue<TimeWrapped>(this.capacity + 1);
-		this.queue = new HashMap<T,Count>();
+		this.queue = new PriorityQueue<TimeWrapped>(this.capacity + 1);
+		this.data = new HashMap<T,Count>();
 	}
 
 	private void prune() {
@@ -106,7 +106,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 			TimeWrapped last;
 			@Override
 			public boolean hasNext() {
-				last = data.peek();
+				last = queue.peek();
 				if(last == null) return false;
 				return last.getDelay(CircularPriorityWindow.this.unit) < 0;
 			}
@@ -116,7 +116,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 			}
 			@Override
 			public void remove() {
-				data.remove(last);
+				queue.remove(last);
 				T lastUnwrapped = last.getWrapped();
 				decrement(lastUnwrapped);
 				try {
@@ -136,7 +136,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 
 	@Override
 	public boolean contains(Object arg0) {
-		return queue.containsKey(arg0) || data.contains(arg0);
+		return data.containsKey(arg0) || queue.contains(arg0);
 	}
 
 	@Override
@@ -149,12 +149,12 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 
 	@Override
 	public boolean isEmpty() {
-		return queue.isEmpty();
+		return data.isEmpty();
 	}
 
 	@Override
 	public int size() {
-		return data.size();
+		return queue.size();
 	}
 
 	@Override
@@ -171,22 +171,22 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	}
 
 	private boolean decrement(T arg0) {
-		Count count = queue.get(arg0);
+		Count count = data.get(arg0);
         if (count == null) {
             return false;
         } else {
             count.dec();
             if (count.getCount() == 0) {
-                queue.remove(arg0);
+                data.remove(arg0);
             }
         }
         return true;
 	}
 
 	private boolean increment(T arg0) {
-		Count count = queue.get(arg0);
+		Count count = data.get(arg0);
         if (count == null) {
-            queue.put(arg0, new Count(1));
+            data.put(arg0, new Count(1));
         } else {
             count.inc();
         }
@@ -197,11 +197,11 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	@Override
 	public boolean remove(Object arg0) {
 		try {
-			return data.remove(arg0) && decrement(((Wrapped)arg0).getWrapped());
+			return queue.remove(arg0) && decrement(((Wrapped)arg0).getWrapped());
 		} catch (ClassCastException e) {}
 		try {
 			T arg = (T) arg0;
-			return data.remove(new Wrapped(arg)) && decrement(arg);
+			return queue.remove(new Wrapped(arg)) && decrement(arg);
 		} catch (ClassCastException e) {}
 		return false;
 
@@ -219,7 +219,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	public boolean retainAll(Collection<?> arg0) {
 		boolean removed = true;
 		List<TimeWrapped> removals = new ArrayList<TimeWrapped>();
-		for (TimeWrapped item : data){
+		for (TimeWrapped item : queue){
 			boolean toRemove = true;
 			for (Object keeper : arg0)
 				toRemove &= !item.equals(keeper);
@@ -251,17 +251,17 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	private boolean add(TimeWrapped arg0){
 		prune();
 		if (arg0.getWrapped() == null) return false;
-		if (data.size() >= capacity){
+		if (queue.size() >= capacity){
 			try {
-				((CapacityOverflowHandler<T>)continuation).handleCapacityOverflow(data.remove().getWrapped());
+				((CapacityOverflowHandler<T>)continuation).handleCapacityOverflow(queue.remove().getWrapped());
 			} catch (NullPointerException e) {
-				data.remove();
+				queue.remove();
 			} catch (ClassCastException e) {
-				data.remove();
+				queue.remove();
 			}
 		}
 		increment(arg0.getWrapped());
-		return data.add(arg0);
+		return queue.add(arg0);
 	}
 
 	@Override
@@ -417,7 +417,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	@Override
 	public T element() {
 		prune();
-		return data.element().getWrapped();
+		return queue.element().getWrapped();
 	}
 
 	@Override
@@ -441,7 +441,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	@Override
 	public T remove() {
 		prune();
-		T item = data.remove().getWrapped();
+		T item = queue.remove().getWrapped();
 		decrement(item);
 		return item;
 	}
@@ -450,7 +450,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	public Iterator <T> iterator() {
 		prune();
 		try {
-			final List<TimeWrapped> dc = Arrays.asList(data.toArray());
+			final List<TimeWrapped> dc = Arrays.asList(queue.toArray());
 			Collections.sort(dc);
 			return new Iterator<T>(){
 				List<TimeWrapped> dataclone = dc;
@@ -466,12 +466,12 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 				}
 				@Override
 				public void remove() {
-					data.remove(last);
+					queue.remove(last);
 					decrement(last.getWrapped());
 				}
 			};
 		} catch (ClassCastException e) {
-			System.out.print(data.toString());
+			System.out.print(queue.toString());
 			e.printStackTrace();
 			System.exit(1);
 		}
