@@ -29,6 +29,7 @@
  */
 package org.openimaj.rdf.storm.eddying.eddies;
 
+import java.util.Date;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -37,7 +38,6 @@ import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.Action;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
-import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.TriplePart;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
@@ -99,16 +99,20 @@ public class StormEddyBolt implements IRichBolt, EddyingBolt {
 	private void execute(Tuple input, Action action, boolean isAdd, Graph g, Long timestamp){
 		switch (action){
 			case check:
-			case build:
-				logger.debug(String.format("\nEddy %s routing triple %s", this.name, g.toString()));
-				this.router.routeTriple(
-							 /*anchor*/input,
-							   (Action)input.getValueByField(Component.action.toString()),
-							  /*isAdd*/input.getBooleanByField(StormSteMBolt.Component.isAdd.toString()),
-							    (Graph)input.getValueByField(StormSteMBolt.Component.graph.toString()),
-						  /*timestamp*/input.getLongByField(Component.timestamp.toString())
-				);
+				Values vals = new Values();
+				vals.add(Action.check);
+				vals.add(true);
+				vals.add(g);
+				vals.add(new Date().getTime());
+				vals.add(0);
+				for (String eddy : this.router.getContinuations()){
+					this.emit(eddy, input, vals);
+				}
 				break;
+			case build:
+				System.out.println("PANIC!!!!!");
+				System.out.println(input.getValues());
+				System.exit(1);
 			case probe:
 				logger.debug(String.format("\nEddy %s routing graph%s", this.name, g.toString()));
 				this.router.routeGraph(
