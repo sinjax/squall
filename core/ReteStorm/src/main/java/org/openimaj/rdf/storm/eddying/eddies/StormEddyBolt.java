@@ -109,10 +109,6 @@ public class StormEddyBolt implements IRichBolt, EddyingBolt {
 					this.emit(eddy, input, vals);
 				}
 				break;
-			case build:
-				System.out.println("PANIC!!!!!");
-				System.out.println(input.getValues());
-				System.exit(1);
 			case probe:
 				logger.debug(String.format("\nEddy %s routing graph%s", this.name, g.toString()));
 				this.router.routeGraph(
@@ -124,6 +120,9 @@ public class StormEddyBolt implements IRichBolt, EddyingBolt {
 				);
 				break;
 			default:
+				System.out.println("PANIC!!!!!");
+				System.out.println(input.getValues());
+				System.exit(1);
 		}
 	}
 	
