@@ -1,5 +1,6 @@
 package org.openimaj.rdf.storm.eddying.routing;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
@@ -28,11 +29,18 @@ public class ExampleStormGraphRouter extends StormGraphRouter {
 	private List<String> sortedStems;
 	private Map<String,String> stems; 
 	
+	private final Fields fields;
+	
 	@SuppressWarnings("unchecked")
 	public ExampleStormGraphRouter(Map<String,String> stems){
 		this.stems = stems;
 		this.sortedStems = (List<String>)Arrays.asList(stems.values().toArray()); 
 		Collections.sort(sortedStems);
+		fields = new Fields("s","p","o",
+				Component.action.toString(),
+				Component.isAdd.toString(),
+				Component.graph.toString(),
+				Component.timestamp.toString());
 	}
 	
 	private int completeCount;
@@ -159,11 +167,7 @@ public class ExampleStormGraphRouter extends StormGraphRouter {
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		for (String stem : stems.values())
-			declarer.declareStream(stem, new Fields("s","p","o",
-													Component.action.toString(),
-													Component.isAdd.toString(),
-													Component.graph.toString(),
-													Component.timestamp.toString()));
+			declarer.declareStream(stem, fields);
 	}
 
 	@Override
@@ -173,41 +177,13 @@ public class ExampleStormGraphRouter extends StormGraphRouter {
 	}
 
 	@Override
-	public void routeTriple(Tuple anchor, Action action, boolean isAdd,
-			Graph g, long timestamp) {
-		this.collector.ack(anchor);
-		// TODO update when hierarchical SteM filtering is fully implemented
-		Triple selected = g.find(null,null,null).next();
-		Values vals = new Values();
-		vals.add(selected.getSubject());
-		vals.add(selected.getPredicate());
-		vals.add(selected.getObject());
-		vals.add(action);
-		vals.add(isAdd);
-		vals.add(g);
-		vals.add(timestamp);
-		
-		if (stems.values().contains(anchor.getSourceComponent())) {
-			logger.debug(String.format("\nSending triple %s, %s, %s to %s from %s for %s",
-					   selected.getSubject(),
-					   selected.getPredicate(),
-					   selected.getObject(),
-					   anchor.getSourceComponent(),
-					   this.collector.getName(),
-					   action.toString()));
-			this.collector.emit(anchor.getSourceComponent(),anchor,vals);
-		} else {
-			for (String stem : stems.values()) {
-				logger.debug(String.format("\nSending triple %s, %s, %s to %s from %s for %s",
-										   selected.getSubject(),
-										   selected.getPredicate(),
-										   selected.getObject(),
-										   stem,
-										   this.collector.getName(),
-										   action.toString()));
-				this.collector.emit(stem, anchor,vals);
-			}
-		}
+	public List<String> getContinuations() {
+		return new ArrayList(stems.values());
+	}
+
+	@Override
+	public Fields getFields() {
+		return fields;
 	}
 
 }
