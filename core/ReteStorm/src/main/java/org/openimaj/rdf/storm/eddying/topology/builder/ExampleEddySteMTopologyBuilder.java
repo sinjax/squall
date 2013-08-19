@@ -33,6 +33,10 @@ import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
 
+/**
+ * @author david.monks
+ *
+ */
 public class ExampleEddySteMTopologyBuilder extends TopologyBuilder {
 	
 	public static final int SLEEP = 3;
@@ -56,37 +60,45 @@ public class ExampleEddySteMTopologyBuilder extends TopologyBuilder {
 	
 	public void build(){
 		final String spoutname = "data-spout";
-		final String eddyname = "data-eddy";
+//		final String eddyname = "data-eddy";
 		final String stemprefix = "data-stem";
-		
-		// Spout
-		List<String> eddies = new ArrayList<String>();
-		eddies.add(eddyname);
-		SimpleSpout spout = new ExampleNTriplesSpout(spoutname,subjects,predicates,new MQPEddyStubStormGraphRouter(eddies));
 
 		// SteMs
 		Map<String,String> stemMap = new HashMap<String,String>();
 		StormSteMBolt[] stems = new StormSteMBolt[predicates.length];
 		for (int i = 0; i < stems.length; i++) {
+			stemMap.put("? \""+predicates[i]+"\" ? .", stemprefix+i);
+		}
+		for (int i = 0; i < stems.length; i++) {
 			String tm = String.format("(?a,  'pred%d', ?b) -> ('woot',  'woot', 'woot') .",i);
-			eddies = new ArrayList<String>();
-			eddies.add(eddyname);
- 			stems[i] = new StormSteMBolt(stemprefix+i,tm,new MQPEddyStubStormGraphRouter(eddies)
+ 			stems[i] = new StormSteMBolt(stemprefix+i,tm,new MultiQueryPolicyStormGraphRouter(stemMap,queries)
  ,3,STEMSIZE,STEMDELAY,STEMUNIT
  );
-			stemMap.put(",\""+predicates[i]+"\",", stemprefix+i);
 		}
 		
+		// Spout
+		SimpleSpout spout = new ExampleNTriplesSpout(spoutname,subjects,predicates,new MultiQueryPolicyStormGraphRouter(stemMap,queries));
+		
 		// Eddy
-		StormEddyBolt eddy = new StormEddyBolt(eddyname,new /*ExampleStormGraphRouter(stemMap)*/MultiQueryPolicyStormGraphRouter(stemMap,queries));
+		// StormEddyBolt eddy = new StormEddyBolt(eddyname,new /*ExampleStormGraphRouter(stemMap)*/MultiQueryPolicyStormGraphRouter(stemMap,queries));
 		
 		// Construct Topology
 		this.setSpout(spoutname, spout, 1);
-		BoltDeclarer eddyDeclarer = this.setBolt(eddyname, eddy, 10).shuffleGrouping(spoutname,eddyname);
+		// BoltDeclarer eddyDeclarer = this.setBolt(eddyname, eddy, 10).shuffleGrouping(spoutname,eddyname);
+		BoltDeclarer[] stemDeclarers = new BoltDeclarer[predicates.length];
 		for (int i = 0; i < predicates.length; i++){
-			this.setBolt(stemprefix+i, stems[i],1).shuffleGrouping(eddyname, stemprefix+i);
+			String steMName = stemprefix+i;
+			stemDeclarers[i] = this.setBolt(steMName, stems[i],1).shuffleGrouping(spoutname,steMName);
+			for (int j = 0; j < i; j++){
+				try {
+					stemDeclarers[j].globalGrouping(steMName, stemprefix+j);
+					stemDeclarers[i].globalGrouping(stemprefix+j, steMName);
+				} catch (NullPointerException e) {
+					break;
+				}
+			}
 			// TODO sort out what to do about field groupings.
-			eddyDeclarer.globalGrouping(stemprefix+i,eddyname);
+			// eddyDeclarer.globalGrouping(steMName,eddyname);
 		}
 	}
 	
@@ -125,7 +137,36 @@ class ExampleNTriplesSpout extends SimpleSpout implements EddyingBolt {
 							  Node.createLiteral(subjects[random.nextInt(subjects.length)]));
 		Graph graph = new GraphMem();
 		graph.add(t);
-		this.router.routeTriple(null, Action.check, true, graph, new Date().getTime());
+		Values vals = new Values();
+		for (String s : this.router.getFields()){
+			switch (s.charAt(0)){
+			case 'a':
+			case 'A':
+				vals.add(Action.check);
+				break;
+			case 'd':
+			case 'D':
+				vals.add((long)0);
+				break;
+			case 'g':
+			case 'G':
+				vals.add(graph);
+				break;
+			case 'i':
+			case 'I':
+				vals.add(true);
+				break;
+			case 't':
+			case 'T':
+				vals.add(new Date().getTime());
+				break;
+			default:
+				vals.add(0);
+			}
+		}
+		for (String eddy : this.router.getContinuations()){
+			this.emit(eddy, null, vals);
+		}
 	}
 
 	@Override
@@ -150,7 +191,7 @@ class ExampleNTriplesSpout extends SimpleSpout implements EddyingBolt {
 
 	@Override
 	public void ack(Tuple anchor) {
-		throw new UnsupportedOperationException("cannot emit back to previous bolt, this is a spout.");
+		// cannot emit back to previous bolt, this is a spout.
 	}
 	
 }
