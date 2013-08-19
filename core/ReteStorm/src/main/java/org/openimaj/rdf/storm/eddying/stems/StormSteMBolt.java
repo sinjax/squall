@@ -29,7 +29,9 @@
  */
 package org.openimaj.rdf.storm.eddying.stems;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -37,10 +39,12 @@ import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.eddying.EddyingBolt;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.Action;
-import org.openimaj.rdf.storm.topology.bolt.StormReteBolt;
+import org.openimaj.rdf.storm.eddying.stems.StormSteMQueue.Environment;
+import org.openimaj.rdf.storm.topology.logging.LoggerBolt.LogEmitter;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
@@ -94,51 +98,7 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 		/**
 		 *
 		 */
-		duration;
-		private static String[] strings;
-		static {
-			Component[] vals = Component.values();
-			strings = new String[vals.length];
-			for (int i = 0; i < vals.length; i++) {
-				strings[i] = vals[i].toString();
-			}
-		}
-
-		/**
-		 * @return like {@link #values()} but {@link String} instances
-		 */
-		public static String[] strings() {
-			return strings;
-		}
-	}
-	
-	/**
-	 * Parts of triples.
-	 *
-	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
-	 *
-	 */
-	public static enum TriplePart {
-
-		/**
-		 * 
-		 */
-		subject
-		,
-		/**
-		 *
-		 */
-		predicate
-		,
-		/**
-		 *
-		 */
-		object
-//		,
-//		/**
-//		 *
-//		 */
-//		timestamp
+		duration
 		;
 		private static String[] strings;
 		static {
@@ -163,8 +123,8 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 	
 	protected int vars = 3;
 	protected int size = 5000;
-	protected long delay = 10;
-	protected TimeUnit unit = TimeUnit.MINUTES;
+	protected long delay = 600000;
+	protected TimeUnit unit = TimeUnit.MILLISECONDS;
 	
 	/**
 	 * Create a new SteM with fully customised characteristics.
@@ -177,13 +137,13 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 	 * @param sgr - the graph routing object for use by the SteM.
 	 */
 	public StormSteMBolt(String name,
-						 String p,
+						 String pattern,
 						 StormGraphRouter sgr,
 						 int vars,
 						 int size,
 						 long delay,
 						 TimeUnit unit) {
-		this(name,p,sgr);
+		this(name,pattern,sgr);
 		this.vars = vars;
 		this.size = size;
 		this.delay = delay;
@@ -202,19 +162,19 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 	 * @param pattern - the pattern of triples stored in this bolt's window.
 	 * @param sgr - the graph routing object for use by the SteM.
 	 */
-	public StormSteMBolt(String name, String p, StormGraphRouter sgr) {
+	public StormSteMBolt(String name, String pattern, StormGraphRouter sgr) {
 		this.name = name;
-		this.patternString = p;
+		this.patternString = pattern;
 		this.router = sgr;
 	}
 
 	private Map<String,Object> conf;
+	@SuppressWarnings("unused")
 	private TopologyContext context;
 	private OutputCollector collector;
 	
 	protected TripleMatch pattern;
 	
-	private static final int CHILDSTEMCOUNT = 1;
 	protected Map<MessageId,Integer> buildCount;
 	protected StormSteMQueue window;
 	
@@ -231,7 +191,7 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 		this.pattern = ((TriplePattern)Rule.parseRule(patternString).getBody()[0]).asTripleMatch();
 		
 		this.buildCount = new HashMap<MessageId,Integer>();
-		this.window = new StormSteMQueue(vars, size, delay, unit, collector, router);
+		this.window = new StormSteMQueue(vars, size, delay, unit, new LogEmitter(collector), router);
 	}
 	
 	@Override
@@ -249,59 +209,77 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 
 	@Override
 	public void execute(Tuple input) {
+logger.debug(String.format("Performing %s with %s at SteM %s.",((Action)input.getValueByField(Component.action.toString())).toString(),
+															   ((Graph)input.getValueByField(Component.graph.toString())).toString(),
+															   this.name));
 		switch (input.getSourceStreamId().charAt(0)) {
+			// Case for 'c'ontrol tuples
 			case 'c':
+			// Case for all other tuples (data tuples)
 			default:
-				long timestamp = input.getLongByField(Component.timestamp.toString());
-				long duration = input.getLongByField(Component.duration.toString());
-				boolean isAdd = input.getBooleanByField(Component.isAdd.toString());
-				Graph g = (Graph) input.getValueByField(Component.graph.toString());
-				Action action = (Action)input.getValueByField(Component.action.toString()); 
+				List<Node> ges = new ArrayList<Node>();
+				for (int i = 0; i < vars; i++)
+					try {
+						ges.add((Node)input.getValue(i));
+					} catch (ClassCastException e) {
+						if (input.getValueByField(Component.action.toString()).equals(Action.check))
+							break;
+						else{
+							e.printStackTrace();
+							System.exit(1);
+						}
+					}
 				execute(input,
-						(Node)input.getValueByField(TriplePart.subject.toString()),
-						(Node)input.getValueByField(TriplePart.predicate.toString()),
-						(Node)input.getValueByField(TriplePart.object.toString()),
-						action,isAdd,g,timestamp,duration);
+					/*Nodes*/	ges,
+					(Action)	input.getValueByField(Component.action.toString()),
+					/*isAdd*/	input.getBooleanByField(Component.isAdd.toString()),
+					(Graph)		input.getValueByField(Component.graph.toString()),
+					/*timestmp*/input.getLongByField(Component.timestamp.toString()),
+					/*duration*/input.getLongByField(Component.duration.toString()));
 		}
 	}
 	
 	private void execute(Tuple input,
-						 Node subject, Node predicate, Node object,
+						 List<Node> graphElements,
 						 Action action, boolean isAdd, Graph g, Long timestamp, Long duration){
 		switch (action){
 			case check:
-				logger.debug(String.format("\nSteM %s checking validity of triple: %s %s %s", this.name,
-						   subject.toString(),
-						   predicate.toString(),
-						   object.toString()));
+				logger.debug(String.format("\nSteM %s checking validity of triple: %s", this.name,
+						   g.toString()));
+				Triple newTriple = g.find(null,null,null).next();
+				Node subject = newTriple.getSubject();
+				Node predicate = newTriple.getPredicate();
+				Node object = newTriple.getObject();
 				if ((pattern.getMatchSubject() == null || pattern.getMatchSubject().sameValueAs(subject))
 						&& (pattern.getMatchPredicate() == null || pattern.getMatchPredicate().sameValueAs(predicate))
 						&& (pattern.getMatchObject() == null || pattern.getMatchObject().sameValueAs(object))){
-					logger.debug(String.format("\nSteM %s routing for further checking/building the triple: %s %s %s", this.name,
-							   subject.toString(),
-							   predicate.toString(),
-							   object.toString()));
+					logger.debug(String.format("\nSteM %s routing for further checking/building the triple: %s", this.name,
+							   g.toString()));
+					graphElements.add(subject);
+					graphElements.add(predicate);
+					graphElements.add(object);
 					//TODO Change to tree-select and build once proper hierarchical SteMs are produced.
-					this.router.routeTriple(input, Action.build, isAdd, g, timestamp);
-				}
-				break;	
+// 					do not do the following in implicit eddy systems, and do not break unless triple does not match
+//					this.router.routeTriple(input, Action.build, isAdd, g, timestamp);
+				} else
+					break;	
 			case build:
-				logger.debug(String.format("\nSteM %s building in triple: %s %s %s", this.name,
-						   subject.toString(),
-						   predicate.toString(),
-						   object.toString()));
-				this.window.build(input, isAdd, timestamp);
+				logger.debug(String.format("\nSteM %s building in environment: %s", this.name,
+						   graphElements.toString()));
+				this.window.build(isAdd, graphElements, g, timestamp, duration);
 				this.router.routeGraph(input, Action.probe, isAdd,
 						   (Graph) input.getValueByField(StormSteMBolt.Component.graph.toString()),
 						   timestamp);
+				break;
 			case probe:
-				logger.debug(String.format("\nSteM %s being probed with triple: %s %s %s", this.name,
-						   subject.toString(),
-						   predicate.toString(),
-						   object.toString()));
+				logger.debug(String.format("\nSteM %s being probed with environment: %s", this.name,
+						   graphElements.toString()));
 				this.window.probe(input, isAdd, timestamp, duration);
 				break;
 			default:
+				System.out.println("PANIC!!!!!");
+				System.out.println(input.getValues());
+				System.exit(1);
 		}
 	}
 	
@@ -317,18 +295,25 @@ public class StormSteMBolt implements IRichBolt, EddyingBolt {
 	
 	@Override
 	public void emit(String name, Tuple anchor, Values vals) {
-		if (name.equals(this.name))
+		if (name.equals(this.name)){
+			List<Node> ges = new ArrayList<Node>();
+			for (int i = 0; i < vars; i++)
+				ges.add((Node)vals.get(i));
 			execute(anchor,
-					(Node)vals.get(0),
-					(Node)vals.get(1),
-					(Node)vals.get(2),
+					/*Nodes*/ges,
 					(Action)vals.get(3),
 					(Boolean)vals.get(4),
 					(Graph)vals.get(5),
 					(Long)vals.get(6),
 					(Long)vals.get(7));
-		else
+		} else{
+			logger.debug(String.format("\nRouting triple: %s %s %s\nto SteM: %s",
+					   vals.get(0),
+					   vals.get(1),
+					   vals.get(2),
+					   name));
 			this.collector.emit(name,anchor,vals);
+		}
 	}
 
 	@Override

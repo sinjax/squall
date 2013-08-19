@@ -29,21 +29,21 @@
  */
 package org.openimaj.rdf.storm.eddying.stems;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rdf.storm.bolt.RETEStormQueue;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.Action;
+import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt;
+import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
 import org.openimaj.rdf.storm.topology.bolt.StormReteBolt;
-import org.openimaj.rdf.storm.topology.bolt.StormReteBolt.Component;
-import org.openimaj.rdf.storm.topology.logging.LoggerBolt;
+import org.openimaj.rdf.storm.topology.logging.LoggerBolt.*;
 import org.openimaj.rdf.storm.utils.CircularPriorityWindow;
 
-import backtype.storm.task.OutputCollector;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
@@ -62,14 +62,14 @@ import com.hp.hpl.jena.graph.compose.Polyadic;
  *         implementation by <a href="mailto:der@hplb.hpl.hp.com">Dave
  *         Reynolds</a>
  */
-public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHandler<Tuple> {
+public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHandler<StormSteMQueue.Environment>, CircularPriorityWindow.CapacityOverflowHandler<StormSteMQueue.Environment> {
 
 	protected final static Logger logger = Logger.getLogger(StormSteMQueue.class);
 	private static final boolean logging = false;
-	private LoggerBolt.LogEmitter logStream;
+	private LogEmitter logStream;
 
 	/** A time-prioritised and size limited sliding window of Tuples */
-	private final CircularPriorityWindow<Tuple> window;
+	private final CircularPriorityWindow<Environment> window;
 
 	/** A count of {@link Fields} which should match between the two inputs */
 	private int varCount;
@@ -79,22 +79,22 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 
 	/**
 	 * Constructor. The window is not usable until it has been bound
-	 * to a sibling and a continuation node.
+	 * to a StormGraphRouter.
 	 * @param vars 
 	 * @param size
 	 * @param delay
 	 * @param unit
-	 * @param oc 
+	 * @param le 
 	 */
 	public StormSteMQueue(int vars,
 						  int size,
 						  long delay,
 						  TimeUnit unit,
-						  OutputCollector oc) {
+						  LogEmitter le) {
 		this.varCount = vars;
-		this.window = new CircularPriorityWindow<Tuple>(this, size, delay, unit);
+		this.window = new CircularPriorityWindow<Environment>(this, size, delay, unit);
 		if (logging)
-			this.logStream = new LoggerBolt.LogEmitter(oc);
+			this.logStream = le;
 	}
 	
 	/**
@@ -106,21 +106,21 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 	}
 	
 	/**
-	 * Constructor. The window is not usable until it has been bound
-	 * to a sibling and a continuation node.
+	 * Constructor. The window is now usable.
 	 * @param vars 
 	 * @param size
 	 * @param delay
 	 * @param unit
-	 * @param oc 
+	 * @param le 
+	 * @param sgr 
 	 */
 	public StormSteMQueue(int vars,
 						  int size,
 						  long delay,
 						  TimeUnit unit,
-						  OutputCollector oc,
+						  LogEmitter le,
 						  StormGraphRouter sgr) {
-		this(vars,size,delay,unit,oc);
+		this(vars,size,delay,unit,le);
 		this.setGraphRouter(sgr);
 	}
 
@@ -134,13 +134,14 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 	 * @param timestamp
 	 *            the time at which the triple was added from the stream
 	 */
-	public void build(Tuple env, boolean isAdd, long timestamp) {
+	public void build(boolean isAdd, List<Node> vars, Graph graph, long timestamp, long duration) {
+		Environment newEnv = new Environment(vars, graph, timestamp, duration);
 		if (isAdd)
 			// Store the new token in this store
-			this.window.offer(env);
+			this.window.offer(newEnv);
 		else
 			// Remove any existing instances of the token from this store
-			this.window.remove(env);
+			this.window.remove(newEnv);
 	}
 	
 	private interface JoinDetector {
@@ -167,10 +168,10 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 		
 	}
 	
-	protected static Graph joinSubGraphs(Tuple thisTuple, Tuple steMTuple) {
+	protected static Graph joinSubGraphs(Tuple thisTuple, Environment steMEnv) {
 		Polyadic newG = new MultiUnion();
 		newG.addGraph((Graph) thisTuple.getValueByField(Component.graph.toString()));
-		newG.addGraph((Graph) steMTuple.getValueByField(Component.graph.toString()));
+		newG.addGraph(steMEnv.getGraph());
 		return newG;
 	}
 	
@@ -180,9 +181,9 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 		logger.debug("\nChecking new tuple values: " + StormReteBolt.cleanString(values));
 		logger.debug("\nComparing new tuple to " + this.window.size() + " other tuples");
 		boolean matched = false;
-		for (Iterator<Tuple> i = this.window.iterator(); i.hasNext();) {
-			Tuple candidate = i.next();
-			long candStamp = candidate.getLongByField(StormSteMBolt.Component.timestamp.toString());
+		for (Iterator<Environment> i = this.window.iterator(); i.hasNext();) {
+			Environment candidate = i.next();
+			long candStamp = candidate.getTimestamp();
 			// If oldest remaining tuple is newer than the probing tuple, don't bother probing against the rest of the window.
 			if (timestamp < candStamp)
 				break;
@@ -194,7 +195,7 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 				// If the queue match indices indicate there should be a match get the
 				// values of j in the queue and matchIndices[j] in the sibling
 				Node thisNode = (Node) values.get(j);
-				Node steMNode = (Node) candidate.getValue(j);
+				Node steMNode = (Node) candidate.getVars().get(j);
 				// If this pair of nodes meet the failure condition, set "matchFailed" to true, and don't bother checking the rest of the node pairs.
 				if (matchFailed = failureCondition.compare(thisNode, steMNode))
 					break;
@@ -249,23 +250,71 @@ public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHa
 	}
 
 	@Override
-	public void handleCapacityOverflow(Tuple overflow) {
+	public void handleCapacityOverflow(Environment overflow) {
 		logger.debug("Window capacity exceeded.");
 		if (logging)
-			logStream.emit(new LoggerBolt.LoggedEvent(LoggerBolt.LoggedEvent.EventType.TUPLE_DROPPED,
+			logStream.emit(new LoggedEvent<Environment>(LoggedEvent.EventType.TUPLE_DROPPED,
 													  overflow, "capacity"));
 	}
 
 	@Override
-	public void handleDurationOverflow(Tuple overflow) {
+	public void handleDurationOverflow(Environment overflow) {
 		logger.debug("Tuple exceeded age of window.");
 		if (logging)
-			logStream.emit(new LoggerBolt.LoggedEvent(LoggerBolt.LoggedEvent.EventType.TUPLE_DROPPED,
+			logStream.emit(new LoggedEvent<Environment>(LoggedEvent.EventType.TUPLE_DROPPED,
 													  overflow, "duration"));
 		Values vals = new Values();
-		vals.addAll(overflow.getValues());
+		vals.addAll(overflow.getVars());
+		vals.add(Action.build);
+		vals.add(true);
+		vals.add(overflow.getGraph());
+		vals.add(overflow.getTimestamp());
+		vals.add(overflow.getDuration());
 //		this.continuation.fire("old", vals, true);
 //		this.continuation.emit("old", overflow);
+	}
+	
+	static class Environment {
+		
+		private final List<Node> vars;
+		private final Graph graph;
+		private final long timestamp;
+		private final long duration;
+		
+		public Environment(List<Node> v, Graph g, long t, long d){
+			this.vars = v;
+			this.graph = g;
+			this.timestamp = t;
+			this.duration = d;
+		}
+		
+		public List<Node> getVars(){
+			return this.vars;
+		}
+		
+		public Graph getGraph(){
+			return this.graph;
+		}
+		
+		public long getTimestamp(){
+			return this.timestamp;
+		}
+		
+		public long getDuration(){
+			return this.duration;
+		}
+		
+		public boolean equals(Object arg0) {
+			try {
+				Environment other = (Environment)arg0;
+				return this.graph.equals(other.graph);
+			} catch (ClassCastException e) {
+				return false;
+			} catch (NullPointerException e) {
+				return false;
+			}
+		}
+		
 	}
 
 }
