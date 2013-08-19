@@ -1,8 +1,10 @@
 package org.openimaj.rdf.storm.eddying.routing;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.eddying.EddyingBolt;
@@ -114,20 +116,45 @@ public abstract class StormGraphRouter implements Serializable {
 	public abstract void routeGraph(Tuple anchor, Action action, boolean isAdd, Graph g, long timestamp);
 	
 	/**
-	 * route the {@link Graph} g (which should contain a single {@link Triple}) according to the internal policy, using the {@link Tuple} anchor as the Storm anchor, applying the stated action at its destination.
-	 * @param anchor 
-	 * @param g
-	 * @param action 
-	 * @param isAdd
-	 * @param timestamp
-	 */
-	public abstract void routeTriple(Tuple anchor, Action action, boolean isAdd, Graph g, long timestamp);
-	
-	/**
 	 * Declares the Storm output streams, and their fields, required by the router.
 	 * @param declarer - the {@link OutputFieldsDeclarer} for the Bolt in which the StormGraphRouter is acting.
 	 */
 	public abstract void declareOutputFields(OutputFieldsDeclarer declarer);
+	
+	/**
+	 * @return
+	 */
+	public abstract List<String> getContinuations();
+	
+	public abstract Fields getFields();
+	
+	public static abstract class EddyingStormGraphRouter extends StormGraphRouter {
+		
+		private static final long serialVersionUID = -3683430533570003022L;
+		protected String queries;
+		protected Map<String,String> stemMap;
+		
+		/**
+		 * 
+		 * @param eddies 
+		 * 			The list of eddies this router's SteM is part of.
+		 */
+		public EddyingStormGraphRouter(Map<String,String> s, String q){
+			this.queries = q;
+			this.stemMap = s;
+		}
+		
+		@Override
+		protected long routingTimestamp(long stamp1, long stamp2){
+			return stamp1 > stamp2 ? stamp1 : -1;
+		}
+		
+		@Override
+		public List<String> getContinuations(){
+			return new ArrayList<String>(stemMap.values());
+		}
+
+	}
 	
 	/**
 	 * An abstract class providing functionality common to all routers whose purpose is to simply route data from some SteM to some Eddy.  This common functionality comprises of storing a set of all the Eddies in a system that one could route to, and providing the first step in a routing policy:
@@ -139,6 +166,8 @@ public abstract class StormGraphRouter implements Serializable {
 		private static final long serialVersionUID = -3683430533570003022L;
 		protected final List<String> eddies;
 		
+		protected final Fields fields;
+		
 		/**
 		 * 
 		 * @param eddies 
@@ -146,48 +175,12 @@ public abstract class StormGraphRouter implements Serializable {
 		 */
 		public EddyStubStormGraphRouter(List<String> eddies){
 			this.eddies = eddies;
+			fields = new Fields( Arrays.asList( Component.strings() ) ) ;
 		}
 		
 		@Override
 		protected long routingTimestamp(long stamp1, long stamp2){
 			return stamp1 > stamp2 ? stamp1 : -1;
-		}
-		
-		@Override
-		public void routeTriple(Tuple anchor, Action action, boolean isAdd, Graph g,
-				   long timestamp) {
-			try {
-				this.collector.ack(anchor);
-			} catch (UnsupportedOperationException e) {
-			}
-			
-			Values vals = new Values();
-			for (Component c : Component.values()) {
-				switch (c) {
-				case action:
-					// set whether this Tuple is intended for probing or building into other SteMs
-					vals.add(action);
-					break;
-				case isAdd:
-					// insert this Tuple's value of isAdd to be passed onto subscribing Bolts.
-					vals.add(isAdd);
-					break;
-				case graph:
-					// insert the new graph into the array of Values
-					vals.add(g);
-					break;
-				case timestamp:
-					vals.add(timestamp);
-					break;
-				case duration:
-					vals.add((long)0);
-					break;
-				default:
-					break;
-				}
-			}
-			
-			distributeToEddies(anchor, vals);
 		}
 
 		@Override
@@ -232,7 +225,15 @@ public abstract class StormGraphRouter implements Serializable {
 		@Override
 		public void declareOutputFields(OutputFieldsDeclarer declarer) {
 			for (String eddy : this.eddies)
-				declarer.declareStream(eddy, new Fields( Arrays.asList( Component.strings() ) ) );
+				declarer.declareStream(eddy, fields);
+		}
+		
+		public List<String> getContinuations() {
+			return eddies;
+		}
+		
+		public Fields getFields() {
+			return fields;
 		}
 
 	}

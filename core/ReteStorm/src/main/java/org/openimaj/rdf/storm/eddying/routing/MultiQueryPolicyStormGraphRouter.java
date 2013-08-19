@@ -1,21 +1,15 @@
 package org.openimaj.rdf.storm.eddying.routing;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.Action;
-import org.openimaj.rdf.storm.eddying.stems.StormSteMQueue;
+import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.EddyingStormGraphRouter;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
-import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.TriplePart;
 import org.openimaj.util.pair.IndependentPair;
 
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -37,15 +31,55 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * A StormGraphRouter implementation that routes graphs according to a policy incorporating potentially many distinct and/or overlapping queries/rules.
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  */
-public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
+public class MultiQueryPolicyStormGraphRouter extends EddyingStormGraphRouter {
 
 	private static final long serialVersionUID = 4342744138230718341L;
 	protected final static Logger logger = Logger.getLogger(MultiQueryPolicyStormGraphRouter.class);
-//	protected static int[] FACTORIALS = {0,1,2,6,24,120,720};
 	
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 *
+	 */
+	public static enum TriplePart {
+		/**
+		 * 
+		 */
+		subject
+		,
+		/**
+		 * 
+		 */
+		predicate
+		,
+		/**
+		 * 
+		 */
+		object
+//		,
+//		/**
+//		 * 
+//		 */
+//		timestamp
+		;
+		
+		private static String[] strings;
+		static {
+			Component[] vals = Component.values();
+			strings = new String[vals.length];
+			for (int i = 0; i < vals.length; i++) {
+				strings[i] = vals[i].toString();
+			}
+		}
 
-	private String queries;
-	private Map<String,String> stemMap;
+		/**
+		 * @return like {@link #values()} but {@link String} instances
+		 */
+		public static String[] strings() {
+			return strings;
+		}
+	}
+	
+	protected final Fields fields;
 	
 	/**
 	 * Creates an new instance of a StormGraphRouter with the multi-query policy.
@@ -53,8 +87,16 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 	 * @param q - A string containing a set of Jena {@link Rule}s
 	 */
 	public MultiQueryPolicyStormGraphRouter(Map<String,String> s, String q){
-		this.queries = q;
-		this.stemMap = s;
+		super(s,q);
+		fields = new Fields(TriplePart.subject.toString(),
+							   TriplePart.predicate.toString(),
+							   TriplePart.object.toString(),
+							   Component.action.toString(),
+							   Component.isAdd.toString(),
+							   Component.graph.toString(),
+							   Component.timestamp.toString(),
+							   Component.duration.toString()
+							);
 	}
 	
 	private int[] varCount;
@@ -112,45 +154,6 @@ public class MultiQueryPolicyStormGraphRouter extends StormGraphRouter {
 	private Node[] setEnvByVarNode(Node[] env, Node var, Node val){
 		env[((Node_RuleVariable) var).getIndex()] = val;
 		return env;
-	}
-	
-	@Override
-	public void routeTriple(Tuple anchor, Action action, boolean isAdd, Graph g,
-						   long timestamp) {
-		this.collector.ack(anchor);
-		// TODO update when hierarchical SteM filtering is fully implemented
-		Triple selected = g.find(null,null,null).next();
-		Values vals = new Values();
-		vals.add(selected.getSubject());
-		vals.add(selected.getPredicate());
-		vals.add(selected.getObject());
-		vals.add(action);
-		vals.add(isAdd);
-		vals.add(g);
-		vals.add(timestamp);
-		vals.add((long)0);
-		
-		if (stemMap.values().contains(anchor.getSourceComponent())) {
-			logger.debug(String.format("\nSending triple %s, %s, %s to %s from %s for %s",
-					   selected.getSubject(),
-					   selected.getPredicate(),
-					   selected.getObject(),
-					   anchor.getSourceComponent(),
-					   this.collector.getName(),
-					   action.toString()));
-			this.collector.emit(anchor.getSourceComponent(),anchor,vals);
-		} else {
-			for (String stem : stemMap.values()) {
-				logger.debug(String.format("\nSending triple %s, %s, %s to %s from %s for %s",
-										   selected.getSubject(),
-										   selected.getPredicate(),
-										   selected.getObject(),
-										   stem,
-										   this.collector.getName(),
-										   action.toString()));
-				this.collector.emit(stem, anchor,vals);
-			}
-		}
 	}
 
 	@Override
@@ -380,10 +383,10 @@ SSQLoop:
 			 * TODO provide some sort of triple match independent way to reference SteMs, probably by some sort of dictionary.
 			 */
 			TripleMatch stem = possibleProbeSteMs.get(selected);
-			String stemName = stemMap.get(String.format("%s,%s,%s",
-															stem.getMatchSubject() == null ? "" : stem.getMatchSubject().toString(),
-															stem.getMatchPredicate() == null ? "" : stem.getMatchPredicate().toString(),
-															stem.getMatchObject() == null ? "" : stem.getMatchObject().toString()
+			String stemName = stemMap.get(String.format("%s %s %s .",
+															stem.getMatchSubject() == null ? "?" : stem.getMatchSubject().toString(),
+															stem.getMatchPredicate() == null ? "?" : stem.getMatchPredicate().toString(),
+															stem.getMatchObject() == null ? "?" : stem.getMatchObject().toString()
 														));
 			
 			Values vals = new Values();
@@ -428,20 +431,12 @@ SSQLoop:
 					// If the stem that provides for the current query pattern hasn't been seen before
 					TripleMatch tm = tp.asTripleMatch();
 					if (stems.add(tm)){
-						declarer.declareStream(stemMap.get(String.format("%s,%s,%s",
-																			tm.getMatchSubject() == null ? "" : tm.getMatchSubject().toString(),
-																			tm.getMatchPredicate() == null ? "" : tm.getMatchPredicate().toString(),
-																			tm.getMatchObject() == null ? "" : tm.getMatchObject().toString()
+						declarer.declareStream(stemMap.get(String.format("%s %s %s .",
+																			tm.getMatchSubject() == null ? "?" : tm.getMatchSubject().toString(),
+																			tm.getMatchPredicate() == null ? "?" : tm.getMatchPredicate().toString(),
+																			tm.getMatchObject() == null ? "?" : tm.getMatchObject().toString()
 																		)),
-													new Fields(TriplePart.subject.toString(),
-															   TriplePart.predicate.toString(),
-															   TriplePart.object.toString(),
-															   Component.action.toString(),
-															   Component.isAdd.toString(),
-															   Component.graph.toString(),
-															   Component.timestamp.toString(),
-															   Component.duration.toString()
-															)
+													fields
 												);
 					}
 				}
@@ -450,6 +445,11 @@ SSQLoop:
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+	
+	@Override
+	public Fields getFields() {
+		return fields;
 	}
 	
 	// INNER CLASSES
