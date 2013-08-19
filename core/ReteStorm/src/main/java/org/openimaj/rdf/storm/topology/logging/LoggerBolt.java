@@ -207,7 +207,7 @@ public class LoggerBolt extends BaseRichBolt {
 	
 	// ********* Logged Data Classes ********* 
 	
-	public static class LoggedEvent implements Serializable {
+	public static class LoggedEvent<T> implements Serializable {
 
 		private static final long serialVersionUID = -872266540293532L;
 
@@ -215,7 +215,7 @@ public class LoggerBolt extends BaseRichBolt {
 			TUPLE_FIRED {
 				@Override
 				public String descriptionFormat() {
-					return "Message %s with bindings %s emitted on stream %s.";
+					return "Message %s emitted on stream %s.";
 				}
 				public String toString() {
 					return "Tuple fired.";
@@ -224,7 +224,7 @@ public class LoggerBolt extends BaseRichBolt {
 			TUPLE_DROPPED {
 				@Override
 				public String descriptionFormat() {
-					return "Message %s with bindings %s dropped due to %s limit exceeded.";
+					return "Message %s dropped due to %s limit exceeded.";
 				}
 				public String toString() {
 					return "Tuple dropped.";
@@ -235,36 +235,16 @@ public class LoggerBolt extends BaseRichBolt {
 		}
 		
 		private EventType type;
-		private Tuple cause;
+		private T cause;
 		private String additionalInfo;
 		private String description;
 		
-		public LoggedEvent(EventType type, Tuple cause, String additionalInfo){
+		public LoggedEvent(EventType type, T cause, String additionalInfo){
 			this.type = type;
 			this.cause = cause;
 			this.additionalInfo = additionalInfo;
-			StringBuilder bindings = new StringBuilder();
-			Node n = (Node) cause.getValue(0);
-			String value = n.isLiteral() 
-								? n.getLiteralValue().toString()
-								: n.isURI()
-									? n.getURI()
-									: n.isBlank()
-										? n.getBlankNodeLabel()
-										: n.getName();
-			bindings.append(cause.getFields().get(0)).append(" => ").append(value);
-			for (int i = 1; i < cause.getFields().size() - 3; i++){
-				n = (Node) cause.getValue(i);
-				value = n.isLiteral() 
-									? n.getLiteralValue().toString()
-									: n.isURI()
-										? n.getURI()
-										: n.isBlank()
-											? n.getBlankNodeLabel()
-											: n.getName();
-				bindings.append(", ").append(cause.getFields().get(i)).append(" => ").append(value);
-			}
-			this.description = String.format(type.descriptionFormat(), cause.getMessageId().toString(), bindings.toString(), additionalInfo);
+			
+			this.description = String.format(type.descriptionFormat(), this.cause.toString(), additionalInfo);
 		}
 		
 		public String getName() {
@@ -275,7 +255,7 @@ public class LoggerBolt extends BaseRichBolt {
 			return this.description;
 		}
 		
-		public Tuple getCause(){
+		public T getCause(){
 			return this.cause;
 		}
 		
