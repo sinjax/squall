@@ -36,8 +36,8 @@ import java.util.List;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.openimaj.util.filter.Filter;
 import org.openimaj.util.filter.FilterUtils;
+import org.openimaj.util.function.Predicate;
 
 import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -71,10 +71,10 @@ public class RetePlanner {
 	private void setupJena() {
 		InputStream instream = RetePlanner.class.getResourceAsStream(RDFS_RULES);
 		List<Rule> rules = Rule.parseRules(Rule.rulesParserFromReader( new BufferedReader(new InputStreamReader(instream))));
-		rules = FilterUtils.filter(rules, new Filter<Rule>(){
+		rules = FilterUtils.filter(rules, new Predicate<Rule>(){
 			boolean oneAxiom = true;
 			@Override
-			public boolean accept(Rule rule) {
+			public boolean test(Rule rule) {
 				String name = rule.getName();
 				if(name!=null && name.equals("rdfs6"))
 					return true;

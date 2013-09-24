@@ -144,6 +144,7 @@ org.eclipse.jdt.core.compiler.problem.missingJavadocTagsVisibility=public
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<openimajversion>1.1.1-SNAPSHOT</openimajversion>
 	</properties>
 	<scm>
 		<connection>scm:svn:svn://svn.code.sf.net/p/openimaj/code/trunk</connection>
