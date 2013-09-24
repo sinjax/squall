@@ -38,7 +38,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.apache.thrift7.TException;
 import org.openimaj.kestrel.writing.WritingScheme;
-import org.openimaj.util.parallel.Operation;
+import org.openimaj.util.function.Operation;
 import org.openimaj.util.parallel.Parallel;
 import org.openjena.atlas.lib.Sink;
 import org.openjena.riot.RiotReader;
