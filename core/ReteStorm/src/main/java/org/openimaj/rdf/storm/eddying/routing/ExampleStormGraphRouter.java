@@ -11,7 +11,6 @@ import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
 
 import scala.actors.threadpool.Arrays;
-
 import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
@@ -176,6 +175,7 @@ public class ExampleStormGraphRouter extends StormGraphRouter {
 		
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public List<String> getContinuations() {
 		return new ArrayList(stems.values());
