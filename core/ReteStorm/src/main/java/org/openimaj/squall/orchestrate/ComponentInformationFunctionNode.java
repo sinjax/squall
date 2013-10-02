@@ -1,5 +1,7 @@
 package org.openimaj.squall.orchestrate;
 
+import java.util.List;
+
 import org.openimaj.squall.compile.data.ComponentInformationFunction;
 import org.openimaj.squall.data.ComponentInformation;
 import org.openimaj.util.data.Context;
@@ -60,5 +62,6 @@ public class ComponentInformationFunctionNode extends DAGNode<ComponentInformati
 	public ComponentInformation information(){
 		return this.information;
 	}
+	
 
 }

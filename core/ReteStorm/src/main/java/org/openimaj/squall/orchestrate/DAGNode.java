@@ -12,12 +12,14 @@ import java.util.List;
  */
 public abstract class DAGNode<T extends DAGNode<T>> implements Iterable<T>{
 	List<T> children;
+	List<T> parents;
 	
 	/**
 	 * 
 	 */
 	public DAGNode() {
 		this.children = new ArrayList<T>();
+		this.parents = new ArrayList<T>();
 	}
 	
 	/**
@@ -31,6 +33,24 @@ public abstract class DAGNode<T extends DAGNode<T>> implements Iterable<T>{
 	
 	@Override
 	public Iterator<T> iterator() {
+		return childiterator();
+	}
+	
+	private Iterator<T> childiterator() {
 		return this.children.iterator();
 	}
+	
+	private Iterator<T> parentiterator() {
+		return this.parents.iterator();
+	}
+
+	/**
+	 * @param child
+	 * @return the child being added
+	 */
+	public T addParent(T parent){
+		this.parents.add(parent);
+		return parent;
+	}
+	
 }

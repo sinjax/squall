@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.openimaj.squall.compile.data.ComponentInformationFunction;
 import org.openimaj.squall.compile.data.ComponentInformationPredicate;
+import org.openimaj.squall.data.ComponentInformation;
 import org.openimaj.util.function.Function;
 
 import com.hp.hpl.jena.graph.Triple;
@@ -53,6 +54,7 @@ public class CompiledProductionSystem {
 	 */
 	List<Function<Map<String,String>,?>> consequences;
 	
+	private ComponentInformation information;
 	/**
 	 * Initialise all system parts as empty, a fairly boring production system
 	 */
@@ -152,5 +154,9 @@ public class CompiledProductionSystem {
 	 */
 	public List<Function<Map<String, String>, ?>> getConequences() {
 		return this.consequences;
+	}
+
+	public ComponentInformation information() {
+		return information;
 	}
 }

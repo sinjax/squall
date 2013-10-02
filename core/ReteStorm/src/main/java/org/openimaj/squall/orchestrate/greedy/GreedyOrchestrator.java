@@ -8,7 +8,6 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.ComponentInformationFunction;
 import org.openimaj.squall.compile.data.ComponentInformationPredicate;
 import org.openimaj.squall.orchestrate.ComponentInformationFunctionNode;
-import org.openimaj.squall.orchestrate.DAGNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
 import org.openimaj.util.data.Context;
@@ -36,22 +35,26 @@ public class GreedyOrchestrator implements Orchestrator{
 	@Override
 	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem sys) {
 		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();
-		orchestrate(ret.graph,sys);
+		ret.root = new ComponentInformationFunctionNode(sys.information(), null);
+		orchestrate(ret.root,sys);
 		return ret;
 	}
 
-	private void orchestrate(DAGNode<ComponentInformationFunctionNode> ret,CompiledProductionSystem sys) {
+	private ComponentInformationFunctionNode orchestrate(ComponentInformationFunctionNode root,CompiledProductionSystem sys) {
+		ComponentInformationFunctionNode currentNode = null;
+		// FIXME: The Sub systems must be joined!
 		for (CompiledProductionSystem subsys : sys.getSystems()) {
-			orchestrate(ret,subsys);
+			currentNode = orchestrate(root,subsys);
 		}
-		ret = orchestrateFilters(ret,sys.getFilters());
-		ret = orchestratePredicates(ret,sys.getPredicates());
-		orchestrateConsequences(ret,sys.getConequences());
+		currentNode = orchestrateFilters(currentNode,root,sys.getFilters());
+		currentNode = orchestratePredicates(currentNode,sys.getPredicates());
+		orchestrateConsequences(currentNode,sys.getConequences());
+		return currentNode;
 	}
 
 
 	private void orchestrateConsequences(
-			DAGNode<ComponentInformationFunctionNode> ret,
+			ComponentInformationFunctionNode ret,
 			List<Function<Map<String, String>, ?>> conequences) {
 		for (Function<Map<String, String>, ?> function : conequences) {
 			ComponentInformationFunctionNode consequenceNode = new ComponentInformationFunctionNode(
@@ -62,8 +65,8 @@ public class GreedyOrchestrator implements Orchestrator{
 		}
 	}
 
-	private DAGNode<ComponentInformationFunctionNode> orchestratePredicates(
-			DAGNode<ComponentInformationFunctionNode> ret,
+	private ComponentInformationFunctionNode orchestratePredicates(
+			ComponentInformationFunctionNode ret,
 			List<ComponentInformationPredicate<Map<String, String>>> predicates) {
 		
 		for (ComponentInformationPredicate<Map<String,String>> pred : predicates) {
@@ -77,22 +80,28 @@ public class GreedyOrchestrator implements Orchestrator{
 		return ret;
 	}
 
-	private DAGNode<ComponentInformationFunctionNode> orchestrateFilters(
-			DAGNode<ComponentInformationFunctionNode> ret,
+	private ComponentInformationFunctionNode orchestrateFilters(
+			ComponentInformationFunctionNode ret,
+			ComponentInformationFunctionNode root, 
 			List<ComponentInformationFunction<Triple, Map<String, String>>> list
 	) {
+		
+		// Always add filters to the root directly, but join them to each other
+		
 		Iterator<ComponentInformationFunction<Triple, Map<String, String>>> filterIter = list.iterator();
-		if(ret == null)
-			ret = createFilterNode(ret, filterIter.next());
+		if(ret == null) // Nothing else to join with yet, add the first filter 
+		{
+			ret = createFilterNode(root, filterIter.next());
+		}
 		while(filterIter.hasNext()){
-			DAGNode<ComponentInformationFunctionNode> nextNode = createFilterNode(ret, filterIter.next());
+			ComponentInformationFunctionNode nextNode = createFilterNode(root, filterIter.next()); 
 			ret = createJoinNode(ret,nextNode);
 		}
 		
-		return currentNode;
+		return ret;
 	}
 
-	private DAGNode<ComponentInformationFunctionNode> createJoinNode(
+	private ComponentInformationFunctionNode createJoinNode(
 			ComponentInformationFunctionNode left,
 			ComponentInformationFunctionNode right) {
 		ComponentInformationFunctionNode currentNode = new ComponentInformationJoinNode(left.information(),right.information());
@@ -102,13 +111,14 @@ public class GreedyOrchestrator implements Orchestrator{
 	}
 
 	private ComponentInformationFunctionNode createFilterNode(
-			DAGNode<ComponentInformationFunctionNode> ret,
+			ComponentInformationFunctionNode ret,
 			ComponentInformationFunction<Triple, Map<String, String>> currentFilter) {
 		ComponentInformationFunctionNode currentNode = new ComponentInformationFunctionNode(
 				currentFilter.information(), 
 				ContextFunction.wrap("triple","binding",currentFilter)
 		);
 		ret.addChild(currentNode);
+		currentNode.addParent(ret);
 		return currentNode;
 	}
 

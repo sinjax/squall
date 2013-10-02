@@ -24,13 +24,12 @@ import com.hp.hpl.jena.graph.Triple;
  * 
  */
 public class OrchestratedProductionSystem {
-	public DAGNode<ComponentInformationFunctionNode> graph;
+	public ComponentInformationFunctionNode root;
 	/**
 	 * 
 	 */
 	public OrchestratedProductionSystem() {
-		graph = new DAGNode<ComponentInformationFunctionNode>() {
-		};
+		
 	}
 	
 }
