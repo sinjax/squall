@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.openimaj.squall.compile.data.ComponentInformationFunction;
+import org.openimaj.squall.compile.data.ComponentInformationPredicate;
 import org.openimaj.util.function.Function;
-import org.openimaj.util.function.Operation;
-import org.openimaj.util.function.Predicate;
 
 import com.hp.hpl.jena.graph.Triple;
 
@@ -31,12 +31,12 @@ public class CompiledProductionSystem {
 	/**
 	 * Filters match triples and assign variables to values within the triple.
 	 */
-	List<AnonymousNameFunction<Triple,Map<String,String>>> filters;
+	List<ComponentInformationFunction<Triple,Map<String,String>>> filters;
 	
 	/**
 	 * Predicates confirm or deny certain bindings. Empty means no predicates
 	 */
-	List<Predicate<Map<String,String>>> predicates;
+	List<ComponentInformationPredicate<Map<String, String>>> predicates;
 	
 	/**
 	 * Groups suggest a join order for filters and binding predicates. Empty means no preffered order
@@ -51,17 +51,18 @@ public class CompiledProductionSystem {
 	/**
 	 * Consequences consume bindings and perform some operation
 	 */
-	List<Operation<Map<String,String>>> consequences;
+	List<Function<Map<String,String>,?>> consequences;
 	
 	/**
 	 * Initialise all system parts as empty, a fairly boring production system
 	 */
 	public CompiledProductionSystem() {
 		systems = new ArrayList<CompiledProductionSystem>();
-		filters = new ArrayList<AnonymousNameFunction<Triple, Map<String, String>>>();
-		predicates = new ArrayList<Predicate<Map<String,String>>>();
+		filters = new ArrayList<ComponentInformationFunction<Triple, Map<String, String>>>();
+		predicates = new ArrayList<ComponentInformationPredicate<Map<String, String>>>();
 		groups = new ArrayList<CompiledProductionSystem>();
 		aggregations = new ArrayList<Function<List<Map<String,String>>,Map<String,String>>>();
+		consequences = new ArrayList<Function<Map<String,String>,?>>();
 	}
 	
 	/**
@@ -80,30 +81,8 @@ public class CompiledProductionSystem {
 	 * @param filter
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem addFilter(AnonymousNameFunction<Triple, Map<String, String>> filter){
+	public CompiledProductionSystem addFilter(ComponentInformationFunction<Triple, Map<String, String>> filter){
 		this.filters.add(filter);
-		return this;
-	}
-	
-	/**
-	 * Add a filter function with a name and a function
-	 * @param name An anonymous name for the function
-	 * @param filter
-	 * @return return this system (useful for chaining)
-	 */
-	public CompiledProductionSystem addFilter(final String name, final Function<Triple, Map<String, String>> filter){
-		this.filters.add(new AnonymousNameFunction<Triple, Map<String,String>>() {
-			
-			@Override
-			public Map<String, String> apply(Triple in) {
-				return filter.apply(in);
-			}
-			
-			@Override
-			public String anonymousName() {
-				return name;
-			}
-		});
 		return this;
 	}
 	
@@ -113,7 +92,7 @@ public class CompiledProductionSystem {
 	 * @param predicate
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem addPredicate(Predicate<Map<String, String>> predicate){
+	public CompiledProductionSystem addPredicate(ComponentInformationPredicate<Map<String, String>> predicate){
 		this.predicates.add(predicate);
 		return this;
 	}
@@ -136,5 +115,42 @@ public class CompiledProductionSystem {
 	public CompiledProductionSystem addAggregation(CompiledProductionSystem aggr){
 		this.groups.add(aggr);
 		return this;
+	}
+	
+	/**
+	 * @param item
+	 * @return return this system (useful for chaining)
+	 */
+	public CompiledProductionSystem addConsequence(Function<Map<String, String>, ?> item){
+		this.consequences.add(item);
+		return this;
+	}
+
+	/**
+	 * @return the filters of this system
+	 */
+	public List<ComponentInformationFunction<Triple, Map<String, String>>> getFilters() {
+		return this.filters;
+	}
+
+	/**
+	 * @return the predicates of this system
+	 */
+	public List<ComponentInformationPredicate<Map<String, String>>> getPredicates() {
+		return this.predicates;
+	}
+
+	/**
+	 * @return the sub systems of this {@link CompiledProductionSystem}
+	 */
+	public List<CompiledProductionSystem> getSystems() {
+		return this.systems;
+	}
+
+	/**
+	 * @return the consequences of this compiled system
+	 */
+	public List<Function<Map<String, String>, ?>> getConequences() {
+		return this.consequences;
 	}
 }
