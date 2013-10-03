@@ -5,9 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
-import org.openimaj.squall.compile.data.ComponentInformationFunction;
-import org.openimaj.squall.compile.data.ComponentInformationPredicate;
-import org.openimaj.squall.orchestrate.DAGNode;
+import org.openimaj.squall.compile.data.VariableFunction;
 import org.openimaj.squall.orchestrate.NamedFunctionNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
@@ -29,25 +27,25 @@ import com.hp.hpl.jena.graph.Triple;
  * Consequences are dealt with at the end
  *
  */
-public class GreedyOrchestrator implements Orchestrator{
-
+public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
+	
 	private int consequence = 0;
 	private int predicate = 0;
 	private int filter = 0;
 	private int join = 0;
 
 	@Override
-	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem sys) {
+	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem<Triple,Triple> sys) {
 		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();
-		ret.root = new NamedFunctionNode("root", sys.information(), null);
+		ret.root = new NamedFunctionNode("root", null);
 		orchestrate(ret.root,sys);
 		return ret;
 	}
 
-	private NamedFunctionNode orchestrate(NamedFunctionNode root,CompiledProductionSystem sys) {
-		NamedFunctionNode currentNode = null;
+	private NamedVarFunctionNode orchestrate(NamedFunctionNode root,CompiledProductionSystem<Triple,Triple> sys) {
+		NamedVarFunctionNode currentNode = null;
 		// FIXME: The Sub systems must be joined!
-		for (CompiledProductionSystem subsys : sys.getSystems()) {
+		for (CompiledProductionSystem<Triple,Triple> subsys : sys.getSystems()) {
 			currentNode = orchestrate(root,subsys);
 		}
 		currentNode = orchestrateFilters(currentNode,root,sys.getFilters());
@@ -59,14 +57,13 @@ public class GreedyOrchestrator implements Orchestrator{
 
 	private void orchestrateConsequences(
 			NamedFunctionNode ret,
-			List<Function<Map<String, String>, ?>> conequences) {
+			List<Function<Map<String, String>, Triple>> conequences) {
 		for (Function<Map<String, String>, ?> function : conequences) {
 			NamedFunctionNode consequenceNode = new NamedFunctionNode(
-				nextConsequenceName(),
-				null, 
+				nextConsequenceName(), 
 				ContextFunction.wrap("binding","consequence",function)
 			);
-			DAGNode.link(ret, consequenceNode);
+//			DGNode.link(ret, consequenceNode);
 		}
 	}
 
@@ -74,17 +71,16 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("CONSEQUENCE_%d",consequence++ );
 	}
 
-	private NamedFunctionNode orchestratePredicates(
-			NamedFunctionNode ret,
-			List<ComponentInformationPredicate<Map<String, String>>> predicates) {
+	private NamedVarFunctionNode orchestratePredicates(
+			NamedVarFunctionNode ret,
+			List<VariableFunction<Map<String, String>,Map<String, String>>> predicates) {
 		
-		for (ComponentInformationPredicate<Map<String,String>> pred : predicates) {
-			NamedFunctionNode prednode = new NamedFunctionNode(
+		for (VariableFunction<Map<String, String>, Map<String, String>> pred : predicates) {
+			NamedVarFunctionNode prednode = new NamedVarFunctionNode(
 					nextPredicateName(),
-					pred.information(), 
-					ContextFunction.wrap("binding","binding",new FilterFunction<Map<String,String>>(pred))
+					ContextVariableFunction.wrap("binding","binding",pred)
 				);
-			DAGNode.link(ret, prednode);
+//			DGNode.link(ret, prednode);
 			ret = prednode;
 		}
 		return ret;
@@ -94,53 +90,54 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("PREDICATE_%d",predicate ++ );
 	}
 
-	private NamedFunctionNode orchestrateFilters(
-			NamedFunctionNode ret,
+	private NamedVarFunctionNode orchestrateFilters(
+			NamedVarFunctionNode ret,
 			NamedFunctionNode root, 
-			List<ComponentInformationFunction<Triple, Map<String, String>>> list
+			List<VariableFunction<Triple, Map<String, String>>> list
 	) {
 		
 		// Always add filters to the root directly, but join them to each other
-		
-		Iterator<ComponentInformationFunction<Triple, Map<String, String>>> filterIter = list.iterator();
+		Iterator<VariableFunction<Triple, Map<String, String>>> filterIter = list.iterator();
 		if(ret == null) // Nothing else to join with yet, add the first filter 
 		{
 			ret = createFilterNode(root, filterIter.next());
 		}
 		while(filterIter.hasNext()){
-			NamedFunctionNode nextNode = createFilterNode(root, filterIter.next()); 
+			NamedVarFunctionNode nextNode = createFilterNode(root, filterIter.next()); 
 			ret = createJoinNode(ret,nextNode);
 		}
 		
 		return ret;
 	}
 
-	private NamedFunctionNode createJoinNode(
-			NamedFunctionNode left,
-			NamedFunctionNode right) {
-		NamedFunctionNode currentNode = new NamedJoinNode(
+	private NamedVarFunctionNode createJoinNode(
+			NamedVarFunctionNode left,
+			NamedVarFunctionNode right) {
+		NamedVarFunctionNode currentNode 
+		= new NamedJoinNode(
 				nextJoinName(),
-				left.information(),
-				right.information()
-		);
-		DAGNode.link(left, currentNode);
-		DAGNode.link(right, currentNode);
-		return currentNode;
+				left,
+				right
+		)
+		;
+//		DGNode.link(left, currentNode);
+//		DGNode.link(right, currentNode);
+//		return currentNode;
+		return null;
 	}
 
 	private String nextJoinName() {
 		return String.format("JOIN_%d",join ++ );
 	}
 
-	private NamedFunctionNode createFilterNode(
+	private NamedVarFunctionNode createFilterNode(
 			NamedFunctionNode ret,
-			ComponentInformationFunction<Triple, Map<String, String>> currentFilter) {
-		NamedFunctionNode currentNode = new NamedFunctionNode(
-				nextFilterName(),
-				currentFilter.information(), 
-				ContextFunction.wrap("triple","binding",currentFilter)
+			VariableFunction<Triple, Map<String, String>> currentFilter) {
+		NamedVarFunctionNode currentNode = new NamedVarFunctionNode(
+				nextFilterName(), 
+				ContextVariableFunction.wrap("triple","binding",currentFilter)
 		);
-		DAGNode.link(ret, currentNode);
+//		DGNode.link(ret, currentNode);
 		return currentNode;
 	}
 

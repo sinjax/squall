@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.openimaj.rdf.storm.topology.bolt.CompilationStormRuleReteBoltHolder;
 import org.openimaj.rdf.storm.topology.bolt.StormReteBolt;
@@ -206,6 +208,22 @@ public class VariableIndependentReteRuleToStringUtils {
 		Count count = new Count(0);
 
 		return clauseToStringAllVars(template, varNames, matchIndices, count);
+	}
+
+	/**
+	 * @param clause
+	 * @param varmap
+	 * @return calls {@link #clauseEntryToString(ClauseEntry, List, int[], Count)}
+	 */
+	public static String clauseEntryToString(ClauseEntry clause,Map<String, Integer> varmap) {
+		List<String> values = new ArrayList<String>();
+		int[] matches = new int[varmap.size()];
+		int i = 0;
+		for (Entry<String, Integer> ent : varmap.entrySet()) {
+			values.add(ent.getKey());
+			matches[i++] = ent.getValue();
+		}
+		return clauseEntryToString(clause, values, matches, new Count(0));
 	}
 
 }

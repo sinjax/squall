@@ -5,19 +5,20 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * A node in a {@link DirectedAcyclicGraph}
+ * A node in a Directed Graph
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * @param <T> 
  *
  */
-public abstract class DAGNode<T extends DAGNode<T>> implements Iterable<T>{
+public abstract class DGNode<T extends DGNode<T,EDGE>,EDGE> implements Iterable<T>{
 	List<T> children;
 	List<T> parents;
+	List<EDGE> edges;
 	
 	/**
 	 * 
 	 */
-	public DAGNode() {
+	public DGNode() {
 		this.children = new ArrayList<T>();
 		this.parents = new ArrayList<T>();
 	}
@@ -26,7 +27,7 @@ public abstract class DAGNode<T extends DAGNode<T>> implements Iterable<T>{
 	 * @param child
 	 * @return the child being added
 	 */
-	public T addChild(T child){
+	T addChild(T child){
 		this.children.add(child);
 		return child;
 	}
@@ -36,11 +37,17 @@ public abstract class DAGNode<T extends DAGNode<T>> implements Iterable<T>{
 		return childiterator();
 	}
 	
-	private Iterator<T> childiterator() {
+	/**
+	 * @return
+	 */
+	public Iterator<T> childiterator() {
 		return this.children.iterator();
 	}
 	
-	private Iterator<T> parentiterator() {
+	/**
+	 * @return
+	 */
+	public Iterator<T> parentiterator() {
 		return this.parents.iterator();
 	}
 
@@ -48,18 +55,24 @@ public abstract class DAGNode<T extends DAGNode<T>> implements Iterable<T>{
 	 * @param child
 	 * @return the child being added
 	 */
-	public T addParent(T parent){
+	T addParent(T parent){
 		this.parents.add(parent);
 		return parent;
 	}
 	
+	void addEdge(EDGE edge){
+		this.edges.add(edge);
+	}
+	
 	/**
 	 * @param A
+	 * @param edge the edge connecting A and B
 	 * @param B
 	 */
-	public static <T extends DAGNode<T>>void link(T A, T B){
+	public static <T extends DGNode<T,EDGE>,EDGE>void link(T A, EDGE edge, T B){
 		A.addChild(B);
 		B.addParent(A);
+		A.addEdge(edge);
 	}
 	
 }
