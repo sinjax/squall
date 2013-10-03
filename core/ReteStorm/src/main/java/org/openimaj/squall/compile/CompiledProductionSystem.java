@@ -25,6 +25,11 @@ import com.hp.hpl.jena.graph.Triple;
  */
 public class CompiledProductionSystem {
 	
+	
+	/**
+	 * FIXME: The compiler should have sources
+	 */
+	
 	/**
 	 * List of production systems that this compilation is made from
 	 */
@@ -36,6 +41,7 @@ public class CompiledProductionSystem {
 	
 	/**
 	 * Predicates confirm or deny certain bindings. Empty means no predicates
+	 * FIXME: Make this into a {@link ComponentInformationFunction} of bindings
 	 */
 	List<ComponentInformationPredicate<Map<String, String>>> predicates;
 	

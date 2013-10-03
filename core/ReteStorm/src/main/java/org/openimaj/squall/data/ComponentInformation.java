@@ -12,7 +12,9 @@ import java.util.List;
  *
  */
 public interface ComponentInformation {
-	public String name();
-	public String anonymisedName();
-	public List<String> variables();
+//	public String name(); // ?1 <cat> <dog>
+//	public String anonymisedName(); // VAR <cat> <dog>
+//	public List<String> variables(); // [ ?1 ]
+	// [ ?cat ]
+	// [ ?0 ]
 }
