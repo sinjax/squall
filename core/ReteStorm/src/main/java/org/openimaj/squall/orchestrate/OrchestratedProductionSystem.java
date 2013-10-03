@@ -24,7 +24,7 @@ import com.hp.hpl.jena.graph.Triple;
  * 
  */
 public class OrchestratedProductionSystem {
-	public ComponentInformationFunctionNode root;
+	public NamedFunctionNode root;
 	/**
 	 * 
 	 */

@@ -2,14 +2,14 @@ package org.openimaj.squall.orchestrate.greedy;
 
 import org.openimaj.squall.compile.data.ComponentInformationFunction;
 import org.openimaj.squall.data.ComponentInformation;
-import org.openimaj.squall.orchestrate.ComponentInformationFunctionNode;
+import org.openimaj.squall.orchestrate.NamedFunctionNode;
 import org.openimaj.util.data.Context;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class ComponentInformationJoinNode extends ComponentInformationFunctionNode {
+public class NamedJoinNode extends NamedFunctionNode {
 
 	
 
@@ -39,7 +39,7 @@ public class ComponentInformationJoinNode extends ComponentInformationFunctionNo
 	 * @param left
 	 * @param right
 	 */
-	public ComponentInformationJoinNode(ComponentInformation left,ComponentInformation right) {
-		super(new ComponentInformationJoinFunction(left,right));
+	public NamedJoinNode(String name, ComponentInformation left,ComponentInformation right) {
+		super(name, new ComponentInformationJoinFunction(left,right));
 	}
 }

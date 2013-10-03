@@ -3,8 +3,10 @@ package org.openimaj.squall.build;
 import java.util.Collection;
 import java.util.List;
 
-import org.openimaj.squall.orchestrate.ComponentInformationFunctionNode;
+import org.openimaj.squall.build.utils.TripleContenxtWrapper;
+import org.openimaj.squall.orchestrate.NamedFunctionNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.SplitStream;
 import org.openimaj.util.stream.Stream;
@@ -28,11 +30,8 @@ public class OIStreamBuilder implements Builder{
 
 	@Override
 	public void build(OrchestratedProductionSystem ops) {
-		SplitStream<Triple> splitStream = new SplitStream<Triple>(this.triples);
+		SplitStream<Context> splitStream = new SplitStream<Context>(this.triples.map(new TripleContenxtWrapper()));
 		// Get the root's children, these feed directly from the triple stream
-		for (ComponentInformationFunctionNode child : ops.root) {
-			
-		}
 	}
 
 }

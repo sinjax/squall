@@ -7,12 +7,11 @@ import java.util.Map;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.ComponentInformationFunction;
 import org.openimaj.squall.compile.data.ComponentInformationPredicate;
-import org.openimaj.squall.orchestrate.ComponentInformationFunctionNode;
+import org.openimaj.squall.orchestrate.DAGNode;
+import org.openimaj.squall.orchestrate.NamedFunctionNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
-import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
-import org.openimaj.util.function.Predicate;
 
 import com.hp.hpl.jena.graph.Triple;
 
@@ -32,16 +31,21 @@ import com.hp.hpl.jena.graph.Triple;
  */
 public class GreedyOrchestrator implements Orchestrator{
 
+	private int consequence = 0;
+	private int predicate = 0;
+	private int filter = 0;
+	private int join = 0;
+
 	@Override
 	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem sys) {
 		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();
-		ret.root = new ComponentInformationFunctionNode(sys.information(), null);
+		ret.root = new NamedFunctionNode("root", sys.information(), null);
 		orchestrate(ret.root,sys);
 		return ret;
 	}
 
-	private ComponentInformationFunctionNode orchestrate(ComponentInformationFunctionNode root,CompiledProductionSystem sys) {
-		ComponentInformationFunctionNode currentNode = null;
+	private NamedFunctionNode orchestrate(NamedFunctionNode root,CompiledProductionSystem sys) {
+		NamedFunctionNode currentNode = null;
 		// FIXME: The Sub systems must be joined!
 		for (CompiledProductionSystem subsys : sys.getSystems()) {
 			currentNode = orchestrate(root,subsys);
@@ -54,35 +58,45 @@ public class GreedyOrchestrator implements Orchestrator{
 
 
 	private void orchestrateConsequences(
-			ComponentInformationFunctionNode ret,
+			NamedFunctionNode ret,
 			List<Function<Map<String, String>, ?>> conequences) {
 		for (Function<Map<String, String>, ?> function : conequences) {
-			ComponentInformationFunctionNode consequenceNode = new ComponentInformationFunctionNode(
+			NamedFunctionNode consequenceNode = new NamedFunctionNode(
+				nextConsequenceName(),
 				null, 
 				ContextFunction.wrap("binding","consequence",function)
 			);
-			ret.addChild(consequenceNode);
+			DAGNode.link(ret, consequenceNode);
 		}
 	}
 
-	private ComponentInformationFunctionNode orchestratePredicates(
-			ComponentInformationFunctionNode ret,
+	private String nextConsequenceName() {
+		return String.format("CONSEQUENCE_%d",consequence++ );
+	}
+
+	private NamedFunctionNode orchestratePredicates(
+			NamedFunctionNode ret,
 			List<ComponentInformationPredicate<Map<String, String>>> predicates) {
 		
 		for (ComponentInformationPredicate<Map<String,String>> pred : predicates) {
-			ComponentInformationFunctionNode prednode = new ComponentInformationFunctionNode(
+			NamedFunctionNode prednode = new NamedFunctionNode(
+					nextPredicateName(),
 					pred.information(), 
 					ContextFunction.wrap("binding","binding",new FilterFunction<Map<String,String>>(pred))
 				);
-			ret.addChild(prednode);
+			DAGNode.link(ret, prednode);
 			ret = prednode;
 		}
 		return ret;
 	}
 
-	private ComponentInformationFunctionNode orchestrateFilters(
-			ComponentInformationFunctionNode ret,
-			ComponentInformationFunctionNode root, 
+	private String nextPredicateName() {
+		return String.format("PREDICATE_%d",predicate ++ );
+	}
+
+	private NamedFunctionNode orchestrateFilters(
+			NamedFunctionNode ret,
+			NamedFunctionNode root, 
 			List<ComponentInformationFunction<Triple, Map<String, String>>> list
 	) {
 		
@@ -94,32 +108,44 @@ public class GreedyOrchestrator implements Orchestrator{
 			ret = createFilterNode(root, filterIter.next());
 		}
 		while(filterIter.hasNext()){
-			ComponentInformationFunctionNode nextNode = createFilterNode(root, filterIter.next()); 
+			NamedFunctionNode nextNode = createFilterNode(root, filterIter.next()); 
 			ret = createJoinNode(ret,nextNode);
 		}
 		
 		return ret;
 	}
 
-	private ComponentInformationFunctionNode createJoinNode(
-			ComponentInformationFunctionNode left,
-			ComponentInformationFunctionNode right) {
-		ComponentInformationFunctionNode currentNode = new ComponentInformationJoinNode(left.information(),right.information());
-		left.addChild(currentNode);
-		right.addChild(currentNode);
+	private NamedFunctionNode createJoinNode(
+			NamedFunctionNode left,
+			NamedFunctionNode right) {
+		NamedFunctionNode currentNode = new NamedJoinNode(
+				nextJoinName(),
+				left.information(),
+				right.information()
+		);
+		DAGNode.link(left, currentNode);
+		DAGNode.link(right, currentNode);
 		return currentNode;
 	}
 
-	private ComponentInformationFunctionNode createFilterNode(
-			ComponentInformationFunctionNode ret,
+	private String nextJoinName() {
+		return String.format("JOIN_%d",join ++ );
+	}
+
+	private NamedFunctionNode createFilterNode(
+			NamedFunctionNode ret,
 			ComponentInformationFunction<Triple, Map<String, String>> currentFilter) {
-		ComponentInformationFunctionNode currentNode = new ComponentInformationFunctionNode(
+		NamedFunctionNode currentNode = new NamedFunctionNode(
+				nextFilterName(),
 				currentFilter.information(), 
 				ContextFunction.wrap("triple","binding",currentFilter)
 		);
-		ret.addChild(currentNode);
-		currentNode.addParent(ret);
+		DAGNode.link(ret, currentNode);
 		return currentNode;
+	}
+
+	private String nextFilterName() {
+		return String.format("FILTER_%d",filter ++);
 	}
 
 }

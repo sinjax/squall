@@ -53,4 +53,13 @@ public abstract class DAGNode<T extends DAGNode<T>> implements Iterable<T>{
 		return parent;
 	}
 	
+	/**
+	 * @param A
+	 * @param B
+	 */
+	public static <T extends DAGNode<T>>void link(T A, T B){
+		A.addChild(B);
+		B.addParent(A);
+	}
+	
 }
