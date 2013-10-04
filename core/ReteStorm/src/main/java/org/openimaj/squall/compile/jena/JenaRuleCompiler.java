@@ -8,6 +8,7 @@ import org.openimaj.squall.compile.TripleTripleCPS;
 import org.openimaj.squall.compile.data.FunctorFunction;
 import org.openimaj.squall.compile.data.TripleConsequence;
 import org.openimaj.squall.compile.data.TripleFilterFunction;
+import org.openimaj.util.stream.Stream;
 
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
@@ -20,11 +21,16 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class JenaRuleCompiler implements Compiler<Triple,Triple,List<Rule>>{
+public class JenaRuleCompiler implements Compiler<Triple,Triple,SourceRulePair>{
 	
 	@Override
-	public TripleTripleCPS compile(List<Rule> rules) {
+	public TripleTripleCPS compile(SourceRulePair sourceRules) {
+		List<Rule> rules = sourceRules.secondObject();
+		List<Stream<Triple>> sources = sourceRules.firstObject();
 		TripleTripleCPS ret = new TripleTripleCPS();
+		for (Stream<Triple> stream : sources) {
+			ret.addSource(stream);
+		}
 		for (Rule rule : rules) {
 			if (rule.isAxiom()) {
 				// how are we dealing with axioms?

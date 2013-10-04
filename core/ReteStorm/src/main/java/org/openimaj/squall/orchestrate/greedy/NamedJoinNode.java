@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.openimaj.squall.compile.data.VariableFunction;
 import org.openimaj.squall.orchestrate.NamedFunctionNode;
+import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.util.data.Context;
 
 /**
@@ -29,7 +30,12 @@ public class NamedJoinNode extends NamedVarFunctionNode {
 
 		@Override
 		public Context apply(Context in) {
-			// TODO DO THE JOIN
+			if(in.getTyped("stream").equals("left")){
+				
+			}
+			else if(in.getTyped("stream").equals("right")){
+				
+			}
 			return null;
 		}
 
@@ -50,6 +56,9 @@ public class NamedJoinNode extends NamedVarFunctionNode {
 		}
 		
 	}
+
+	private NamedVarFunctionNode left;
+	private NamedVarFunctionNode right;
 	
 	/**
 	 * @param name 
@@ -58,5 +67,22 @@ public class NamedJoinNode extends NamedVarFunctionNode {
 	 */
 	public NamedJoinNode(String name, NamedVarFunctionNode left,NamedVarFunctionNode right) {
 		super(name, new JoinVariableFunction(left.getVarFunc(),right.getVarFunc()));
+		this.left = left;
+		this.right = right;
 	}
+
+	/**
+	 * @return named stream representing the link between the left and this join
+	 */
+	public NamedStream<NamedFunctionNode> leftNamedStream() {
+		return new NamedStream<NamedFunctionNode>("left", left, this);
+	}
+	
+	/**
+	 * @return named stream representing the link between the right and this join
+	 */
+	public NamedStream<NamedFunctionNode> rightNamedStream() {
+		return new NamedStream<NamedFunctionNode>("right", right, this);
+	}
+
 }

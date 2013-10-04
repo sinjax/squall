@@ -7,6 +7,7 @@ import java.util.Map;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.VariableFunction;
 import org.openimaj.squall.orchestrate.NamedFunctionNode;
+import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
 import org.openimaj.util.function.Function;
@@ -44,6 +45,14 @@ public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
 
 	private NamedVarFunctionNode orchestrate(NamedFunctionNode root,CompiledProductionSystem<Triple,Triple> sys) {
 		NamedVarFunctionNode currentNode = null;
+		
+		// FIXME: Sources should produce a differenet kind of NamedFunctionNode which is a stream, not a function
+//		if(sys.getSources().size()>0){
+//			new NamedFunctionNode(
+//				nextSourceName(), 
+//				ContextFunction.wrap(null,"triple", function)
+//			);
+//		}
 		// FIXME: The Sub systems must be joined!
 		for (CompiledProductionSystem<Triple,Triple> subsys : sys.getSystems()) {
 			currentNode = orchestrate(root,subsys);
@@ -55,6 +64,11 @@ public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
 	}
 
 
+	int sources = 0;
+	private String nextSourceName() {
+		return "source_" + sources ++;
+	}
+
 	private void orchestrateConsequences(
 			NamedFunctionNode ret,
 			List<Function<Map<String, String>, Triple>> conequences) {
@@ -63,7 +77,7 @@ public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
 				nextConsequenceName(), 
 				ContextFunction.wrap("binding","consequence",function)
 			);
-//			DGNode.link(ret, consequenceNode);
+			ret.connect(new NamedStream<NamedFunctionNode>("link", ret, consequenceNode), consequenceNode);
 		}
 	}
 
@@ -80,7 +94,7 @@ public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
 					nextPredicateName(),
 					ContextVariableFunction.wrap("binding","binding",pred)
 				);
-//			DGNode.link(ret, prednode);
+			ret.connect(new NamedStream<NamedFunctionNode>("link", ret, prednode),prednode);
 			ret = prednode;
 		}
 		return ret;
@@ -113,17 +127,14 @@ public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
 	private NamedVarFunctionNode createJoinNode(
 			NamedVarFunctionNode left,
 			NamedVarFunctionNode right) {
-		NamedVarFunctionNode currentNode 
-		= new NamedJoinNode(
+		NamedJoinNode currentNode = new NamedJoinNode(
 				nextJoinName(),
 				left,
 				right
-		)
-		;
-//		DGNode.link(left, currentNode);
-//		DGNode.link(right, currentNode);
-//		return currentNode;
-		return null;
+		);
+		left.connect(currentNode.leftNamedStream(), currentNode);
+		right.connect(currentNode.rightNamedStream(), currentNode);
+		return currentNode;
 	}
 
 	private String nextJoinName() {
@@ -137,7 +148,7 @@ public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
 				nextFilterName(), 
 				ContextVariableFunction.wrap("triple","binding",currentFilter)
 		);
-//		DGNode.link(ret, currentNode);
+		ret.connect(new NamedStream<NamedFunctionNode>("link", ret, currentNode),currentNode);
 		return currentNode;
 	}
 

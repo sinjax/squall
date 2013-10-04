@@ -18,7 +18,7 @@ import org.openimaj.util.function.Function;
  * 
  * The {@link NamedFunctionNode} is a function itself which wraps the internal {@link Function} call
  */
-public class NamedFunctionNode extends DGNode<NamedFunctionNode,NamedStream<NamedFunctionNode>> implements Function<Context,Context>{
+public class NamedFunctionNode extends NamedNode<NamedFunctionNode> implements Function<Context,Context>{
 	/**
 	 * key used to insert this node's name into the returned context
 	 */
@@ -34,14 +34,14 @@ public class NamedFunctionNode extends DGNode<NamedFunctionNode,NamedStream<Name
 	 * @param func
 	 */
 	public NamedFunctionNode(String name, Function<Context, Context> func) {
+		super(name);
 		this.func = func;
-		this.name = name;
 		this.wrapped = new Function<Context, Context>() {
 			
 			@Override
 			public Context apply(Context in) {
 				Context out = NamedFunctionNode.this.func.apply(in);
-				out.put(NAME_KEY, NamedFunctionNode.this.name);
+				addName(out);
 				return out;
 			}
 		};

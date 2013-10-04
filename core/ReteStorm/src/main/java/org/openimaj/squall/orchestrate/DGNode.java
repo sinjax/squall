@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+
 /**
  * A node in a Directed Graph
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -65,14 +66,14 @@ public abstract class DGNode<T extends DGNode<T,EDGE>,EDGE> implements Iterable<
 	}
 	
 	/**
-	 * @param A
-	 * @param edge the edge connecting A and B
-	 * @param B
+	 * @param edge
+	 * @param child
 	 */
-	public static <T extends DGNode<T,EDGE>,EDGE>void link(T A, EDGE edge, T B){
-		A.addChild(B);
-		B.addParent(A);
-		A.addEdge(edge);
+	@SuppressWarnings("unchecked")
+	public void connect(EDGE edge, T child) {
+		this.addChild(child);
+		child.addParent((T) this);
+		this.addEdge(edge);
 	}
 	
 }

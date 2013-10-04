@@ -1,5 +1,6 @@
 package org.openimaj.squall.orchestrate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,8 +12,39 @@ import java.util.List;
  *
  */
 public class NamedStream<T extends DGNode<T, NamedStream<T>>> {
+	
+	
 	String name;
 	List<String> variables;
 	T start;
 	T end;
+	
+	/**
+	 * Simple link, named, with a start and end
+	 * @param name
+	 * @param start
+	 * @param end
+	 */
+	public NamedStream(String name, T start, T end) {
+		this.name = name;
+		this.variables = new ArrayList<String>();
+		this.start = start;
+		this.end = end;
+	}
+	
+	/**
+	 * Simple link, named, with a start and end
+	 * @param name
+	 * @param start
+	 * @param end
+	 * @param variables 
+	 */
+	public NamedStream(String name, T start, T end, List<String> variables) {
+		this.name = name;
+		this.variables = variables;
+		this.start = start;
+		this.end = end;
+	}
+	
+	
 }

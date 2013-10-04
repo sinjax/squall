@@ -2,6 +2,7 @@ package org.openimaj.squall.orchestrate.greedy;
 
 import org.openimaj.squall.compile.data.VariableFunction;
 import org.openimaj.squall.orchestrate.NamedFunctionNode;
+import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.util.data.Context;
 
 class NamedVarFunctionNode extends NamedFunctionNode{

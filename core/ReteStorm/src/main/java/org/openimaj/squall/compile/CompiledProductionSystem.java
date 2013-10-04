@@ -74,6 +74,16 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	}
 	
 	/**
+	 * a source of INPUT
+	 * @param stream
+	 * @return a {@link Stream} of input 
+	 */
+	public CompiledProductionSystem<INPUT,OUTPUT> addSource(Stream<INPUT> stream) {
+		this.sources.add(stream);
+		return this;
+	}
+	
+	/**
 	 * Add a system as a part of this production system
 	 * @param sys
 	 * @return return this system (useful for chaining)
@@ -150,5 +160,12 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 */
 	public List<Function<Map<String, String>, OUTPUT>> getConequences() {
 		return this.consequences;
+	}
+
+	/**
+	 * @return the sources
+	 */
+	public List<Stream<INPUT>> getSources() {
+		return this.sources;
 	}
 }
