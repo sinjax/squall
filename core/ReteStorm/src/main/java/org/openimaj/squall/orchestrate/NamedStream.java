@@ -11,7 +11,7 @@ import java.util.List;
  * @param <T> The {@link DGNode} this edge supports
  *
  */
-public class NamedStream<T extends DGNode<T, NamedStream<T>>> {
+public class NamedStream<T extends DGNode<?, NamedStream<T>,?>> {
 	
 	
 	String name;

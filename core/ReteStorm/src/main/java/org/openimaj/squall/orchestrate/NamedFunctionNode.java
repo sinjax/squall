@@ -18,12 +18,8 @@ import org.openimaj.util.function.Function;
  * 
  * The {@link NamedFunctionNode} is a function itself which wraps the internal {@link Function} call
  */
-public class NamedFunctionNode extends NamedNode<NamedFunctionNode> implements Function<Context,Context>{
-	/**
-	 * key used to insert this node's name into the returned context
-	 */
-	public static final String NAME_KEY = "information";
-	private String name;
+public class NamedFunctionNode extends NamedNode<Function<Context,Context>> {
+	
 	private Function<Context, Context> func;
 	private Function<Context, Context> wrapped;
 	
@@ -46,15 +42,16 @@ public class NamedFunctionNode extends NamedNode<NamedFunctionNode> implements F
 			}
 		};
 	}
-	
-	
-	/**
-	 * @param in
-	 * @return the function wrapping this node's behavior
-	 */
-	public Context apply(Context in) {
-		return wrapped.apply(in);
+
+
+
+	@Override
+	public Function<Context, Context> getData() {
+		return this.wrapped;
 	}
+	
+	
+	
 	
 	
 }

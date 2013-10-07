@@ -1,5 +1,6 @@
 package org.openimaj.squall.orchestrate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +25,7 @@ import com.hp.hpl.jena.graph.Triple;
  * 
  */
 public class OrchestratedProductionSystem {
-	public NamedFunctionNode root;
+	public List<NamedSourceNode> root;
 	/**
 	 * 
 	 */

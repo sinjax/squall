@@ -17,9 +17,9 @@ import org.openimaj.util.function.Function;
  *  It is the job of the builder to guarantee consistent instances based on the {@link NamedNode}'s name
  * 
  * The {@link NamedNode} is a function itself which wraps the internal {@link Function} call
- * @param <T> 
+ * @param <DATA> 
  */
-public class NamedNode<T extends NamedNode<T>> extends DGNode<T,NamedStream<T>>{
+public abstract class NamedNode<DATA> extends DGNode<NamedNode<DATA>,NamedStream<NamedNode<DATA>>,DATA>{
 	/**
 	 * key used to insert this node's name into the returned context
 	 */

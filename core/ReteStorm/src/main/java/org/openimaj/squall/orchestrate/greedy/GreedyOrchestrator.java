@@ -1,16 +1,19 @@
 package org.openimaj.squall.orchestrate.greedy;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.VariableFunction;
 import org.openimaj.squall.orchestrate.NamedFunctionNode;
-import org.openimaj.squall.orchestrate.NamedStream;
+import org.openimaj.squall.orchestrate.NamedNode;
+import org.openimaj.squall.orchestrate.NamedSourceNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
+import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
+import org.openimaj.util.stream.Stream;
 
 import com.hp.hpl.jena.graph.Triple;
 
@@ -37,47 +40,52 @@ public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
 
 	@Override
 	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem<Triple,Triple> sys) {
-		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();
-		ret.root = new NamedFunctionNode("root", null);
-		orchestrate(ret.root,sys);
+		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();		
+		ret.root = new ArrayList<NamedSourceNode>();
+		orchestrate(ret,sys);
 		return ret;
 	}
 
-	private NamedVarFunctionNode orchestrate(NamedFunctionNode root,CompiledProductionSystem<Triple,Triple> sys) {
-		NamedVarFunctionNode currentNode = null;
+	private void orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem<Triple,Triple> sys) {
+		NamedNode<?> currentNode = null;
 		
-		// FIXME: Sources should produce a differenet kind of NamedFunctionNode which is a stream, not a function
-//		if(sys.getSources().size()>0){
-//			new NamedFunctionNode(
-//				nextSourceName(), 
-//				ContextFunction.wrap(null,"triple", function)
-//			);
-//		}
+		if(sys.getSources().size()>0){
+			for (Stream<Triple> sourceS: sys.getSources()) {				
+				root.root.add(new NamedSourceNode(nextSourceName(root), sourceS.map(new Function<Triple,Context>(){
+
+					@Override
+					public Context apply(Triple in) {
+						Context ret = new Context();
+						ret.put("triple", in);
+						return ret;
+					}
+					
+				})));
+			}
+		}
 		// FIXME: The Sub systems must be joined!
 		for (CompiledProductionSystem<Triple,Triple> subsys : sys.getSystems()) {
-			currentNode = orchestrate(root,subsys);
+			orchestrate(root,subsys);
 		}
-		currentNode = orchestrateFilters(currentNode,root,sys.getFilters());
+		currentNode = orchestrateFilters(root,currentNode,sys.getFilters());
 		currentNode = orchestratePredicates(currentNode,sys.getPredicates());
 		orchestrateConsequences(currentNode,sys.getConequences());
-		return currentNode;
 	}
 
 
-	int sources = 0;
-	private String nextSourceName() {
-		return "source_" + sources ++;
+	private String nextSourceName(OrchestratedProductionSystem ret) {
+		return "source_" + ret.root.size();
 	}
 
 	private void orchestrateConsequences(
-			NamedFunctionNode ret,
+			NamedNode<?> currentNode,
 			List<Function<Map<String, String>, Triple>> conequences) {
 		for (Function<Map<String, String>, ?> function : conequences) {
 			NamedFunctionNode consequenceNode = new NamedFunctionNode(
 				nextConsequenceName(), 
 				ContextFunction.wrap("binding","consequence",function)
 			);
-			ret.connect(new NamedStream<NamedFunctionNode>("link", ret, consequenceNode), consequenceNode);
+			
 		}
 	}
 
@@ -85,56 +93,38 @@ public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
 		return String.format("CONSEQUENCE_%d",consequence++ );
 	}
 
-	private NamedVarFunctionNode orchestratePredicates(
-			NamedVarFunctionNode ret,
+	private NamedNode<?> orchestratePredicates(
+			NamedNode<?> currentNode,
 			List<VariableFunction<Map<String, String>,Map<String, String>>> predicates) {
 		
 		for (VariableFunction<Map<String, String>, Map<String, String>> pred : predicates) {
 			NamedVarFunctionNode prednode = new NamedVarFunctionNode(
-					nextPredicateName(),
-					ContextVariableFunction.wrap("binding","binding",pred)
-				);
-			ret.connect(new NamedStream<NamedFunctionNode>("link", ret, prednode),prednode);
-			ret = prednode;
+				nextPredicateName(),
+				ContextVariableFunction.wrap("binding","binding",pred)
+			);
+			
+			currentNode = prednode;
 		}
-		return ret;
+		return currentNode;
 	}
 
 	private String nextPredicateName() {
 		return String.format("PREDICATE_%d",predicate ++ );
 	}
 
-	private NamedVarFunctionNode orchestrateFilters(
-			NamedVarFunctionNode ret,
-			NamedFunctionNode root, 
+	private NamedNode<?> orchestrateFilters(
+			OrchestratedProductionSystem root, 
+			NamedNode<?> ret,
 			List<VariableFunction<Triple, Map<String, String>>> list
 	) {
-		
-		// Always add filters to the root directly, but join them to each other
-		Iterator<VariableFunction<Triple, Map<String, String>>> filterIter = list.iterator();
-		if(ret == null) // Nothing else to join with yet, add the first filter 
-		{
-			ret = createFilterNode(root, filterIter.next());
-		}
-		while(filterIter.hasNext()){
-			NamedVarFunctionNode nextNode = createFilterNode(root, filterIter.next()); 
-			ret = createJoinNode(ret,nextNode);
-		}
 		
 		return ret;
 	}
 
-	private NamedVarFunctionNode createJoinNode(
+	private NamedNode<?> createJoinNode(
 			NamedVarFunctionNode left,
 			NamedVarFunctionNode right) {
-		NamedJoinNode currentNode = new NamedJoinNode(
-				nextJoinName(),
-				left,
-				right
-		);
-		left.connect(currentNode.leftNamedStream(), currentNode);
-		right.connect(currentNode.rightNamedStream(), currentNode);
-		return currentNode;
+				return right;
 	}
 
 	private String nextJoinName() {
@@ -142,13 +132,12 @@ public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
 	}
 
 	private NamedVarFunctionNode createFilterNode(
-			NamedFunctionNode ret,
+			OrchestratedProductionSystem root,
 			VariableFunction<Triple, Map<String, String>> currentFilter) {
 		NamedVarFunctionNode currentNode = new NamedVarFunctionNode(
 				nextFilterName(), 
 				ContextVariableFunction.wrap("triple","binding",currentFilter)
 		);
-		ret.connect(new NamedStream<NamedFunctionNode>("link", ret, currentNode),currentNode);
 		return currentNode;
 	}
 
