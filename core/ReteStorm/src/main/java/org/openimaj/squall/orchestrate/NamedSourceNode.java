@@ -49,6 +49,34 @@ public class NamedSourceNode extends NamedNode<Stream<Context>> {
 	public Stream<Context> getData() {
 		return wrapped;
 	}
+
+
+
+	@Override
+	public boolean isSource() {
+		return true;
+	}
+
+
+
+	@Override
+	public boolean isFunction() {
+		return false;
+	}
+
+
+
+	@Override
+	public Stream<Context> getSource() {
+		return this.wrapped;
+	}
+
+
+
+	@Override
+	public Function<Context, Context> getFunction() {
+		throw new UnsupportedOperationException();
+	}
 	
 	
 	

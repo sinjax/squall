@@ -2,6 +2,7 @@ package org.openimaj.squall.orchestrate;
 
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
+import org.openimaj.util.stream.Stream;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -47,6 +48,34 @@ public class NamedFunctionNode extends NamedNode<Function<Context,Context>> {
 
 	@Override
 	public Function<Context, Context> getData() {
+		return this.wrapped;
+	}
+
+
+
+	@Override
+	public boolean isSource() {
+		return false;
+	}
+
+
+
+	@Override
+	public boolean isFunction() {
+		return true;
+	}
+
+
+
+	@Override
+	public Stream<Context> getSource() {
+		throw new UnsupportedOperationException();
+	}
+
+
+
+	@Override
+	public Function<Context, Context> getFunction() {
 		return this.wrapped;
 	}
 	

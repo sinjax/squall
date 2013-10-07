@@ -2,6 +2,7 @@ package org.openimaj.squall.orchestrate;
 
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
+import org.openimaj.util.stream.Stream;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -36,5 +37,21 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<DATA>,NamedStream
 		c.put(NAME_KEY, NamedNode.this.name);
 	}
 	
+	/**
+	 * @return true if {@link #getSource()} will return 
+	 */
+	public abstract boolean isSource();
+	/**
+	 * @return true if {@link #getFunction()} will return
+	 */
+	public abstract boolean isFunction();
 	
+	/**
+	 * @return {@link Stream} returned if this node is a Source, {@link UnsupportedOperationException} otherwise
+	 */
+	public abstract Stream<Context> getSource();
+	/**
+	 * @return {@link Function} returned if this node is not a Source, {@link UnsupportedOperationException} otherwise
+	 */
+	public abstract Function<Context,Context> getFunction();
 }

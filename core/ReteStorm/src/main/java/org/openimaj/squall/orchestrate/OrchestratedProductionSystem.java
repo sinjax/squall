@@ -25,6 +25,9 @@ import com.hp.hpl.jena.graph.Triple;
  * 
  */
 public class OrchestratedProductionSystem {
+	/**
+	 * The source nodes which are connected to the children
+	 */
 	public List<NamedSourceNode> root;
 	/**
 	 * 

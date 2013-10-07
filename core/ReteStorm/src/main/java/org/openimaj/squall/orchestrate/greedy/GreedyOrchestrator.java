@@ -63,12 +63,17 @@ public class GreedyOrchestrator implements Orchestrator<Triple,Triple>{
 				})));
 			}
 		}
-		// FIXME: The Sub systems must be joined!
 		for (CompiledProductionSystem<Triple,Triple> subsys : sys.getSystems()) {
 			orchestrate(root,subsys);
 		}
+		// There are either no filters, and therefore null, or there is exactly 1 final join of all the filters
 		currentNode = orchestrateFilters(root,currentNode,sys.getFilters());
-		currentNode = orchestratePredicates(currentNode,sys.getPredicates());
+		// If no filters, no predicates can be allowed?
+		if(currentNode != null)
+		{
+			currentNode = orchestratePredicates(currentNode,sys.getPredicates());
+		}
+		
 		orchestrateConsequences(currentNode,sys.getConequences());
 	}
 
