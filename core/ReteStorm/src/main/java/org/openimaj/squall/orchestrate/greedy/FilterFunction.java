@@ -2,7 +2,6 @@ package org.openimaj.squall.orchestrate.greedy;
 
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.ComponentInformationPredicate;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.function.Predicate;
 

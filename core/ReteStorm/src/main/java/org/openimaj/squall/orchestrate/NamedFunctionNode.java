@@ -1,7 +1,5 @@
 package org.openimaj.squall.orchestrate;
 
-import org.openimaj.squall.compile.data.ComponentInformationFunction;
-import org.openimaj.squall.data.ComponentInformation;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 
@@ -18,38 +16,35 @@ import org.openimaj.util.function.Function;
  *  
  *  It is the job of the builder to guarantee consistent instances based on the {@link NamedFunctionNode}'s name
  * 
- * A {@link NamedFunctionNode} has a {@link ComponentInformation} instances and . The {@link NamedFunctionNode} is a
- * function itself which wraps the internal {@link Function} call while embedding its own
- * name in the {@link Context} instance under the key NAME_KEY
+ * The {@link NamedFunctionNode} is a function itself which wraps the internal {@link Function} call
  */
-public class NamedFunctionNode extends DAGNode<NamedFunctionNode>{
+public class NamedFunctionNode extends NamedNode<NamedFunctionNode> implements Function<Context,Context>{
 	/**
 	 * key used to insert this node's name into the returned context
 	 */
-	public static final String INFORMATION_KEY = "information";
+	public static final String NAME_KEY = "information";
 	private String name;
-	private ComponentInformation information;
 	private Function<Context, Context> func;
+	private Function<Context, Context> wrapped;
+	
 	
 	
 	/**
 	 * @param name the name of the node
-	 * @param cif
-	 */
-	public NamedFunctionNode(String name, ComponentInformationFunction<Context,Context> cif) {
-		this.information = cif.information();
-		this.func = cif;
-		this.name = name;
-	}
-	/**
-	 * @param name the name of the node
-	 * @param information
 	 * @param func
 	 */
-	public NamedFunctionNode(String name, ComponentInformation information, Function<Context, Context> func) {
-		this.information = information;
+	public NamedFunctionNode(String name, Function<Context, Context> func) {
+		super(name);
 		this.func = func;
-		this.name = name;
+		this.wrapped = new Function<Context, Context>() {
+			
+			@Override
+			public Context apply(Context in) {
+				Context out = NamedFunctionNode.this.func.apply(in);
+				addName(out);
+				return out;
+			}
+		};
 	}
 	
 	
@@ -57,27 +52,9 @@ public class NamedFunctionNode extends DAGNode<NamedFunctionNode>{
 	 * @param in
 	 * @return the function wrapping this node's behavior
 	 */
-	public Function<Context,Context> apply(Context in) {
-		return new Function<Context, Context>() {
-			
-			@Override
-			public Context apply(Context in) {
-				Context out = func.apply(in);
-				out.put(INFORMATION_KEY, information);
-				return out;
-			}
-		};
+	public Context apply(Context in) {
+		return wrapped.apply(in);
 	}
 	
-	/**
-	 * @return the component information of this node
-	 */
-	public ComponentInformation information(){
-		return this.information;
-	}
-	public Function<Context, Context> getFunction() {
-		return this.func;
-	}
 	
-
 }

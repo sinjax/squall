@@ -1,5 +1,8 @@
 package org.openimaj.squall.orchestrate.greedy;
 
+import java.util.List;
+import java.util.Map;
+
 import org.openimaj.squall.compile.data.VariableFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
@@ -16,20 +19,20 @@ import org.openimaj.util.function.Predicate;
  * @param <B> Output type
  *
  */
-public class ContextFunction<A,B> implements Function<Context, Context> {
+public class ContextVariableFunction<A,B> implements VariableFunction<Context, Context> {
 	
 	
 	
 	private String inkey;
 	private String outkey;
-	private Function<A, B> func;
+	private VariableFunction<A, B> func;
 
 	/**
 	 * @param input
 	 * @param output
 	 * @param filter
 	 */
-	public ContextFunction(String input, String output, Function<A,B> filter) {
+	public ContextVariableFunction(String input, String output, VariableFunction<A,B> filter) {
 		this.inkey = input;
 		this.outkey = output;
 		this.func = filter;
@@ -48,10 +51,25 @@ public class ContextFunction<A,B> implements Function<Context, Context> {
 	 * @param in
 	 * @param out
 	 * @param filter
-	 * @return wrap the filter in a {@link ContextFunction} with the specified keys
+	 * @return wrap the filter in a {@link ContextVariableFunction} with the specified keys
 	 */
-	public static <A,B> ContextFunction<A, B> wrap(String in, String out, Function<A, B> filter) {
-		return new ContextFunction<A,B>(in, out, filter);
+	public static <A,B> ContextVariableFunction<A, B> wrap(String in, String out, VariableFunction<A, B> filter) {
+		return new ContextVariableFunction<A,B>(in, out, filter);
+	}
+
+	@Override
+	public List<String> variables() {
+		return func.variables();
+	}
+
+	@Override
+	public String anonimised(Map<String, Integer> varmap) {
+		return func.anonimised(varmap);
+	}
+
+	@Override
+	public String anonimised() {
+		return func.anonimised();
 	}
 
 }

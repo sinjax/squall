@@ -6,32 +6,34 @@ import java.util.Map;
 
 import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 
-import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.reasoner.TriplePattern;
+import com.hp.hpl.jena.reasoner.rulesys.Functor;
+import com.hp.hpl.jena.util.PrintUtil;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- * Filter a triple, return bindings against variables
+ * Given a binding environment, output a binding environment
  *
  */
-public class TripleFilterFunction implements VariableFunction<Triple, Map<String, String>> {
-	private TriplePattern clause;
+public class FunctorFunction implements VariableFunction<Map<String, String>, Map<String, String>> {
+	private Functor clause;
 
 	/**
 	 * @param clause construct using a {@link TriplePattern}
 	 */
-	public TripleFilterFunction(TriplePattern clause) {
+	public FunctorFunction(Functor clause) {
 		this.clause = clause;
 	}
 
 	@Override
-	public Map<String, String> apply(Triple in) {
+	public List<String> variables() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<String> variables() {
+	public Map<String, String> apply(Map<String, String> in) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -45,4 +47,6 @@ public class TripleFilterFunction implements VariableFunction<Triple, Map<String
 	public String anonimised() {
 		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
 	}
+	
+	
 }
