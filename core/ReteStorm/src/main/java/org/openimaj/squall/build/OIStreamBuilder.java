@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.openimaj.squall.build.utils.TripleContenxtWrapper;
-import org.openimaj.squall.orchestrate.NamedFunctionNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.CollectionStream;

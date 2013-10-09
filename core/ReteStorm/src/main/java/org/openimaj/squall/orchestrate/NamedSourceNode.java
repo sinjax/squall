@@ -1,5 +1,6 @@
 package org.openimaj.squall.orchestrate;
 
+import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.Stream;
@@ -19,11 +20,11 @@ import org.openimaj.util.stream.Stream;
  * 
  * The {@link NamedSourceNode} is a function itself which wraps the internal {@link Function} call
  */
-public class NamedSourceNode extends NamedNode<Stream<Context>> {
+public class NamedSourceNode extends NamedNode<IStream<Context>> {
 	
 	
 	
-	private Stream<Context> wrapped;
+	private IStream<Context> wrapped;
 
 
 
@@ -31,7 +32,7 @@ public class NamedSourceNode extends NamedNode<Stream<Context>> {
 	 * @param name the name of the node
 	 * @param strm the source of triples
 	 */
-	public NamedSourceNode(String name, Stream<Context> strm) {
+	public NamedSourceNode(String name, IStream<Context> strm) {
 		super(name);
 		this.wrapped = strm.map(new Function<Context, Context>() {
 			
@@ -46,7 +47,7 @@ public class NamedSourceNode extends NamedNode<Stream<Context>> {
 
 
 	@Override
-	public Stream<Context> getData() {
+	public IStream<Context> getData() {
 		return wrapped;
 	}
 

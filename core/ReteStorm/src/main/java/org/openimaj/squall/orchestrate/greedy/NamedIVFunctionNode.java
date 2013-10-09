@@ -1,21 +1,22 @@
 package org.openimaj.squall.orchestrate.greedy;
 
+import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.VariableFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.Stream;
 
-class NamedVarFunctionNode extends NamedNode<VariableFunction<Context, Context>>{
+class NamedIVFunctionNode extends NamedNode<IVFunction<Context, Context>>{
 
-	private VariableFunction<Context, Context> varfunc;
+	private IVFunction<Context, Context> varfunc;
 
-	public NamedVarFunctionNode(String name, VariableFunction<Context, Context> func) {
+	public NamedIVFunctionNode(String name, IVFunction<Context, Context> func) {
 		super(name);
 		this.varfunc = func;
 	}
 	
-	public VariableFunction<Context, Context> getData(){
+	public IVFunction<Context, Context> getData(){
 		return varfunc;
 	}
 

@@ -13,7 +13,7 @@ import java.util.List;
  * @param <DATA> The type of data held by the node
  *
  */
-public abstract class DGNode<NODE extends DGNode<NODE,EDGE,DATA>,EDGE,DATA> implements Iterable<NODE>{
+public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> implements Iterable<NODE>{
 	List<NODE> children;
 	List<NODE> parents;
 	List<EDGE> edges;

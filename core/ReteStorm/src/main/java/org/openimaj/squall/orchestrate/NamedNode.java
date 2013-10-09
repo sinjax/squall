@@ -20,7 +20,7 @@ import org.openimaj.util.stream.Stream;
  * The {@link NamedNode} is a function itself which wraps the internal {@link Function} call
  * @param <DATA> 
  */
-public abstract class NamedNode<DATA> extends DGNode<NamedNode<DATA>,NamedStream<NamedNode<DATA>>,DATA>{
+public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DATA>{
 	/**
 	 * key used to insert this node's name into the returned context
 	 */
