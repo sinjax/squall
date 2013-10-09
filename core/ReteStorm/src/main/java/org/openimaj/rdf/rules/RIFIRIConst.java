@@ -8,4 +8,6 @@ import java.net.URI;
  */
 public class RIFIRIConst extends RIFConst<URI> {
 	
+	public static final String datatype = "http://www.w3.org/2007/rif#iri";
+	
 }
