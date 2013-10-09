@@ -3,9 +3,11 @@ package org.openimaj.rdf.rules;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -13,6 +15,7 @@ import java.util.Stack;
 import javax.xml.parsers.*;
 
 import org.xml.sax.*;
+import org.xml.sax.ext.LexicalHandler;
 import org.xml.sax.helpers.*;
 
 /**
@@ -21,6 +24,25 @@ import org.xml.sax.helpers.*;
  */
 public class RIFRuleSet implements Iterable<RIFSentence> {
 
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args){
+		try {
+			RIFRuleSet rs = RIFRuleSet.parse(new URI("http://www.w3.org/2005/rules/test/repository/tc/Frames/Frames-premise.rif"));
+			System.out.println(rs.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * Parses the RIF Rule Set from the XML document at the rulesURI.
 	 * @param rulesURI -
@@ -33,15 +55,22 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 	public static RIFRuleSet parse(URI rulesURI) throws IOException, SAXException {
 		//Fetch the rules from the rulesURI and load into a SAX parser.
 		SAXParserFactory spf = SAXParserFactory.newInstance();
-	    spf.setNamespaceAware(true);
-	    
+	    try {
+			spf.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
+			spf.setFeature("http://xml.org/sax/features/namespaces", true);
+		} catch (ParserConfigurationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 	    SAXParser saxParser;
 	    RIFRuleSet ruleSet = new RIFRuleSet();
 	    
 		try {
 			saxParser = spf.newSAXParser();
 			XMLReader xmlReader = saxParser.getXMLReader();
-		    xmlReader.setContentHandler(new RIFXMLContentHandler(ruleSet));
+			RIFXMLContentHandler conH = new RIFXMLContentHandler(ruleSet);
+		    xmlReader.setContentHandler(conH);
 		    xmlReader.parse(new InputSource(rulesURI.toASCIIString()));
 		} catch (ParserConfigurationException e) {
 			// TODO Auto-generated catch block
@@ -202,6 +231,23 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 	@Override
 	public Iterator<RIFSentence> iterator(){
 		return this.groups.iterator();
+	}
+	
+	public String toString(){
+		String fbase = "base: "+ (base == null ? "" : base.toString());
+		String fprefixes = "prefixes:";
+		for (String pref : prefixes.keySet()){
+			fprefixes += "\n\t[ "+pref+": "+prefixes.get(pref).toString()+" ]";
+		}
+		String fimports = "imports:";
+		for (URI loc : imports.keySet()){
+			fimports += "\n\t[ loc: "+loc.toString()+", prof: "+(imports.get(loc) == null ? "" : imports.get(loc).toString())+" ]";
+		}
+		String fgroups = "groups:";
+		for (RIFSentence sentence : groups){
+			fgroups += "\n"+sentence.toString();
+		}
+		return "[ \n  "+fbase+"\n  "+fprefixes+"\n  "+fimports+"\n  "+fgroups+"\n]";
 	}
 	
 	//  RIFXMLContentHandler Class
@@ -463,6 +509,9 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 		private Stack<Element> lastSibling;
 		
 		private StringBuilder partialContent;
+		
+		private URI currentLocation;
+		private URI currentProfile;
 
 		private Stack<RIFGroup> currentGroup;
 		
@@ -474,28 +523,18 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 		
 		private Stack<RIFExternal> currentExternal;
 		private RIFAtom currentAtom;
-		private RIFTriple currentTriple;
+		private RIFFrame currentFrame;
 		
 		private Stack<RIFList> currentList;
 		private RIFVar currentVar;
-		private RIFConst currentConst;
-		
+		private RIFConst<?> currentConst;
 		
 		//   !ENTITY HANDLING
 		
 		@Override
-		public InputSource resolveEntity(String publicId, String systemId){
-			try {
-				ruleSet.addPrefix(publicId, new URI(systemId));
-			} catch (URISyntaxException e) {
-				System.err.println(e.getMessage());
-				e.printStackTrace();
-				System.exit(1);
-			}
-			
-			InputSource returnable = new InputSource(systemId);
-			returnable.setPublicId(publicId);
-			return returnable;
+		public void startPrefixMapping(String prefix, String uri) throws SAXException {
+			if (prefix != null && !prefix.equals(""))
+				ruleSet.addPrefix(prefix, findURI(uri));
 		}
 		
 		//   DOCUMENT HANDLING
@@ -506,6 +545,9 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 			lastSibling = new Stack<Element>();
 			
 			partialContent = null;
+			
+			currentLocation = null;
+			currentProfile = null;
 			
 			currentGroup = new Stack<RIFGroup>();
 			currentFormula = new Stack<RIFFormula>();
@@ -522,814 +564,855 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 		
 		@Override
 		public void startElement(		String namespaceURI,
-	            				 String localName,
-	            				 		String qName, 
+	            				 		String localName,
+	            				 String qName, 
 	            				 		Attributes atts)
 	           throws SAXException {
-			if (partialContent != null) handleContent();
+			handleContent();
+			
+			if (localName == null || localName.equals(""))
+				localName = qName;
+			
+//System.out.println(localName);
 			
 			RIFData d = null;
-					
-			switch (descent.peek()){
-				case ID:
-					switch (localName.charAt(0)){
-						case 'C':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Const' element, if it exists, must be the first child of an 'id' element.");
-							descent.push(Element.IRICONST);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'Const' expected, '"+localName+"' found.");
-					}
-					break;
-				case META:
-					switch (localName.charAt(0)){
-						case 'F':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' elements must be the sole child of a 'meta' element.");
-							descent.push(Element.FRAME);
-							lastSibling.push(null);
-							break;
-						case 'A':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'And' elements must be the sole child of a 'meta' element.");
-							descent.push(Element.META_AND);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'And' or 'Frame' expected, '"+localName+"' found.");
-					}
-					break;
-				case META_AND:
-					switch (localName.charAt(0)){
-						case 'f':
-							descent.push(Element.META_FORMULA);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'formula' expected, '"+localName+"' found.");
-					}
-					break;
-				case META_FORMULA:
-					switch (localName.charAt(0)){
-						case 'F':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' elements must be the sole child of a 'formula' element when within a 'meta'.");
-							descent.push(Element.FRAME);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'Frame' expected, '"+localName+"' found.");
-					}
-					break;
-					
-				case DOCUMENT:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'd':
-							if (lastSibling.peek() == Element.PAYLOAD) throw new SAXException("RIF: All 'directive' elements must preceed any 'payload' element.");
-							descent.push(Element.DIRECTIVE);
-							lastSibling.push(null);
-							break;
-						case 'p':
-							if (lastSibling.peek() == Element.PAYLOAD) throw new SAXException("RIF: 'payload' elements must be unique within a 'directive' element.");
-							descent.push(Element.PAYLOAD);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta', 'directive' or 'payload' expected, '"+localName+"' found.");
-					}
-					break;
-				case DIRECTIVE:
-					switch (localName.charAt(0)){
-						case 'I':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Import' elements must be the sole child of a 'directive' element.");
-							descent.push(Element.IMPORT);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'Import' expected, '"+localName+"' found.");
-					}
-					break;
-				case IMPORT:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'l':
-							if (lastSibling.peek() == Element.LOCATION) throw new SAXException("RIF: 'location' element must be unique within an 'Import' element.");
-							if (lastSibling.peek() == Element.PROFILE) throw new SAXException("RIF: 'location' element must preceed any 'profile' element within an 'Import' element.");
-							descent.push(Element.LOCATION);
-							lastSibling.push(null);
-							break;
-						case 'p':
-							if (lastSibling.peek() != Element.LOCATION) throw new SAXException("RIF: 'profile' element, if it exists, must be preceeded by a 'location' element.");
-							descent.push(Element.PROFILE);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta', 'location' or 'profile' expected, '"+localName+"' found.");
-					}
-					break;
-					
-				case PAYLOAD:
-					switch (localName.charAt(0)){
-						case 'G':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Group' element must be within a 'payload' element.");
-							descent.push(Element.GROUP);
-							lastSibling.push(null);
-							
-							currentGroup.push(new RIFGroup());
-							this.ruleSet.groups.add(currentGroup.peek());
-							
-							break;
-						default:
-							throw new SAXException("RIF: 'Group' expected, '"+localName+"' found.");
-					}
-					break;
-				case GROUP:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 's':
-							descent.push(Element.SENTENCE);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta' or 'sentence' expected, '"+localName+"' found.");
-					}
-					break;
-				case SENTENCE:
-					switch (localName.charAt(0)){
-						case 'G':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Group' element must be the sole child of a 'sentence' element.");
-							descent.push(Element.GROUP);
-							lastSibling.push(null);
-							
-							RIFGroup g = new RIFGroup();
-							currentGroup.peek().addSentence(g);
-							currentGroup.push(g);
-							
-							break;
-						case 'F':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Forall' element must be the sole child of a 'sentence' element.");
-							descent.push(Element.FOR_ALL);
-							lastSibling.push(null);
-							
-							currentForAll = new RIFForAll();
-							currentGroup.peek().addSentence(currentForAll);
-							
-							break;
-						case 'I':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Implies' element must be the sole child of a 'sentence' element.");
-							descent.push(Element.IMPLIES);
-							lastSibling.push(null);
-							
-							currentRule = new RIFRule();
-							currentGroup.peek().addSentence(currentRule);
-							
-							break;
-						default:
-							throw new SAXException("RIF: 'Group', 'ForAll' or 'Implies' expected, '"+localName+"' found.");
-					}
-					break;
-				case FOR_ALL:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'd':
-							if (lastSibling.peek() == Element.FOR_ALL_FORMULA) throw new SAXException("RIF: 'declare' element must be stated before any 'formula' element when within a 'Forall' element.");
-							descent.push(Element.DECLARE);
-							lastSibling.push(null);
-							break;
-						case 'f':
-							if (lastSibling.peek() != Element.DECLARE) throw new SAXException("RIF: 'formula' element must be preceeded by at least one 'declare' element when within a 'Forall' element.");
-							descent.push(Element.FOR_ALL_FORMULA);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta', 'declare' or 'formula' expected, '"+localName+"' found.");
-					}
-					break;
-				case DECLARE:
-					switch (localName.charAt(0)){
-						case 'V':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Var' elements must be the sole child of a 'declare' element.");
-							descent.push(Element.VAR);
-							lastSibling.push(null);
-							
-							currentVar = new RIFVar();
-							if (currentFormula.isEmpty())
-								currentForAll.addUniversalVar(currentVar);
-							else
-								try {
-									((RIFExists) currentFormula.peek()).addExistentialVar(currentVar);
-								} catch (ClassCastException e) {
-									throw new SAXException("RIF: variable declarations can only occur as direct children of 'ForAll' or 'Exists' elements", e);
-								}
-							
-							break;
-						default:
-							throw new SAXException("RIF: 'Var' expected, '"+localName+"' found.");
-					}
-					break;
-				case VAR:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'N':
-							if (lastSibling.peek() == Element.NAME) throw new SAXException("RIF: 'Name' element must be unique within a 'Var' element.");
-							descent.push(Element.NAME);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta' or 'Name' expected, '"+localName+"' found.");
-					}
-					break;
-				case FOR_ALL_FORMULA:
-					switch (localName.charAt(0)){
-						case 'I':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Implies' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
-							descent.push(Element.IMPLIES);
-							lastSibling.push(null);
-							
-							currentRule = new RIFRule();
-							currentForAll.setStatement(currentRule);
-							
-							break;
-						case 'A':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Atom' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
-							descent.push(Element.ATOM);
-							lastSibling.push(null);
-							
-							currentAtom = new RIFAtom();
-							currentForAll.setStatement(currentAtom);
-							
-							break;
-						case 'F':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
-							descent.push(Element.FRAME);
-							lastSibling.push(null);
-							
-							currentTriple = new RIFTriple();
-							currentForAll.setStatement(currentTriple);
-							
-							break;
-						default:
-							throw new SAXException("RIF: 'Implies', 'Atom' or 'Frame' expected, '"+localName+"' found.");
-					}
-					break;
-				case IMPLIES:
-					switch (localName.charAt(0)){
-						case 'i':
-							switch (localName.charAt(1)){
-								case 'd':
-									if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-									descent.push(Element.ID);
-									lastSibling.push(null);
-									break;
-								case 'f':
-									if (lastSibling.peek() == Element.IF) throw new SAXException("RIF: 'if' element must be unique within an 'Implies' element.");
-									if (lastSibling.peek() == Element.THEN) throw new SAXException("RIF: 'if' element must preceed any 'then' element within an 'Implies' element.");
-									descent.push(Element.IF);
-									lastSibling.push(null);
-									break;
-								default:
-									throw new SAXException("RIF: 'id', 'meta', 'if' or 'then' expected, '"+localName+"' found.");
-							}
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 't':
-							if (lastSibling.peek() != Element.IF) throw new SAXException("RIF: 'then' element must follow an 'if' element within an 'Implies' element.");
-							descent.push(Element.THEN);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta', 'if' or 'then' expected, '"+localName+"' found.");
-					}
-					break;
-				
-				case IF:
-				case FORMULA:
-					startFORMULA(localName);
-					break;
-				case EXISTS:
-					switch (localName.charAt(0)){
-						case 'd':
-							if (lastSibling.peek() == Element.FORMULA) throw new SAXException("RIF: 'declare' element must preceed the 'formula' element when within an 'Exists' element.");
-							descent.push(Element.DECLARE);
-							lastSibling.push(null);
-							break;
-						case 'f':
-							if (lastSibling.peek() != Element.DECLARE) throw new SAXException("RIF: 'formula' element, if it exists, must be preceeded by a 'declare' element when within an 'Exists' element.");
-							descent.push(Element.FORMULA);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'declare' or 'formula' expected, '"+localName+"' found.");
-					}
-				case AND:
-				case OR:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'f':
-							descent.push(Element.FORMULA);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta' or 'formula' expected, '"+localName+"' found.");
-					}
-					break;
-				case FRAME:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'o':
-							if (lastSibling.peek() == Element.OBJECT) throw new SAXException("RIF: 'object' element must be unique within a 'Frame' element.");
-							if (lastSibling.peek() == Element.SLOT) throw new SAXException("RIF: 'object' element must preceed any 'slot' element within a 'Frame' element.");
-							descent.push(Element.OBJECT);
-							lastSibling.push(null);
-							break;
-						case 's':
-							if (lastSibling.peek() != Element.OBJECT) throw new SAXException("RIF: 'slot' element must be preceeded by an 'object' element within a 'Frame' element.");
-							descent.push(Element.SLOT);
-							descent.push(Element.SLOT_FIRST);
-							lastSibling.push(null);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta', 'object' or 'slot' expected, '"+localName+"' found.");
-					}
-					break;
-				case EQUAL:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'l':
-							if (lastSibling.peek() == Element.LEFT) throw new SAXException("RIF: 'left' element must be unique within an 'Equal' element.");
-							if (lastSibling.peek() == Element.RIGHT) throw new SAXException("RIF: 'left' element must preceed any 'right' element within an 'Equal' element.");
-							descent.push(Element.LEFT);
-							lastSibling.push(null);
-							break;
-						case 'r':
-							if (lastSibling.peek() != Element.LEFT) throw new SAXException("RIF: 'right' element must be preceeded by a 'left' element within an 'Equal' element.");
-							descent.push(Element.RIGHT);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta', 'left' or 'right' expected, '"+localName+"' found.");
-					}
-					break;
-				case MEMBER:
-					switch (localName.charAt(0)){
-						case 'i':
-							switch (localName.charAt(1)){
-								case 'd':
-									if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-									descent.push(Element.ID);
-									lastSibling.push(null);
-									break;
-								case 'n':
-									if (lastSibling.peek() == Element.INSTANCE) throw new SAXException("RIF: 'instance' element must be unique within an 'Memeber' element.");
-									if (lastSibling.peek() == Element.CLASS) throw new SAXException("RIF: 'instance' element must preceed any 'class' element within an 'Member' element.");
-									descent.push(Element.INSTANCE);
-									lastSibling.push(null);
-									break;
-								default:
-									throw new SAXException("RIF: 'id', 'meta', 'instance' or 'class' expected, '"+localName+"' found.");
-							}
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'c':
-							if (lastSibling.peek() != Element.INSTANCE) throw new SAXException("RIF: 'class' element must be preceeded by an 'instance' element within an 'Equal' element.");
-							descent.push(Element.CLASS);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta', 'instance' or 'class' expected, '"+localName+"' found.");
-					}
-					break;
-				case SLOT_FIRST:
-					d = startTERM(localName,atts);
-					if (lastSibling.peek() == null){
-						currentTriple.setPredicate(d);
-					}else{
-						descent.pop();
-						lastSibling.pop();
-						currentTriple.setObject(d);
-					}
-				case OBJECT:
-					if (d == null) {
-						d = startTERM(localName,atts);
-						currentTriple.setSubject(d);
-					}
-				case RIGHT:
-					if (d == null) {
-						d = startTERM(localName,atts);
-						currentEqual.setRight(d);
-					}
-				case LEFT:
-					if (d == null) {
-						d = startTERM(localName,atts);
-						currentEqual.setLeft(d);
-					}
-				case INSTANCE:
-					if (d == null) {
-						d = startTERM(localName,atts);
-						currentMember.setInstance(d);
-					}
-				case CLASS:
-					if (d == null) {
-						d = startTERM(localName,atts);
-						currentMember.setInClass(d);
-					}
-					if (d instanceof RIFList){
-						currentList.push((RIFList) d);
-					}
-					break;
-				case LIST:
-					switch (localName.charAt(0)){
-						case 'i':
-							switch (localName.charAt(1)){
-								case 'd':
-									if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-									descent.push(Element.ID);
-									lastSibling.push(null);
-									break;
-								case 't':
-									if (lastSibling.peek() == Element.ITEMS) throw new SAXException("RIF: 'items' element, if it exists, must be unique in a 'List' element.");
-									descent.push(Element.ITEMS);
-									lastSibling.push(null);
-								default:
-									throw new SAXException("RIF: 'id', 'meta' or 'items' expected, '"+localName+"' found.");
-							}
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta' or 'items' expected, '"+localName+"' found.");
-					}
-					break;
-				case ITEMS:
-					lastSibling.pop();
+			
+			if (descent.isEmpty()){
+				if (localName.equals(Element.DOCUMENT.toString())){
+					descent.push(Element.DOCUMENT);
 					lastSibling.push(null);
-					d = startGROUNDTERM(localName,atts);
-					currentList.peek().add(d);
-					if (d instanceof RIFList){
-						currentList.push((RIFList) d);
-					}
-					break;
-				case GROUND_EXTERNAL:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'c':
-							if (lastSibling.peek() == Element.GROUND_CONTENT) throw new SAXException("RIF: 'content' element must be the unique in an 'External' element.");
-							descent.push(Element.GROUND_CONTENT);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta' or 'content' expected, '"+localName+"' found.");
-					}
-					break;
-				case GROUND_CONTENT:
-					switch (localName.charAt(0)){
-						case 'E':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Expr' element must be the sole child of a 'content' element.");
-							descent.push(Element.GROUND_EXPR);
-							lastSibling.push(null);
-							
-							currentAtom = new RIFAtom();
-							currentExternal.peek().setCommand(currentAtom);
-							
-							break;
-						default:
-							throw new SAXException("RIF: 'Expr' expected, '"+localName+"' found.");
-					}
-					break;
-				case TERM_EXTERNAL:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'c':
-							if (lastSibling.peek() == Element.TERM_CONTENT) throw new SAXException("RIF: 'content' element must be the unique in an 'External' element.");
-							descent.push(Element.TERM_CONTENT);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta' or 'content' expected, '"+localName+"' found.");
-					}
-					break;
-				case TERM_CONTENT:
-					switch (localName.charAt(0)){
-						case 'E':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Expr' element must be the sole child of a 'content' element.");
-							descent.push(Element.TERM_EXPR);
-							lastSibling.push(null);
-							
-							currentAtom = new RIFAtom();
-							currentExternal.peek().setCommand(currentAtom);
-							
-							break;
-						default:
-							throw new SAXException("RIF: 'Expr' expected, '"+localName+"' found.");
-					}
-					break;
-				case GROUND_EXPR:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'o':
-							if (lastSibling.peek() == Element.OP) throw new SAXException("RIF: 'op' element must be unique within an 'Expr' element.");
-							if (lastSibling.peek() == Element.GROUND_ARGS) throw new SAXException("RIF: 'op' element must preceed any 'args' element within an 'Expr' element.");
-							descent.push(Element.OP);
-							lastSibling.push(null);
-							break;
-						case 'a':
-							if (lastSibling.peek() != Element.OP) throw new SAXException("RIF: 'args' element must be preceeded by an 'op' element within an 'Expr' element.");
-							descent.push(Element.GROUND_ARGS);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta', 'op' or 'args' expected, '"+localName+"' found.");
-					}
-					break;
-				case TERM_EXPR:
-				case ATOM:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'o':
-							if (lastSibling.peek() == Element.OP) throw new SAXException("RIF: 'op' element must be unique within an 'Expr' or 'Atom' element.");
-							if (lastSibling.peek() == Element.TERM_ARGS) throw new SAXException("RIF: 'op' element must preceed any 'args' element within an 'Expr' or 'Atom' element.");
-							descent.push(Element.OP);
-							lastSibling.push(null);
-						case 'a':
-							if (lastSibling.peek() != Element.OP) throw new SAXException("RIF: 'args' element must be preceeded by an 'op' element within an 'Expr' or 'Atom' element.");
-							descent.push(Element.TERM_ARGS);
-							lastSibling.push(null);
-						default:
-							throw new SAXException("RIF: 'id', 'meta', 'op' or 'args' expected, '"+localName+"' found.");
-					}
-					break;
-				case OP:
-					switch (localName.charAt(0)){
-						case 'C':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Const' element must be the sole child of an 'op' element.");
-							descent.push(Element.CONST);
-							lastSibling.push(null);
-							
-							if (atts.getValue("type").equals("&rif;iri")){
-								currentConst = new RIFIRIConst();
-							}else{
-								currentConst = new RIFStringConst();
-							}
-							break;
-						default:
-							throw new SAXException("RIF: 'Const' expected, '"+localName+"' found.");
-					}
-					break;
-				case GROUND_ARGS:
-					lastSibling.pop();
-					lastSibling.push(null);
-					d = startGROUNDTERM(localName,atts);
-					currentAtom.addArg(d);
-					if (d instanceof RIFList){
-						currentList.push((RIFList) d);
-					}
-					break;
-				case TERM_ARGS:
-					lastSibling.pop();
-					lastSibling.push(null);
-					d = startTERM(localName,atts);
-					currentAtom.addArg(d);
-					if (d instanceof RIFList){
-						currentList.push((RIFList) d);
-					}
-					break;
-				case FORMULA_EXTERNAL:
-					switch (localName.charAt(0)){
-						case 'i':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
-							descent.push(Element.ID);
-							lastSibling.push(null);
-							break;
-						case 'm':
-							if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
-							descent.push(Element.META);
-							lastSibling.push(null);
-							break;
-						case 'c':
-							if (lastSibling.peek() == Element.FORMULA_CONTENT) throw new SAXException("RIF: 'content' element must be the unique in an 'External' element.");
-							descent.push(Element.FORMULA_CONTENT);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'id', 'meta' or 'content' expected, '"+localName+"' found.");
-					}
-					break;
-				case FORMULA_CONTENT:
-					switch (localName.charAt(0)){
-						case 'A':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Atom' element must be the sole child of an 'content' element.");
-							descent.push(Element.ATOM);
-							lastSibling.push(null);
-							
-							currentAtom = new RIFAtom();
-							currentExternal.peek().setCommand(currentAtom);
-							
-							break;
-						default:
-							throw new SAXException("RIF: 'Atom' expected, '"+localName+"' found.");
-					}
-					break;
 					
-				case THEN:
-					switch (localName.charAt(0)){
-						case 'A':
-							switch (localName.charAt(1)){
-								case 't':
-									if (lastSibling.peek() != null) throw new SAXException("RIF: 'Atom' element, if it exists, must be the sole child of a 'then' element.");
-									descent.push(Element.ATOM);
-									lastSibling.push(null);
-									
-									currentAtom = new RIFAtom();
-									currentRule.addAtomicToHead(currentAtom);
-									
-									break;
-								case 'n':
-									if (lastSibling.peek() != null) throw new SAXException("RIF: 'And' element, if it exists, must be the sole child of a 'then' element.");
-									descent.push(Element.THEN_AND);
-									lastSibling.push(null);
-									break;
-								default:
-									throw new SAXException("RIF: 'And', 'Frame' or 'Atom' expected, '"+localName+"' found.");
-							}
-							break;
-						case 'F':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' element, if it exists, must be the sole child of a 'then' element.");
-							descent.push(Element.FRAME);
-							lastSibling.push(null);
-							
-							currentTriple = new RIFTriple();
-							currentRule.addAtomicToHead(currentTriple);
-							
-							break;
-						default:
-							throw new SAXException("RIF: 'And', 'Frame' or 'Atom' expected, '"+localName+"' found.");
+					if (atts.getValue("xmlns") != null){
+						ruleSet.setBase(findURI(atts.getValue("xmlns")));
 					}
-					break;
-				case THEN_AND:
-					switch (localName.charAt(0)){
-						case 'f':
-							descent.push(Element.THEN_AND_FORMULA);
-							lastSibling.push(null);
-							break;
-						default:
-							throw new SAXException("RIF: 'formula' expected, '"+localName+"' found.");
-					}
-					break;
-				case THEN_AND_FORMULA:
-					switch (localName.charAt(0)){
-						case 'A':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Atom' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
-							descent.push(Element.ATOM);
-							lastSibling.push(null);
-							
-							currentAtom = new RIFAtom();
-							currentRule.addAtomicToHead(currentAtom);
-							
-							break;
-						case 'F':
-							if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
-							descent.push(Element.FRAME);
-							lastSibling.push(null);
-							
-							currentTriple = new RIFTriple();
-							currentRule.addAtomicToHead(currentTriple);
-							
-							break;
-						default:
-							throw new SAXException("RIF: 'Frame' or 'Atom' expected, '"+localName+"' found.");
-					}
-					break;
-					
-				default:
-					if (descent.isEmpty()){
-						if (localName.equals("Document")){
-							descent.push(Element.DOCUMENT);
-							lastSibling.push(null);
-						}else{
-							throw new SAXException("RIF: The root of the RIF document must be a 'Document' element.  Found a '"+localName+"'.");
+				}
+			}else{
+				switch (descent.peek()){
+					case ID:
+						switch (localName.charAt(0)){
+							case 'C':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Const' element, if it exists, must be the first child of an 'id' element.");
+								descent.push(Element.IRICONST);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'Const' expected, '"+localName+"' found.");
 						}
-					}else{
+						break;
+					case META:
+						switch (localName.charAt(0)){
+							case 'F':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' elements must be the sole child of a 'meta' element.");
+								descent.push(Element.FRAME);
+								lastSibling.push(null);
+								
+								currentFrame = new RIFFrame();
+								
+								break;
+							case 'A':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'And' elements must be the sole child of a 'meta' element.");
+								descent.push(Element.META_AND);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'And' or 'Frame' expected, '"+localName+"' found.");
+						}
+						break;
+					case META_AND:
+						switch (localName.charAt(0)){
+							case 'f':
+								descent.push(Element.META_FORMULA);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'formula' expected, '"+localName+"' found.");
+						}
+						break;
+					case META_FORMULA:
+						switch (localName.charAt(0)){
+							case 'F':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' elements must be the sole child of a 'formula' element when within a 'meta'.");
+								descent.push(Element.FRAME);
+								lastSibling.push(null);
+								
+								currentFrame = new RIFFrame();
+								
+								break;
+							default:
+								throw new SAXException("RIF: 'Frame' expected, '"+localName+"' found.");
+						}
+						break;
+						
+					case DOCUMENT:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'd':
+								if (lastSibling.peek() == Element.PAYLOAD) throw new SAXException("RIF: All 'directive' elements must preceed any 'payload' element.");
+								descent.push(Element.DIRECTIVE);
+								lastSibling.push(null);
+								break;
+							case 'p':
+								if (lastSibling.peek() == Element.PAYLOAD) throw new SAXException("RIF: 'payload' elements must be unique within a 'directive' element.");
+								descent.push(Element.PAYLOAD);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta', 'directive' or 'payload' expected, '"+localName+"' found.");
+						}
+						break;
+					case DIRECTIVE:
+						switch (localName.charAt(0)){
+							case 'I':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Import' elements must be the sole child of a 'directive' element.");
+								descent.push(Element.IMPORT);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'Import' expected, '"+localName+"' found.");
+						}
+						break;
+					case IMPORT:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'l':
+								if (lastSibling.peek() == Element.LOCATION) throw new SAXException("RIF: 'location' element must be unique within an 'Import' element.");
+								if (lastSibling.peek() == Element.PROFILE) throw new SAXException("RIF: 'location' element must preceed any 'profile' element within an 'Import' element.");
+								descent.push(Element.LOCATION);
+								lastSibling.push(null);
+								break;
+							case 'p':
+								if (lastSibling.peek() != Element.LOCATION) throw new SAXException("RIF: 'profile' element, if it exists, must be preceeded by a 'location' element.");
+								descent.push(Element.PROFILE);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta', 'location' or 'profile' expected, '"+localName+"' found.");
+						}
+						break;
+						
+					case PAYLOAD:
+						switch (localName.charAt(0)){
+							case 'G':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Group' element must be within a 'payload' element.");
+								descent.push(Element.GROUP);
+								lastSibling.push(null);
+								
+								currentGroup.push(new RIFGroup());
+								this.ruleSet.groups.add(currentGroup.peek());
+								
+								break;
+							default:
+								throw new SAXException("RIF: 'Group' expected, '"+localName+"' found.");
+						}
+						break;
+					case GROUP:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 's':
+								descent.push(Element.SENTENCE);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta' or 'sentence' expected, '"+localName+"' found.");
+						}
+						break;
+					case SENTENCE:
+						switch (localName.charAt(0)){
+							case 'G':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Group' element must be the sole child of a 'sentence' element.");
+								descent.push(Element.GROUP);
+								lastSibling.push(null);
+								
+								RIFGroup g = new RIFGroup();
+								currentGroup.peek().addSentence(g);
+								currentGroup.push(g);
+								
+								break;
+							case 'F':
+								switch(localName.charAt(1)){
+									case 'o':
+										if (lastSibling.peek() != null) throw new SAXException("RIF: 'Forall' element must be the sole child of a 'sentence' element.");
+										descent.push(Element.FOR_ALL);
+										lastSibling.push(null);
+										
+										currentForAll = new RIFForAll();
+										currentGroup.peek().addSentence(currentForAll);
+										
+										break;
+									case 'r':
+										if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
+										descent.push(Element.FRAME);
+										lastSibling.push(null);
+										
+										currentFrame = new RIFFrame();
+										currentForAll.setStatement(currentFrame);
+										
+										break;
+									default:
+										throw new SAXException("RIF: 'Group', 'ForAll', 'Frame', 'Atom' or 'Implies' expected, '"+localName+"' found.");
+								}
+								
+								break;
+							case 'I':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Implies' element must be the sole child of a 'sentence' element.");
+								descent.push(Element.IMPLIES);
+								lastSibling.push(null);
+								
+								currentRule = new RIFRule();
+								currentGroup.peek().addSentence(currentRule);
+								
+								break;
+							case 'A':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Atom' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
+								descent.push(Element.ATOM);
+								lastSibling.push(null);
+								
+								currentAtom = new RIFAtom();
+								currentForAll.setStatement(currentAtom);
+								
+								break;
+							default:
+								throw new SAXException("RIF: 'Group', 'ForAll', 'Frame', 'Atom' or 'Implies' expected, '"+localName+"' found.");
+						}
+						break;
+					case FOR_ALL:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'd':
+								if (lastSibling.peek() == Element.FOR_ALL_FORMULA) throw new SAXException("RIF: 'declare' element must be stated before any 'formula' element when within a 'Forall' element.");
+								descent.push(Element.DECLARE);
+								lastSibling.push(null);
+								break;
+							case 'f':
+								if (lastSibling.peek() != Element.DECLARE) throw new SAXException("RIF: 'formula' element must be preceeded by at least one 'declare' element when within a 'Forall' element.");
+								descent.push(Element.FOR_ALL_FORMULA);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta', 'declare' or 'formula' expected, '"+localName+"' found.");
+						}
+						break;
+					case DECLARE:
+						switch (localName.charAt(0)){
+							case 'V':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Var' elements must be the sole child of a 'declare' element.");
+								descent.push(Element.VAR);
+								lastSibling.push(null);
+								
+								currentVar = new RIFVar();
+								if (currentFormula.isEmpty())
+									currentForAll.addUniversalVar(currentVar);
+								else
+									try {
+										((RIFExists) currentFormula.peek()).addExistentialVar(currentVar);
+									} catch (ClassCastException e) {
+										throw new SAXException("RIF: variable declarations can only occur as direct children of 'ForAll' or 'Exists' elements", e);
+									}
+								
+								break;
+							default:
+								throw new SAXException("RIF: 'Var' expected, '"+localName+"' found.");
+						}
+						break;
+					case VAR:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'N':
+								if (lastSibling.peek() == Element.NAME) throw new SAXException("RIF: 'Name' element must be unique within a 'Var' element.");
+								descent.push(Element.NAME);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta' or 'Name' expected, '"+localName+"' found.");
+						}
+						break;
+					case FOR_ALL_FORMULA:
+						switch (localName.charAt(0)){
+							case 'I':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Implies' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
+								descent.push(Element.IMPLIES);
+								lastSibling.push(null);
+								
+								currentRule = new RIFRule();
+								currentForAll.setStatement(currentRule);
+								
+								break;
+							case 'A':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Atom' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
+								descent.push(Element.ATOM);
+								lastSibling.push(null);
+								
+								currentAtom = new RIFAtom();
+								currentForAll.setStatement(currentAtom);
+								
+								break;
+							case 'F':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
+								descent.push(Element.FRAME);
+								lastSibling.push(null);
+								
+								currentFrame = new RIFFrame();
+								currentForAll.setStatement(currentFrame);
+								
+								break;
+							default:
+								throw new SAXException("RIF: 'Implies', 'Atom' or 'Frame' expected, '"+localName+"' found.");
+						}
+						break;
+					case IMPLIES:
+						switch (localName.charAt(0)){
+							case 'i':
+								switch (localName.charAt(1)){
+									case 'd':
+										if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+										descent.push(Element.ID);
+										lastSibling.push(null);
+										break;
+									case 'f':
+										if (lastSibling.peek() == Element.IF) throw new SAXException("RIF: 'if' element must be unique within an 'Implies' element.");
+										if (lastSibling.peek() == Element.THEN) throw new SAXException("RIF: 'if' element must preceed any 'then' element within an 'Implies' element.");
+										descent.push(Element.IF);
+										lastSibling.push(null);
+										break;
+									default:
+										throw new SAXException("RIF: 'id', 'meta', 'if' or 'then' expected, '"+localName+"' found.");
+								}
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 't':
+								if (lastSibling.peek() != Element.IF) throw new SAXException("RIF: 'then' element must follow an 'if' element within an 'Implies' element.");
+								descent.push(Element.THEN);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta', 'if' or 'then' expected, '"+localName+"' found.");
+						}
+						break;
+					
+					case IF:
+					case FORMULA:
+						startFORMULA(localName);
+						break;
+					case EXISTS:
+						switch (localName.charAt(0)){
+							case 'd':
+								if (lastSibling.peek() == Element.FORMULA) throw new SAXException("RIF: 'declare' element must preceed the 'formula' element when within an 'Exists' element.");
+								descent.push(Element.DECLARE);
+								lastSibling.push(null);
+								break;
+							case 'f':
+								if (lastSibling.peek() != Element.DECLARE) throw new SAXException("RIF: 'formula' element, if it exists, must be preceeded by a 'declare' element when within an 'Exists' element.");
+								descent.push(Element.FORMULA);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'declare' or 'formula' expected, '"+localName+"' found.");
+						}
+					case AND:
+					case OR:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'f':
+								descent.push(Element.FORMULA);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta' or 'formula' expected, '"+localName+"' found.");
+						}
+						break;
+					case FRAME:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'o':
+								if (lastSibling.peek() == Element.OBJECT) throw new SAXException("RIF: 'object' element must be unique within a 'Frame' element.");
+								if (lastSibling.peek() == Element.SLOT) throw new SAXException("RIF: 'object' element must preceed any 'slot' element within a 'Frame' element.");
+								descent.push(Element.OBJECT);
+								lastSibling.push(null);
+								break;
+							case 's':
+								if (lastSibling.peek() != Element.OBJECT) currentFrame.newPredObPair();
+								descent.push(Element.SLOT);
+								descent.push(Element.SLOT_FIRST);
+								lastSibling.push(null);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta', 'object' or 'slot' expected, '"+localName+"' found.");
+						}
+						break;
+					case EQUAL:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'l':
+								if (lastSibling.peek() == Element.LEFT) throw new SAXException("RIF: 'left' element must be unique within an 'Equal' element.");
+								if (lastSibling.peek() == Element.RIGHT) throw new SAXException("RIF: 'left' element must preceed any 'right' element within an 'Equal' element.");
+								descent.push(Element.LEFT);
+								lastSibling.push(null);
+								break;
+							case 'r':
+								if (lastSibling.peek() != Element.LEFT) throw new SAXException("RIF: 'right' element must be preceeded by a 'left' element within an 'Equal' element.");
+								descent.push(Element.RIGHT);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta', 'left' or 'right' expected, '"+localName+"' found.");
+						}
+						break;
+					case MEMBER:
+						switch (localName.charAt(0)){
+							case 'i':
+								switch (localName.charAt(1)){
+									case 'd':
+										if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+										descent.push(Element.ID);
+										lastSibling.push(null);
+										break;
+									case 'n':
+										if (lastSibling.peek() == Element.INSTANCE) throw new SAXException("RIF: 'instance' element must be unique within an 'Memeber' element.");
+										if (lastSibling.peek() == Element.CLASS) throw new SAXException("RIF: 'instance' element must preceed any 'class' element within an 'Member' element.");
+										descent.push(Element.INSTANCE);
+										lastSibling.push(null);
+										break;
+									default:
+										throw new SAXException("RIF: 'id', 'meta', 'instance' or 'class' expected, '"+localName+"' found.");
+								}
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'c':
+								if (lastSibling.peek() != Element.INSTANCE) throw new SAXException("RIF: 'class' element must be preceeded by an 'instance' element within an 'Equal' element.");
+								descent.push(Element.CLASS);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta', 'instance' or 'class' expected, '"+localName+"' found.");
+						}
+						break;
+					case SLOT_FIRST:
+						if (lastSibling.peek() == null){
+							d = startTERM(localName,atts);
+							currentFrame.setPredicate(d);
+						}else{
+							descent.pop();
+							lastSibling.pop();
+							d = startTERM(localName,atts);
+							currentFrame.setObject(d);
+						}
+					case OBJECT:
+						if (d == null) {
+							d = startTERM(localName,atts);
+							currentFrame.setSubject(d);
+						}
+					case RIGHT:
+						if (d == null) {
+							d = startTERM(localName,atts);
+							currentEqual.setRight(d);
+						}
+					case LEFT:
+						if (d == null) {
+							d = startTERM(localName,atts);
+							currentEqual.setLeft(d);
+						}
+					case INSTANCE:
+						if (d == null) {
+							d = startTERM(localName,atts);
+							currentMember.setInstance(d);
+						}
+					case CLASS:
+						if (d == null) {
+							d = startTERM(localName,atts);
+							currentMember.setInClass(d);
+						}
+						if (d instanceof RIFList){
+							currentList.push((RIFList) d);
+						}
+						break;
+					case LIST:
+						switch (localName.charAt(0)){
+							case 'i':
+								switch (localName.charAt(1)){
+									case 'd':
+										if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+										descent.push(Element.ID);
+										lastSibling.push(null);
+										break;
+									case 't':
+										if (lastSibling.peek() == Element.ITEMS) throw new SAXException("RIF: 'items' element, if it exists, must be unique in a 'List' element.");
+										descent.push(Element.ITEMS);
+										lastSibling.push(null);
+									default:
+										throw new SAXException("RIF: 'id', 'meta' or 'items' expected, '"+localName+"' found.");
+								}
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta' or 'items' expected, '"+localName+"' found.");
+						}
+						break;
+					case ITEMS:
+						lastSibling.pop();
+						lastSibling.push(null);
+						d = startGROUNDTERM(localName,atts);
+						currentList.peek().add(d);
+						if (d instanceof RIFList){
+							currentList.push((RIFList) d);
+						}
+						break;
+					case GROUND_EXTERNAL:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'c':
+								if (lastSibling.peek() == Element.GROUND_CONTENT) throw new SAXException("RIF: 'content' element must be the unique in an 'External' element.");
+								descent.push(Element.GROUND_CONTENT);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta' or 'content' expected, '"+localName+"' found.");
+						}
+						break;
+					case GROUND_CONTENT:
+						switch (localName.charAt(0)){
+							case 'E':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Expr' element must be the sole child of a 'content' element.");
+								descent.push(Element.GROUND_EXPR);
+								lastSibling.push(null);
+								
+								currentAtom = new RIFAtom();
+								currentExternal.peek().setCommand(currentAtom);
+								
+								break;
+							default:
+								throw new SAXException("RIF: 'Expr' expected, '"+localName+"' found.");
+						}
+						break;
+					case TERM_EXTERNAL:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'c':
+								if (lastSibling.peek() == Element.TERM_CONTENT) throw new SAXException("RIF: 'content' element must be the unique in an 'External' element.");
+								descent.push(Element.TERM_CONTENT);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta' or 'content' expected, '"+localName+"' found.");
+						}
+						break;
+					case TERM_CONTENT:
+						switch (localName.charAt(0)){
+							case 'E':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Expr' element must be the sole child of a 'content' element.");
+								descent.push(Element.TERM_EXPR);
+								lastSibling.push(null);
+								
+								currentAtom = new RIFAtom();
+								currentExternal.peek().setCommand(currentAtom);
+								
+								break;
+							default:
+								throw new SAXException("RIF: 'Expr' expected, '"+localName+"' found.");
+						}
+						break;
+					case GROUND_EXPR:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'o':
+								if (lastSibling.peek() == Element.OP) throw new SAXException("RIF: 'op' element must be unique within an 'Expr' element.");
+								if (lastSibling.peek() == Element.GROUND_ARGS) throw new SAXException("RIF: 'op' element must preceed any 'args' element within an 'Expr' element.");
+								descent.push(Element.OP);
+								lastSibling.push(null);
+								break;
+							case 'a':
+								if (lastSibling.peek() != Element.OP) throw new SAXException("RIF: 'args' element must be preceeded by an 'op' element within an 'Expr' element.");
+								descent.push(Element.GROUND_ARGS);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta', 'op' or 'args' expected, '"+localName+"' found.");
+						}
+						break;
+					case TERM_EXPR:
+					case ATOM:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'o':
+								if (lastSibling.peek() == Element.OP) throw new SAXException("RIF: 'op' element must be unique within an 'Expr' or 'Atom' element.");
+								if (lastSibling.peek() == Element.TERM_ARGS) throw new SAXException("RIF: 'op' element must preceed any 'args' element within an 'Expr' or 'Atom' element.");
+								descent.push(Element.OP);
+								lastSibling.push(null);
+								break;
+							case 'a':
+								if (lastSibling.peek() != Element.OP) throw new SAXException("RIF: 'args' element must be preceeded by an 'op' element within an 'Expr' or 'Atom' element.");
+								descent.push(Element.TERM_ARGS);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta', 'op' or 'args' expected, '"+localName+"' found.");
+						}
+						break;
+					case OP:
+						switch (localName.charAt(0)){
+							case 'C':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Const' element must be the sole child of an 'op' element.");
+								descent.push(Element.CONST);
+								lastSibling.push(null);
+								
+								if (atts.getValue("type").equals("&rif;iri")){
+									currentConst = new RIFIRIConst();
+								}else{
+									currentConst = new RIFStringConst();
+								}
+								break;
+							default:
+								throw new SAXException("RIF: 'Const' expected, '"+localName+"' found.");
+						}
+						break;
+					case GROUND_ARGS:
+						lastSibling.pop();
+						lastSibling.push(null);
+						d = startGROUNDTERM(localName,atts);
+						currentAtom.addArg(d);
+						if (d instanceof RIFList){
+							currentList.push((RIFList) d);
+						}
+						break;
+					case TERM_ARGS:
+						lastSibling.pop();
+						lastSibling.push(null);
+						d = startTERM(localName,atts);
+						currentAtom.addArg(d);
+						if (d instanceof RIFList){
+							currentList.push((RIFList) d);
+						}
+						break;
+					case FORMULA_EXTERNAL:
+						switch (localName.charAt(0)){
+							case 'i':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'id' element, if it exists, must be the first child of any element.");
+								descent.push(Element.ID);
+								lastSibling.push(null);
+								break;
+							case 'm':
+								if (lastSibling.peek() != null && lastSibling.peek() != Element.ID) throw new SAXException("RIF: 'meta' element, if it exists, must be the first child of its parent or follow an 'id' element.");
+								descent.push(Element.META);
+								lastSibling.push(null);
+								break;
+							case 'c':
+								if (lastSibling.peek() == Element.FORMULA_CONTENT) throw new SAXException("RIF: 'content' element must be the unique in an 'External' element.");
+								descent.push(Element.FORMULA_CONTENT);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'id', 'meta' or 'content' expected, '"+localName+"' found.");
+						}
+						break;
+					case FORMULA_CONTENT:
+						switch (localName.charAt(0)){
+							case 'A':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Atom' element must be the sole child of an 'content' element.");
+								descent.push(Element.ATOM);
+								lastSibling.push(null);
+								
+								currentAtom = new RIFAtom();
+								currentExternal.peek().setCommand(currentAtom);
+								
+								break;
+							default:
+								throw new SAXException("RIF: 'Atom' expected, '"+localName+"' found.");
+						}
+						break;
+						
+					case THEN:
+						switch (localName.charAt(0)){
+							case 'A':
+								switch (localName.charAt(1)){
+									case 't':
+										if (lastSibling.peek() != null) throw new SAXException("RIF: 'Atom' element, if it exists, must be the sole child of a 'then' element.");
+										descent.push(Element.ATOM);
+										lastSibling.push(null);
+										
+										currentAtom = new RIFAtom();
+										currentRule.addAtomicToHead(currentAtom);
+										
+										break;
+									case 'n':
+										if (lastSibling.peek() != null) throw new SAXException("RIF: 'And' element, if it exists, must be the sole child of a 'then' element.");
+										descent.push(Element.THEN_AND);
+										lastSibling.push(null);
+										break;
+									default:
+										throw new SAXException("RIF: 'And', 'Frame' or 'Atom' expected, '"+localName+"' found.");
+								}
+								break;
+							case 'F':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' element, if it exists, must be the sole child of a 'then' element.");
+								descent.push(Element.FRAME);
+								lastSibling.push(null);
+								
+								currentFrame = new RIFFrame();
+								currentRule.addAtomicToHead(currentFrame);
+								
+								break;
+							default:
+								throw new SAXException("RIF: 'And', 'Frame' or 'Atom' expected, '"+localName+"' found.");
+						}
+						break;
+					case THEN_AND:
+						switch (localName.charAt(0)){
+							case 'f':
+								descent.push(Element.THEN_AND_FORMULA);
+								lastSibling.push(null);
+								break;
+							default:
+								throw new SAXException("RIF: 'formula' expected, '"+localName+"' found.");
+						}
+						break;
+					case THEN_AND_FORMULA:
+						switch (localName.charAt(0)){
+							case 'A':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Atom' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
+								descent.push(Element.ATOM);
+								lastSibling.push(null);
+								
+								currentAtom = new RIFAtom();
+								currentRule.addAtomicToHead(currentAtom);
+								
+								break;
+							case 'F':
+								if (lastSibling.peek() != null) throw new SAXException("RIF: 'Frame' element, if it exists, must be the sole child of a 'formula' element when within a 'Forall'.");
+								descent.push(Element.FRAME);
+								lastSibling.push(null);
+								
+								currentFrame = new RIFFrame();
+								currentRule.addAtomicToHead(currentFrame);
+								
+								break;
+							default:
+								throw new SAXException("RIF: 'Frame' or 'Atom' expected, '"+localName+"' found.");
+						}
+						break;
+						
+					default:
 						throw new SAXException("RIF: '"+descent.peek().toString()+"' element must not contain child elements.");
-					}
+				}
 			}
 		}
 		
@@ -1344,7 +1427,7 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 		private void startFORMULA(String localName) throws SAXException{
 			switch (localName.charAt(0)){
 				case 'A':
-					switch (localName.charAt(0)){
+					switch (localName.charAt(1)){
 						case 'n':
 							if (lastSibling.peek() != null) throw new SAXException("RIF: 'And' element, if it exists, must be the sole child of an element.");
 							descent.push(Element.AND);
@@ -1433,8 +1516,8 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 					descent.push(Element.FRAME);
 					lastSibling.push(null);
 					
-					currentTriple = new RIFTriple();
-					pushToFormula(currentTriple);
+					currentFrame = new RIFFrame();
+					pushToFormula(currentFrame);
 					
 					break;
 				default:
@@ -1449,11 +1532,13 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 					descent.push(Element.CONST);
 					lastSibling.push(null);
 					
-					if (atts.getValue("type").equals("&rif;iri")){
-						currentConst = new RIFIRIConst();
-					}else{
-						currentConst = new RIFStringConst();
-					}
+					if (atts.getValue("type") != null
+							&& atts.getValue("type").equals(RIFIRIConst.datatype)){
+//System.out.println(atts.getValue("type"));
+							currentConst = new RIFIRIConst();
+						}else{
+							currentConst = new RIFStringConst();
+						}
 					return currentConst;
 				case 'V':
 					if (lastSibling.peek() != null) throw new SAXException("RIF: 'Var' element, if it exists, must be the sole child of an element.");
@@ -1487,11 +1572,13 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 					descent.push(Element.CONST);
 					lastSibling.push(null);
 					
-					if (atts.getValue("type").equals("&rif;iri")){
-						currentConst = new RIFIRIConst();
-					}else{
-						currentConst = new RIFStringConst();
-					}
+					if (atts.getValue("type") != null
+							&& atts.getValue("type").equals(RIFIRIConst.datatype)){
+//System.out.println(atts.getValue("type"));
+							currentConst = new RIFIRIConst();
+						}else{
+							currentConst = new RIFStringConst();
+						}
 					return currentConst;
 				case 'L':
 					if (lastSibling.peek() != null) throw new SAXException("RIF: 'List' element, if it exists, must be the sole child of an element.");
@@ -1513,84 +1600,123 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 		
 		//   CONTENT HANDLING
 		
-		@Override
-		public void characters(char[] chars, int arg0, int arg1){
+		private URI findURI(String value) throws SAXException{
 			try {
-				for (int i = arg0; i < arg0 + arg1; i++)
-					partialContent.append(chars[i]);
-			} catch (NullPointerException e){
-				partialContent = new StringBuilder();
-				for (int i = arg0; i < arg0 + arg1; i++)
-					partialContent.append(chars[i]);
+				return new URI(value);
+			} catch (URISyntaxException e) {
+System.out.println("Looking up Prefix");
+				if (value.charAt(0) == '&'){
+					int endOfEntity = value.indexOf(';');
+					String prefix = value.substring(1, endOfEntity);
+					String uri = ruleSet.getPrefix(prefix).toString();
+					if (endOfEntity < value.length()){
+						uri += value.substring(endOfEntity + 1);
+					}
+					try {
+						return new URI(uri);
+					} catch (URISyntaxException ex) {
+						throw new SAXException("RIF: IRI <"+uri+"> does not follow URI syntax.",e);
+					}
+				}else{
+					throw new SAXException("RIF: IRI <"+value+"> does not follow URI syntax.",e);
+				}
 			}
 		}
 		
+		@Override
+		public void characters(char[] chars, int start, int length) throws SAXException{
+			StringBuilder filteredChars = new StringBuilder();
+			for (int i = start; i < start + length; i++)
+				if (chars[i] != '\n' && chars[i] != '\r')
+					filteredChars.append(chars[i]);
+			if (filteredChars.length() > 0)
+				try {
+					partialContent.append(filteredChars);
+				} catch (NullPointerException e){
+					partialContent = filteredChars;
+				}
+		}
+		
 		private void handleContent() throws SAXException {
-			String content = partialContent.toString();
-			partialContent = null;
-			
-			switch (descent.peek()){
-				case CONST:
-					if (currentConst instanceof RIFIRIConst)
-						try {
-							((RIFIRIConst) currentConst).setData(new URI(content));
-						} catch (URISyntaxException e) {
-							throw new SAXException("RIF: IRI <"+content+"> does not follow URI syntax.",e);
-						}
-					else
-						((RIFStringConst) currentConst).setData(content);
-					break;
-				case IRICONST:
-					break;
-					
-				case LOCATION:
-					break;
-				case PROFILE:
-					break;
+			if (partialContent != null){
+				String content = partialContent.toString();
+				partialContent = null;
 				
-				case VAR:
-				case NAME:
-					currentVar.setName(content);
-					break;
-				default:
-					throw new SAXException("RIF: Did not expect characters value for element "+descent.peek().toString());
+				if (!descent.isEmpty())
+					switch (descent.peek()){
+						case CONST:
+							if (currentConst instanceof RIFIRIConst)
+								((RIFIRIConst) currentConst).setData(findURI(content));
+							else
+								((RIFStringConst) currentConst).setData(content);
+							break;
+						case IRICONST:
+							break;
+							
+						case LOCATION:
+							currentLocation = findURI(content);
+							break;
+						case PROFILE:
+							currentProfile = findURI(content);
+							break;
+						
+						case VAR:
+						case NAME:
+							currentVar.setName(content);
+							break;
+						default:
+					}
 			}
 		}
 		
 		//   ELEMENT END HANDLING
 		
 		public void endElement(		String uri,
-								String localName,
-									String qName)
+									String localName,
+								String qName)
 				throws SAXException {
-			if (partialContent != null) handleContent();
+			handleContent();
 			
-			if (!localName.equals(descent.peek().toString()))
-				throw new SAXException("RIF: Closing tag mismatch on '"+descent.peek().toString()+"'.");
+			if (localName == null || localName.equals(""))
+				localName = qName;
 			
-			switch (descent.peek()){
-				case ITEMS:
-					currentList.pop();
-					break;
-				case FORMULA_EXTERNAL:
-				case TERM_EXTERNAL:
-				case GROUND_EXTERNAL:
-					currentExternal.pop();
-					break;
-				case GROUP:
-					currentGroup.pop();
-					break;
-				case AND:
-				case OR:
-				case EXISTS:
-					currentFormula.pop();
-					break;
-				default:
+//System.out.println("/"+localName);
+			
+			if (!descent.isEmpty()){
+				if (!localName.equals(descent.peek().toString()))
+					throw new SAXException("RIF: Closing tag mismatch on '"+descent.peek().toString()+"'.");
+				
+				switch (descent.peek()){
+					case ITEMS:
+						currentList.pop();
+						break;
+					case FORMULA_EXTERNAL:
+					case TERM_EXTERNAL:
+					case GROUND_EXTERNAL:
+						currentExternal.pop();
+						break;
+					case GROUP:
+						currentGroup.pop();
+						break;
+					case AND:
+					case OR:
+					case EXISTS:
+						currentFormula.pop();
+						break;
+					case IMPORT:
+						ruleSet.addImport(currentLocation, currentProfile);
+						currentLocation = null;
+						currentProfile = null;
+						break;
+					default:
+				}
+				
+				lastSibling.pop();
+				if (!lastSibling.isEmpty()){
+					lastSibling.pop();
+					lastSibling.push(descent.pop());
+				}
 			}
-			
-			lastSibling.pop();
-			lastSibling.pop();
-			lastSibling.push(descent.pop());
 		}
 	
 	}
