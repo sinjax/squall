@@ -53,12 +53,12 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	/**
 	 * Aggregations consume lists of bindings and produce bindings. Empty means no aggregations
 	 */
-	List<IFunction<List<Context>,Context>> aggregations;
+	List<IVFunction<List<Context>, Context>> aggregations;
 	 
 	/**
 	 * Consequences consume bindings and perform some operation
 	 */
-	List<IFunction<Context,Context>> consequences;
+	IVFunction<Context, Context> consequence;
 	
 	/**
 	 * Initialise all system parts as empty, a fairly boring production system
@@ -68,8 +68,8 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 		systems = new ArrayList<List<CompiledProductionSystem<Context, Context>>>();
 		filters = new ArrayList<IVFunction<Context, Context>>();
 		predicates = new ArrayList<IVFunction<Context, Context>>();
-		aggregations = new ArrayList<IFunction<List<Context>, Context>>();
-		consequences = new ArrayList<IFunction<Context, Context>>();
+		aggregations = new ArrayList<IVFunction<List<Context>, Context>>();
+		consequence = null;
 	}
 	
 	/**
@@ -126,8 +126,8 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 * @param item
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addConsequence(IFunction<Context, Context> item){
-		this.consequences.add(item);
+	public CompiledProductionSystem<INPUT,OUTPUT> setConsequence(IVFunction<Context, Context> item){
+		this.consequence = item;
 		return this;
 	}
 
@@ -155,8 +155,8 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	/**
 	 * @return the consequences of this compiled system
 	 */
-	public List<IFunction<Context, Context>> getConequences() {
-		return this.consequences;
+	public IVFunction<Context, Context> getConequences() {
+		return this.consequence;
 	}
 
 	/**
@@ -169,7 +169,7 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	/**
 	 * @return the bindings aggregations
 	 */
-	public List<IFunction<List<Context>, Context>> getAggregations() {
+	public List<IVFunction<List<Context>, Context>> getAggregations() {
 		return this.aggregations;
 	}
 }

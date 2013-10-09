@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 
@@ -20,7 +22,7 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class TripleConsequence implements IFunction<Context,Context> {
+public class TripleConsequence implements IVFunction<Context,Context> {
 
 	private TriplePattern clause;
 	private Node_RuleVariable[] ruleVariables;
@@ -53,6 +55,21 @@ public class TripleConsequence implements IFunction<Context,Context> {
 
 	@Override
 	public void cleanup() { }
+
+	@Override
+	public List<String> variables() {
+		return new ArrayList<String>();
+	}
+
+	@Override
+	public String anonimised(Map<String, Integer> varmap) {
+		return anonimised();
+	}
+
+	@Override
+	public String anonimised() {
+		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
+	}
 
 
 }

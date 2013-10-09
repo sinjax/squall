@@ -62,9 +62,6 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 	}
 
 	private NamedNode<? extends IVFunction<Context,Context>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem<Context,Context> sys) {
-		
-		
-		
 		NamedNode<? extends IVFunction<Context, Context>> combinedFilters = orchestrateFilters(root,sys.getFilters());
 		combinedFilters = orchestratePredicates(combinedFilters,sys.getPredicates());
 		
@@ -79,18 +76,17 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 					combined = createJoinNode(combined, next);
 				}
 			}
-			if(combined!=null){
+			if(combined!=null && combinedFilters != null){ // join the sub systems to any filters
 				combined = createJoinNode(combined,combinedFilters);
-				joinedCPS.add(combined);
 			}
+			joinedCPS.add(combined);
 		}
 		if(joinedCPS.size() == 0){
 			// There were no sub CPS to join with, just add the combined filters to the list
 			joinedCPS.add(combinedFilters);
 		}
 //		aggregations = orchestrateAggregations(joinedCPS,sys.getAggregations());
-		orchestrateConsequences(joinedCPS,sys.getConequences());
-		return null;
+		return orchestrateConsequences(joinedCPS,sys.getConequences());
 	}
 
 
@@ -105,20 +101,17 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 		return "source_" + ret.root.size();
 	}
 
-	private void orchestrateConsequences(
+	private NamedNode<? extends IVFunction<Context,Context>> orchestrateConsequences(
 			List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS,
-			List<IFunction<Context,Context>> list) {
-		for (IFunction<Context, Context> function : list) {
-			NamedIFunctionNode consequenceNode = new NamedIFunctionNode(
-				nextConsequenceName(), 
-				function
-			);
-			
-			for (NamedNode<?> namedNode : joinedCPS) {
-				consequenceNode.connect(new NamedStream("link", namedNode, consequenceNode), consequenceNode);
-			}
-			
+			IVFunction<Context,Context> function) {
+		NamedIVFunctionNode consequenceNode = new NamedIVFunctionNode(
+			nextConsequenceName(), 
+			function
+		);
+		for (NamedNode<?> namedNode : joinedCPS) {
+			namedNode.connect(new NamedStream("link", namedNode, consequenceNode), consequenceNode);
 		}
+		return consequenceNode;
 	}
 
 	private String nextConsequenceName() {

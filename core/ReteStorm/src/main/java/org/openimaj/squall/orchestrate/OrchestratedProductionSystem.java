@@ -36,4 +36,14 @@ public class OrchestratedProductionSystem {
 		
 	}
 	
+	@Override
+	public String toString() {
+		StringBuffer buf = new StringBuffer();
+		for (NamedSourceNode elm : root) {
+			buf.append(elm.toString());
+			buf.append("\n");
+		}
+		return buf.toString();
+	}
+	
 }

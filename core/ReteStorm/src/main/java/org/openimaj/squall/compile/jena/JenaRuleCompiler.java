@@ -1,12 +1,14 @@
 package org.openimaj.squall.compile.jena;
 
 import java.util.List;
+import java.util.Map;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.TripleTripleListCPS;
 import org.openimaj.squall.compile.data.IStream;
+import org.openimaj.squall.compile.data.jena.CombinedIVFunction;
 import org.openimaj.squall.compile.data.jena.FunctorConsequence;
 import org.openimaj.squall.compile.data.jena.FunctorFunction;
 import org.openimaj.squall.compile.data.jena.TripleConsequence;
@@ -24,13 +26,29 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class JenaRuleCompiler implements Compiler<Triple,List<Triple>,SourceRulePair>{
+public class JenaRuleCompiler implements Compiler<Context,Context,SourceRulePair>{
 	
+	private final class CombinedContextFunction extends
+			CombinedIVFunction<Context, Context> {
+		@Override
+		protected Context initial() {
+			return new Context();
+		}
+
+		@Override
+		protected Context combine(Context out, Context apply) {
+			for (String key : apply.keySet()) {
+				out.put(key, apply.get(key));
+			}
+			return out;
+		}
+	}
+
 	@Override
-	public TripleTripleListCPS compile(SourceRulePair sourceRules) {
+	public ContextCPS compile(SourceRulePair sourceRules) {
 		List<Rule> rules = sourceRules.secondObject();
 		List<IStream<Context>> sources = sourceRules.firstObject();
-		TripleTripleListCPS ret = new TripleTripleListCPS();
+		ContextCPS ret = new ContextCPS();
 		for (IStream<Context> stream : sources) {
 			ret.addSource(stream);
 		}
@@ -54,16 +72,17 @@ public class JenaRuleCompiler implements Compiler<Triple,List<Triple>,SourceRule
 					}
 				}
 				
+				
+				CombinedIVFunction<Context, Context> comb = new CombinedContextFunction();
 				// Extract all the head parts
 				for (int i = 0; i < rule.headLength(); i++) {
 					ClauseEntry clause = rule.getHeadElement(i);
 					if (clause instanceof TriplePattern) {
-						ruleret.addConsequence(new TripleConsequence(rule, (TriplePattern)clause));
+						ruleret.setConsequence(new TripleConsequence(rule, (TriplePattern)clause));
 					} 
 					else if (clause instanceof Functor){
-						ruleret.addConsequence(new FunctorConsequence(rule, (Functor)clause));
-					}
-					
+						ruleret.setConsequence(new FunctorConsequence(rule, (Functor)clause));
+					}	
 				}
 			}
 		}

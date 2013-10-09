@@ -24,6 +24,7 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> impleme
 	public DGNode() {
 		this.children = new ArrayList<NODE>();
 		this.parents = new ArrayList<NODE>();
+		this.edges = new ArrayList<EDGE>();
 	}
 	
 	/**

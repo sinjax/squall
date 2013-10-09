@@ -12,9 +12,14 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.openimaj.io.FileUtils;
 import org.openimaj.rdf.storm.topology.ReteTopologyTest;
+import org.openimaj.squall.build.OIStreamBuilder;
+import org.openimaj.squall.compile.ContextCPS;
+import org.openimaj.squall.compile.TripleTripleListCPS;
 import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.IStreamWrapper;
 import org.openimaj.squall.compile.data.Initialisable;
+import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
@@ -93,7 +98,7 @@ public class TestJenaRuleCompiler {
 				.map(new ContextWrapper())
 			,init)
 		);
-		List<Rule> rules = JenaUtils.readRules(TestJenaRuleCompiler.class.getResourceAsStream("/test.rules"));
+		List<Rule> rules = JenaUtils.readRules(TestJenaRuleCompiler.class.getResourceAsStream("/test.single.rules"));
 		sourceRules = new SourceRulePair(sources, rules);
 		
 	}
@@ -104,7 +109,11 @@ public class TestJenaRuleCompiler {
 	@Test
 	public void testCompiler(){
 		JenaRuleCompiler jrc = new JenaRuleCompiler();
-		jrc.compile(sourceRules);
+		ContextCPS comp = jrc.compile(sourceRules);
+		GreedyOrchestrator go = new GreedyOrchestrator();
+		OrchestratedProductionSystem orchestrated = go.orchestrate(comp);
+		OIStreamBuilder builder = new OIStreamBuilder();
+		builder.build(orchestrated);
 	}
 
 }

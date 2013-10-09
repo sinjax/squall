@@ -22,15 +22,13 @@ public class OIStreamBuilder implements Builder{
 
 	private CollectionStream<Triple> triples;
 
-	public OIStreamBuilder(List<Triple> tripleList) {
-		// Start the triple stream
-		this.triples = new CollectionStream<Triple>(tripleList);
+	public OIStreamBuilder() {
 	}
 
 	@Override
 	public void build(OrchestratedProductionSystem ops) {
-		SplitStream<Context> splitStream = new SplitStream<Context>(this.triples.map(new TripleContenxtWrapper()));
-		// Get the root's children, these feed directly from the triple stream
+		System.out.println(ops);
+		
 	}
 
 }

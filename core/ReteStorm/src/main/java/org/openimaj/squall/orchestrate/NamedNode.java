@@ -54,4 +54,38 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	 * @return {@link Function} returned if this node is not a Source, {@link UnsupportedOperationException} otherwise
 	 */
 	public abstract Function<Context,Context> getFunction();
+	
+	@Override
+	public String toString() {
+		return String.format(this.name + "(children=%d)",this.children.size());
+	}
+
+	private String toString(int align, boolean printself) {
+		String spaces = rep(align, " ");
+		String ret = "";
+		String parentstr ;
+		if(printself){
+			parentstr = String.format("%s", name);
+			ret += parentstr;
+		}
+		else parentstr = spaces;
+		boolean first = true;
+		for (NamedStream edge : this.edges) {
+			String withstream = "";
+			if(printself) withstream = String.format(" %s ",edge.name);
+			ret += withstream + edge.end.toString(align + withstream.length(),first) + "\n";
+			first = false;
+		}
+		
+		return ret;
+	}
+
+	private String rep(int depth, String torep) {
+		String ret = "";
+		while(depth-- > 0 ){
+			ret += torep;
+			
+		}
+		return ret;
+	}
 }
