@@ -2,6 +2,7 @@ package org.openimaj.squall.orchestrate;
 
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
+import org.openimaj.util.stream.Stream;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -18,12 +19,8 @@ import org.openimaj.util.function.Function;
  * 
  * The {@link NamedFunctionNode} is a function itself which wraps the internal {@link Function} call
  */
-public class NamedFunctionNode extends NamedNode<NamedFunctionNode> implements Function<Context,Context>{
-	/**
-	 * key used to insert this node's name into the returned context
-	 */
-	public static final String NAME_KEY = "information";
-	private String name;
+public class NamedFunctionNode extends NamedNode<Function<Context,Context>> {
+	
 	private Function<Context, Context> func;
 	private Function<Context, Context> wrapped;
 	
@@ -46,15 +43,44 @@ public class NamedFunctionNode extends NamedNode<NamedFunctionNode> implements F
 			}
 		};
 	}
-	
-	
-	/**
-	 * @param in
-	 * @return the function wrapping this node's behavior
-	 */
-	public Context apply(Context in) {
-		return wrapped.apply(in);
+
+
+
+	@Override
+	public Function<Context, Context> getData() {
+		return this.wrapped;
 	}
+
+
+
+	@Override
+	public boolean isSource() {
+		return false;
+	}
+
+
+
+	@Override
+	public boolean isFunction() {
+		return true;
+	}
+
+
+
+	@Override
+	public Stream<Context> getSource() {
+		throw new UnsupportedOperationException();
+	}
+
+
+
+	@Override
+	public Function<Context, Context> getFunction() {
+		return this.wrapped;
+	}
+	
+	
+	
 	
 	
 }
