@@ -1,5 +1,9 @@
 package org.openimaj.squall.orchestrate;
 
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.IStream;
+import org.openimaj.squall.compile.data.Initialisable;
+import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.Stream;
@@ -27,9 +31,11 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	public static final String NAME_KEY = "information";
 	private String name;
 	/**
+	 * @param parent 
 	 * @param name the name of the node
 	 */
-	public NamedNode(String name) {
+	public NamedNode(OrchestratedProductionSystem parent, String name) {
+		super(parent);
 		this.name = name;
 	}
 	
@@ -47,6 +53,16 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	public abstract boolean isFunction();
 	
 	/**
+	 * @return true if {@link #getVariableHolder()} will return
+	 */
+	public abstract boolean isVariableHolder();
+	
+	/**
+	 * @return return the {@link VariableHolder} held otherwise fail horibbly
+	 */
+	public abstract VariableHolder getVariableHolder();
+	
+	/**
 	 * @return {@link Stream} returned if this node is a Source, {@link UnsupportedOperationException} otherwise
 	 */
 	public abstract Stream<Context> getSource();
@@ -60,32 +76,20 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 		return String.format(this.name + "(children=%d)",this.children.size());
 	}
 
-	private String toString(int align, boolean printself) {
-		String spaces = rep(align, " ");
-		String ret = "";
-		String parentstr ;
-		if(printself){
-			parentstr = String.format("%s", name);
-			ret += parentstr;
-		}
-		else parentstr = spaces;
-		boolean first = true;
-		for (NamedStream edge : this.edges) {
-			String withstream = "";
-			if(printself) withstream = String.format(" %s ",edge.name);
-			ret += withstream + edge.end.toString(align + withstream.length(),first) + "\n";
-			first = false;
-		}
-		
-		return ret;
+	/**
+	 * @return
+	 */
+	public String getName() {
+		return this.name;
 	}
 
-	private String rep(int depth, String torep) {
-		String ret = "";
-		while(depth-- > 0 ){
-			ret += torep;
-			
-		}
-		return ret;
-	}
+	/**
+	 * @return the {@link Initialisable} instance if {@link #isInitialisable()}, otherwise fail 
+	 */ 
+	public abstract Initialisable getInit();
+
+	/**
+	 * @return whether this node is {@link Initialisable}
+	 */
+	public abstract boolean isInitialisable() ;
 }

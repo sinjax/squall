@@ -59,7 +59,7 @@ public class JenaRuleCompiler implements Compiler<Context,Context,SourceRulePair
 			else
 			{
 				ContextCPS ruleret = new ContextCPS();
-				ret.addSystem(ruleret);
+				ret.addSeperateSystem(ruleret);
 
 				// Extract all the parts of the body
 				for (int i = 0; i < rule.bodyLength(); i++) {

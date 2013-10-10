@@ -1,18 +1,19 @@
 package org.openimaj.squall.orchestrate.greedy;
 
+import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.data.VariableFunction;
+import org.openimaj.squall.compile.data.Initialisable;
+import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.squall.orchestrate.NamedNode;
+import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.function.Function;
-import org.openimaj.util.stream.Stream;
 
 class NamedIVFunctionNode extends NamedNode<IVFunction<Context, Context>>{
 
 	private IVFunction<Context, Context> varfunc;
 
-	public NamedIVFunctionNode(String name, IVFunction<Context, Context> func) {
-		super(name);
+	public NamedIVFunctionNode(OrchestratedProductionSystem parent, String name, IVFunction<Context, Context> func) {
+		super(parent, name);
 		this.varfunc = func;
 	}
 	
@@ -31,12 +32,32 @@ class NamedIVFunctionNode extends NamedNode<IVFunction<Context, Context>>{
 	}
 
 	@Override
-	public Stream<Context> getSource() {
+	public IStream<Context> getSource() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Function<Context, Context> getFunction() {
+	public IVFunction<Context, Context> getFunction() {
+		return this.varfunc;
+	}
+
+	@Override
+	public Initialisable getInit() {
+		return this.varfunc;
+	}
+
+	@Override
+	public boolean isInitialisable() {
+		return true;
+	}
+
+	@Override
+	public boolean isVariableHolder() {
+		return true;
+	}
+
+	@Override
+	public VariableHolder getVariableHolder() {
 		return this.varfunc;
 	}
 	

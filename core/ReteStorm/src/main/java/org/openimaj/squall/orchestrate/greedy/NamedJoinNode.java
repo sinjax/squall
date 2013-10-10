@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.data.VariableFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
+import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
 
 /**
@@ -19,12 +19,12 @@ public class NamedJoinNode extends NamedIVFunctionNode {
 
 	static class JoinVariableFunction implements IVFunction<Context, Context>{
 
-		private VariableFunction<Context, Context> left;
-		private VariableFunction<Context, Context> right;
+		private IVFunction<Context, Context> left;
+		private IVFunction<Context, Context> right;
 
 		public JoinVariableFunction(
-				VariableFunction<Context,Context> left,
-				VariableFunction<Context,Context> right) {
+				IVFunction<Context,Context> left,
+				IVFunction<Context,Context> right) {
 			this.left = left;
 			this.right = right;
 		}
@@ -70,16 +70,16 @@ public class NamedJoinNode extends NamedIVFunctionNode {
 		
 	}
 
-	private NamedNode<? extends VariableFunction<Context, Context>> left;
-	private NamedNode<? extends VariableFunction<Context, Context>> right;
+	private NamedNode<? extends IVFunction<Context, Context>> left;
+	private NamedNode<? extends IVFunction<Context, Context>> right;
 	
 	/**
 	 * @param name 
 	 * @param left
 	 * @param right
 	 */
-	public NamedJoinNode(String name, NamedNode<? extends VariableFunction<Context, Context>> left,NamedNode<? extends VariableFunction<Context, Context>> right) {
-		super(name, new JoinVariableFunction(left.getData(),right.getData()));
+	public NamedJoinNode(OrchestratedProductionSystem parent, String name, NamedNode<? extends IVFunction<Context, Context>> left,NamedNode<? extends IVFunction<Context, Context>> right) {
+		super(parent, name, new JoinVariableFunction(left.getData(), right.getData()));
 		this.left = left;
 		this.right = right;
 		left.connect(this.leftNamedStream(), this);
@@ -90,14 +90,14 @@ public class NamedJoinNode extends NamedIVFunctionNode {
 	 * @return named stream representing the link between the left and this join
 	 */
 	public NamedStream leftNamedStream() {
-		return new NamedStream("left", left, this);
+		return new NamedStream("left");
 	}
 	
 	/**
 	 * @return named stream representing the link between the right and this join
 	 */
 	public NamedStream rightNamedStream() {
-		return new NamedStream("right", right, this);
+		return new NamedStream("right");
 	}
 
 }

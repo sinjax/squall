@@ -93,6 +93,18 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	}
 	
 	/**
+	 * Add a system as a part of this production system, this system is added to the 0th {@link List} of {@link CompiledProductionSystem}
+	 * @param sys
+	 * @return return this system (useful for chaining)
+	 */
+	public CompiledProductionSystem<INPUT,OUTPUT> addSeperateSystem(CompiledProductionSystem<Context,Context> sys){
+		List<CompiledProductionSystem<Context, Context>> l = new ArrayList<CompiledProductionSystem<Context, Context>>();
+		l.add(sys);
+		this.systems.add(l);
+		return this;
+	}
+	
+	/**
 	 * Add a filter function. Filters consume {@link Triple}, decide whether they
 	 * concern the filter, and if so emit a {@link Map} of bindings, otherwise null.
 	 * @param filter

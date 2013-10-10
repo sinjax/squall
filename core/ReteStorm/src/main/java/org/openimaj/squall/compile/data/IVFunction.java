@@ -8,6 +8,6 @@ package org.openimaj.squall.compile.data;
  * @param <I>
  * @param <O>
  */
-public interface IVFunction<I,O>  extends IFunction<I, O>, VariableFunction<I, O>{
+public interface IVFunction<I,O>  extends IFunction<I, O>, VariableHolder{
 
 }

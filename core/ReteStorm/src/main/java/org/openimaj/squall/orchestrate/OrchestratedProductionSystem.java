@@ -24,7 +24,7 @@ import com.hp.hpl.jena.graph.Triple;
  * 	TerminalNode
  * 
  */
-public class OrchestratedProductionSystem {
+public class OrchestratedProductionSystem extends DirectedGraph<NamedNode<?>,NamedStream> {
 	/**
 	 * The source nodes which are connected to the children
 	 */
@@ -45,5 +45,9 @@ public class OrchestratedProductionSystem {
 		}
 		return buf.toString();
 	}
+
+	
+
+	
 	
 }
