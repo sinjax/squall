@@ -31,9 +31,11 @@ package org.openimaj.rdf.storm.topology.builder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.topology.bolt.CompilationStormRuleReteBoltHolder;
@@ -79,6 +81,7 @@ public abstract class BaseStormReteTopologyBuilder extends ReteTopologyBuilder {
 	private List<IndependentPair<String,CompilationStormRuleReteBoltHolder>> rule;
 	private Map<String, StormRuleReteBolt> ruleBolts;
 	private Map<String, StormRuleReteBolt> bolts;
+	private Set<String> madeBolts;
 	private String ruleName;
 	private String prior;
 
@@ -86,6 +89,7 @@ public abstract class BaseStormReteTopologyBuilder extends ReteTopologyBuilder {
 	public void initTopology(ReteTopologyBuilderContext context) {
 		this.rules = new HashMap<String, List<IndependentPair<String, CompilationStormRuleReteBoltHolder>>>();
 		this.bolts = new HashMap<String, StormRuleReteBolt>();
+		this.madeBolts = new HashSet<String>();
 		ReteConflictSetBolt finalTerm = constructConflictSetBolt(context);
 		if (finalTerm != null)
 		{
@@ -225,13 +229,17 @@ public abstract class BaseStormReteTopologyBuilder extends ReteTopologyBuilder {
 
 		logger.debug("Connecting the filter and join instances to the source/final terminal instances");
 		// Now add the nodes to the actual topology
-		for (Entry<String, StormRuleReteBolt> nameFilter : ruleBolts.entrySet()) {
-			String name = nameFilter.getKey();
-			IRichBolt bolt = nameFilter.getValue();
-			if (bolt instanceof StormReteFilterBolt)
-				connectFilterBolt(context, name, bolt);
-			else if (bolt instanceof StormReteJoinBolt)
-				connectJoinBolt(context, name, (StormReteJoinBolt) bolt);
+		for (String name : ruleBolts.keySet()) {
+			// If the bolt hasn't yet been added to the topology in another rule, add it now
+			if (!madeBolts.contains(name)){
+				IRichBolt bolt = ruleBolts.get(name);
+				if (bolt instanceof StormReteFilterBolt)
+					connectFilterBolt(context, name, bolt);
+				else if (bolt instanceof StormReteJoinBolt)
+					connectJoinBolt(context, name, (StormReteJoinBolt) bolt);
+				// Indicate the bolt has already been added by removing it from the list of bolts to add
+				madeBolts.add(name);
+			}
 		}
 	}
 

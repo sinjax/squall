@@ -144,7 +144,7 @@ public class VariableIndependentReteRuleToStringUtils {
 
 			String rule = "[ ";
 			if (r.getName() != null)
-				rule += r.getName() + " : ";
+				rule += r.getName() + ": ";
 			return rule
 					+ clauseToStringAllVars(Arrays.asList(r.getBody()),v,m,c) + "-> "
 					+ clauseToStringAllVars(Arrays.asList(r.getHead()),v,m,c) + "]";
