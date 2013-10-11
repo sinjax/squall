@@ -134,9 +134,4 @@ public abstract class StormSPARQLReteBolt extends StormReteBolt implements Query
 		this.query = null;
 	}
 
-	public static Object extractBindings(Tuple env) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }
