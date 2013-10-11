@@ -9,7 +9,6 @@ import org.openimaj.util.stream.Stream;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * A stream which can be {@link #setup()} and {@link #cleanup()}
  *
- * @param <I>
  * @param <O>
  */
 public interface IStream<O> extends Stream<O>, Initialisable{

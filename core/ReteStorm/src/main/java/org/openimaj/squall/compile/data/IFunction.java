@@ -1,6 +1,5 @@
 package org.openimaj.squall.compile.data;
 
-import org.openimaj.util.function.Function;
 import org.openimaj.util.function.MultiFunction;
 
 /**

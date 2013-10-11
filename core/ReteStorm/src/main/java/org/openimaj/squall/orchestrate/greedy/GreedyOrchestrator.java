@@ -3,8 +3,6 @@ package org.openimaj.squall.orchestrate.greedy;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.squall.compile.CompiledProductionSystem;
@@ -24,11 +22,9 @@ import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
-import org.openimaj.util.function.Operation;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
 
-import com.android.dx.command.grep.Grep;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
@@ -46,7 +42,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  * Consequences are dealt with at the end
  *
  */
-public class GreedyOrchestrator implements Orchestrator<Context,Context>{
+public class GreedyOrchestrator implements Orchestrator{
 	
 	private int consequence = 0;
 	private int predicate = 0;
@@ -54,7 +50,7 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 	private int join = 0;
 
 	@Override
-	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem<Context,Context> sys, IOperation<Context> op) {
+	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem sys, IOperation<Context> op) {
 		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();		
 		ret.root = new ArrayList<NamedSourceNode>();
 		orchestrateSources(sys,ret);
@@ -80,28 +76,28 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 	}
 
 	private void orchestrateSources(
-			CompiledProductionSystem<Context, Context> sys,
+			CompiledProductionSystem sys,
 			OrchestratedProductionSystem root) {
 		if(sys.getSources().size()>0){
 			for (IStream<Context> sourceS: sys.getSources()) {				
 				root.root.add(new NamedSourceNode(root,nextSourceName(root), sourceS));
 			}
 		}
-		for (List<CompiledProductionSystem<Context, Context>> syslist: sys.getSystems()) {
-			for (CompiledProductionSystem<Context, Context> cps : syslist) {
+		for (List<CompiledProductionSystem> syslist: sys.getSystems()) {
+			for (CompiledProductionSystem cps : syslist) {
 				orchestrateSources(cps, root);
 			}
 		}
 	}
 
-	private NamedNode<? extends IVFunction<Context,Context>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem<Context,Context> sys) {
+	private NamedNode<? extends IVFunction<Context,Context>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem sys) {
 		NamedNode<? extends IVFunction<Context, Context>> combinedFilters = orchestrateFilters(root,sys.getFilters());
 		combinedFilters = orchestratePredicates(root,combinedFilters,sys.getPredicates());
 		
 		List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS = new ArrayList<NamedNode<? extends IVFunction<Context, Context>>>();
-		for (List<CompiledProductionSystem<Context,Context>> subsyslist : sys.getSystems()) {
+		for (List<CompiledProductionSystem> subsyslist : sys.getSystems()) {
 			NamedNode<? extends IVFunction<Context, Context>> combined = null;
-			for (CompiledProductionSystem<Context, Context> subsys : subsyslist) {
+			for (CompiledProductionSystem subsys : subsyslist) {
 				NamedNode<? extends IVFunction<Context, Context>> next = orchestrate(root,subsys);
 				if(combined == null){
 					combined = next;
@@ -124,10 +120,14 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 	}
 
 
-	private void orchestrateAggregations(
-			NamedNode<?> currentNode,
-			List<Function<List<Map<String, String>>, Map<String, String>>> aggregations) {
-		// TODO Auto-generated method stub
+	@SuppressWarnings("unused")
+	/**
+	 * FIXME: Make aggregation do something
+	 * 
+	 * @param currentNode
+	 * @param aggregations
+	 */
+	private void orchestrateAggregations(NamedNode<?> currentNode, List<Function<Context, Context>> aggregations) {
 		
 	}
 
@@ -224,6 +224,10 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 		return String.format("FILTER_%d",filter ++);
 	}
 	
+	/**
+	 * Draws an example {@link GreedyOrchestrator} 
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		InputStream nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
 		InputStream ruleStream = TestJenaRuleCompiler.class.getResourceAsStream("/test.singlejoin.complex.rules");

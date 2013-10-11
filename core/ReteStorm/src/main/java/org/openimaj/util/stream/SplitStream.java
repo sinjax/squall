@@ -1,15 +1,15 @@
 package org.openimaj.util.stream;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Random;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.openimaj.util.data.JoinStream;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.function.MultiFunction;
 import org.openimaj.util.function.Operation;
@@ -32,12 +32,12 @@ import org.openimaj.util.function.Predicate;
 public class SplitStream<T> implements Stream<T>{
 	
 	private Stream<T> inner;
-	private List<ConcurrentLinkedQueue<T>> lists;
-	class ConcurrentLinkedQueueStream extends AbstractStream<T>{
+	private List<Deque<T>> lists;
+	class DequeStream extends AbstractStream<T>{
 		
-		private ConcurrentLinkedQueue<T> queue;
+		private Deque<T> queue;
 
-		public ConcurrentLinkedQueueStream(ConcurrentLinkedQueue<T> queue) {
+		public DequeStream(Deque<T> queue) {
 			this.queue = queue;
 		}
 
@@ -60,7 +60,7 @@ public class SplitStream<T> implements Stream<T>{
 	 */
 	public SplitStream(Stream<T> inner) {
 		this.inner = inner;
-		this.lists = Collections.synchronizedList(new ArrayList<ConcurrentLinkedQueue<T>>());
+		this.lists = new ArrayList<Deque<T>>();
 	}
 	
 	@Override
@@ -72,16 +72,18 @@ public class SplitStream<T> implements Stream<T>{
 	public T next() {
 		throw new UnsupportedOperationException();
 	}
-	private ConcurrentLinkedQueue<T> registerNewQueue() {
+	private Deque<T> registerNewQueue() {
 		
-		ConcurrentLinkedQueue<T> ret = new ConcurrentLinkedQueue<T>();
+		Deque<T> ret = new ArrayDeque<T>();
 		this.lists.add(ret);
 		return ret;
 	}
 	
 	private T innerNext(){
 		T next = this.inner.next();
-		for (ConcurrentLinkedQueue<T> queue : this.lists) {
+		if(next == null) 
+			return null;
+		for (Deque<T> queue : this.lists) {
 			queue.offer(next);
 		}
 		return next;
@@ -103,9 +105,9 @@ public class SplitStream<T> implements Stream<T>{
 		newCLQS().forEach(op);
 	}
 
-	private ConcurrentLinkedQueueStream newCLQS() {
-		ConcurrentLinkedQueue<T> queue = registerNewQueue();
-		ConcurrentLinkedQueueStream clqs = new ConcurrentLinkedQueueStream(queue);
+	private DequeStream newCLQS() {
+		Deque<T> queue = registerNewQueue();
+		DequeStream clqs = new DequeStream(queue);
 		return clqs;
 	}
 
@@ -150,6 +152,10 @@ public class SplitStream<T> implements Stream<T>{
 	}
 	
 	
+	/**
+	 * @param args
+	 * @throws InterruptedException
+	 */
 	public static void main(String[] args) throws InterruptedException {
 		final long start = System.currentTimeMillis();
 		final SplitStream<Double> ss = new SplitStream<Double>(new AbstractStream<Double>() {
@@ -165,31 +171,28 @@ public class SplitStream<T> implements Stream<T>{
 			}
 		});
 		Random r = new Random();
+		List<Stream<Double>> streams = new ArrayList<Stream<Double>>();
 		for (int i = 0; i < 3; i++) {
 			final double limit = r.nextDouble();
-			new Thread(new Runnable(){
-				
+			Stream<Double> rstream = ss
+			.filter(new Predicate<Double>() {
 				@Override
-				public void run() {
-					final int[] count = new int[1];
-					ss
-					.filter(new Predicate<Double>() {
-						@Override
-						public boolean test(Double d) {
-							return d < limit;
-						}
-					})
-					.forEach(new Operation<Double>() {
-						
-						@Override
-						public void perform(Double  object) {
-							count[0]++;
-						}
-					});
-					System.out.println("Seen: " + count[0] + ", Limit: " + limit);
+				public boolean test(Double d) {
+					return d < limit;
 				}
-			}).start();
+			});
 			
+			streams.add(rstream);
 		}
+		final long count[] = new long[1];
+		JoinStream<Double> js = new JoinStream<Double>(streams);
+		js.forEach(new Operation<Double>() {
+			
+			@Override
+			public void perform(Double object) {
+				count[0]++;
+			}
+		});
+		System.out.println(count[0]);
 	}
 }

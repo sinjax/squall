@@ -29,7 +29,6 @@ public interface VariableHolder{
 	
 	/**
 	 * The name of this function with all variables replaced with "<VAR>"
-	 * @param varmap
 	 * @return anonimised name
 	 */
 	public String anonimised();

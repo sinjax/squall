@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
-import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 
 
@@ -24,10 +22,8 @@ import com.hp.hpl.jena.graph.Triple;
  * of a list of {@link CompiledProductionSystem}
  * 
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- * @param <INPUT> The sources of the production system produce this
- * @param <OUTPUT> The consequences of this production system produce  this
  */
-public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
+public abstract class CompiledProductionSystem {
 	
 	
 	/**
@@ -38,7 +34,7 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	/**
 	 * List of production systems that this compilation is made from
 	 */
-	List<List<CompiledProductionSystem<Context,Context>>> systems;	
+	List<List<CompiledProductionSystem>> systems;	
 	/**
 	 * Filters match triples and assign variables to values within the triple.
 	 */
@@ -65,7 +61,7 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 */
 	public CompiledProductionSystem() {
 		sources = new ArrayList<IStream<Context>>();
-		systems = new ArrayList<List<CompiledProductionSystem<Context, Context>>>();
+		systems = new ArrayList<List<CompiledProductionSystem>>();
 		filters = new ArrayList<IVFunction<Context, Context>>();
 		predicates = new ArrayList<IVFunction<Context, Context>>();
 		aggregations = new ArrayList<IVFunction<List<Context>, Context>>();
@@ -77,7 +73,7 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 * @param stream
 	 * @return a {@link Stream} of input 
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addSource(IStream<Context> stream) {
+	public CompiledProductionSystem addSource(IStream<Context> stream) {
 		this.sources.add(stream);
 		return this;
 	}
@@ -87,7 +83,7 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 * @param sys
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addSystem(CompiledProductionSystem<Context,Context> sys){
+	public CompiledProductionSystem addSystem(CompiledProductionSystem sys){
 		addFirst(systems,sys);
 		return this;
 	}
@@ -97,8 +93,8 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 * @param sys
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addSeperateSystem(CompiledProductionSystem<Context,Context> sys){
-		List<CompiledProductionSystem<Context, Context>> l = new ArrayList<CompiledProductionSystem<Context, Context>>();
+	public CompiledProductionSystem addSeperateSystem(CompiledProductionSystem sys){
+		List<CompiledProductionSystem> l = new ArrayList<CompiledProductionSystem>();
 		l.add(sys);
 		this.systems.add(l);
 		return this;
@@ -110,7 +106,7 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 * @param filter
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addFilter(IVFunction<Context,Context> filter){
+	public CompiledProductionSystem addFilter(IVFunction<Context,Context> filter){
 		filters.add(filter);
 		return this;
 	}
@@ -129,7 +125,7 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 * @param predicate
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addPredicate(IVFunction<Context,Context> predicate){
+	public CompiledProductionSystem addPredicate(IVFunction<Context,Context> predicate){
 		this.predicates.add(predicate);
 		return this;
 	}
@@ -138,7 +134,7 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 * @param item
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> setConsequence(IVFunction<Context, Context> item){
+	public CompiledProductionSystem setConsequence(IVFunction<Context, Context> item){
 		this.consequence = item;
 		return this;
 	}
@@ -160,7 +156,7 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	/**
 	 * @return the sub systems of this {@link CompiledProductionSystem}
 	 */
-	public List<List<CompiledProductionSystem<Context, Context>>> getSystems() {
+	public List<List<CompiledProductionSystem>> getSystems() {
 		return this.systems;
 	}
 

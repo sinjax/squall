@@ -12,7 +12,7 @@ import org.openimaj.util.stream.Stream;
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * 
- * A {@link NamedSourceNode} provides a unique name for a function. This name should be used by builders
+ * A {@link NamedSourceNode} provides a unique name for a {@link Stream}. This name should be used by builders
  * to guarantee that the output of a node goes to the correct children. The function provided
  * by a {@link NamedSourceNode} takes as input a {@link Context} and returns a {@link Context}. Exactly
  * how these {@link Context} instances are transmitted is entirley the choice of the builder, but it must be 
@@ -33,6 +33,7 @@ public class NamedSourceNode extends NamedNode<IStream<Context>> {
 
 
 	/**
+	 * @param parent The {@link OrchestratedProductionSystem} which this node is a part
 	 * @param name the name of the node
 	 * @param strm the source of triples
 	 */

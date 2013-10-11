@@ -8,9 +8,7 @@ import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.function.Function;
 import org.openimaj.util.function.Operation;
-import org.openimaj.util.stream.Stream;
 
 class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 

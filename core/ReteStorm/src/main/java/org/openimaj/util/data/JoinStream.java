@@ -1,15 +1,8 @@
 package org.openimaj.util.data;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
 
-import org.openimaj.util.parallel.GlobalExecutorPool;
-import org.openimaj.util.queue.BoundedPriorityQueue;
 import org.openimaj.util.stream.AbstractStream;
 import org.openimaj.util.stream.Stream;
 

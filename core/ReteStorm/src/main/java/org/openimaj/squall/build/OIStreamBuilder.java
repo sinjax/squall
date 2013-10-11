@@ -16,21 +16,17 @@ import org.openimaj.util.data.Context;
 import org.openimaj.util.data.JoinStream;
 import org.openimaj.util.data.NonBlockingStream;
 import org.openimaj.util.function.MultiFunction;
-import org.openimaj.util.stream.CollectionStream;
+import org.openimaj.util.stream.NullCatch;
 import org.openimaj.util.stream.SplitStream;
 import org.openimaj.util.stream.Stream;
 
-import com.hp.hpl.jena.graph.Triple;
-
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- * From an {@link OrchestratedProductionSystem} construct an OpenIMAJ {@link Stream} based 
- * instantiation
+ * From an {@link OrchestratedProductionSystem} construct and run an OpenIMAJ {@link Stream} based 
+ * instantiation of the production system
  *
  */
 public class OIStreamBuilder implements Builder{
-
-	private CollectionStream<Triple> triples;
 
 	/**
 	 * 
@@ -47,6 +43,11 @@ public class OIStreamBuilder implements Builder{
 
 	private void buildStream(OrchestratedProductionSystem ops, Map<String, Stream<Context>> state, Set<? extends NamedNode<?>> disconnected) {
 		
+		/**
+		 * Once there is only 1 disconnected node and that node has no children, we're at the end of the production system.
+		 * By defenition this must be the NamedNode which holds the Operation so start the forEach here
+		 * 
+		 */
 		if(disconnected.size() == 1 && disconnected.iterator().next().childCount() == 0){
 			NamedNode<?> last = disconnected.iterator().next();
 			if(last.isInitialisable()){
@@ -68,6 +69,10 @@ public class OIStreamBuilder implements Builder{
 			stream.forEach(last.getOperation());
 			return;
 		}
+		
+		/**
+		 * Try to connect each currently disconnected node
+		 */
 		Iterator<? extends NamedNode<?>> iter = disconnected.iterator();
 		Set<NamedNode<?>> newdisconnected = new HashSet<NamedNode<?>>();
 		while(iter.hasNext()){
@@ -76,18 +81,31 @@ public class OIStreamBuilder implements Builder{
 			
 			boolean remove = false;
 			
+			/**
+			 * If it is a source, initialise the stream, grab it, put it in a 
+			 * NonBlockingStream and if it has multiple children wrap it in a 
+			 * SplitStream. Also note, we put a NullCatch around the NonBlockingStream
+			 * 
+			 * Is this better than expecting every function down the production system to handle nulls?
+			 */
 			if(namedNode.isSource()){
 				if(namedNode.isInitialisable()){
 					Initialisable init = namedNode.getInit();
 					init.setup();
 				}
-				Stream<Context> source = new NonBlockingStream<Context>(namedNode.getSource());
+				Stream<Context> source = new NonBlockingStream<Context>(namedNode.getSource()).map(new NullCatch<Context>());
 				if(namedNode.childCount() > 1){
 					source = new SplitStream<Context>(source);
 				}
 				state.put(name, source);
 				remove = true;
 			}
+			/**
+			 * If it is a function and all its parents are ready, apply the function
+			 * to the parents. If there are more than one parent wrap them up
+			 * with a JoinStream and map this function to that join.
+			 * 
+			 */
 			if(namedNode.isFunction()){
 				if(containsAllParents(state,namedNode)){
 					// ready for connection!
@@ -123,6 +141,13 @@ public class OIStreamBuilder implements Builder{
 		buildStream(ops,state,newdisconnected);
 	}
 
+	/**
+	 * Grab all the parent streams, attaching them to a {@link NamedStream} function on the way
+	 * @param ops
+	 * @param state
+	 * @param namedNode
+	 * @return
+	 */
 	private List<Stream<Context>> extractParentStreams(OrchestratedProductionSystem ops, Map<String, Stream<Context>> state, NamedNode<?> namedNode) {
 		List<Stream<Context>> ret = new ArrayList<Stream<Context>>();
 		for (NamedStream edge : namedNode.parentEdges()) {
@@ -131,6 +156,12 @@ public class OIStreamBuilder implements Builder{
 		return ret;
 	}
 
+	/**
+	 * Have all the parents of a node been created?
+	 * @param state
+	 * @param namedNode
+	 * @return
+	 */
 	private boolean containsAllParents(Map<String, Stream<Context>> state,NamedNode<?> namedNode) {
 		
 		for (NamedNode<?> par : namedNode.parents()) {

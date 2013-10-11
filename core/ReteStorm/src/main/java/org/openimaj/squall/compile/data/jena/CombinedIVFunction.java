@@ -4,20 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.util.data.Context;
-
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.reasoner.rulesys.Builtin;
-import com.hp.hpl.jena.reasoner.rulesys.Functor;
-import com.hp.hpl.jena.reasoner.rulesys.Rule;
-import com.hp.hpl.jena.reasoner.rulesys.RuleContext;
-import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
 
 /**
+ * A {@link CombinedIVFunction} performs all functions on the data.
+ * Implementations know how to make an initial, empty output of 
+ * a function and further know how to combine the output of 
+ * multiple functions in a pairwise manner
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ * @param <A> 
+ * @param <B> 
  *
  */
 public abstract class CombinedIVFunction<A,B> implements IVFunction<A,B> {
@@ -25,14 +21,14 @@ public abstract class CombinedIVFunction<A,B> implements IVFunction<A,B> {
 	private List<IVFunction<A, B>> functions;
 
 	/**
-	 * @param functions 
-	 * @param r
-	 * @param clause
 	 */
 	public CombinedIVFunction() {
 		this.functions = new ArrayList<IVFunction<A,B>>();
 	}
 	
+	/**
+	 * @param func add a function to apply
+	 */
 	public void addFunction(IVFunction<A,B> func){
 		this.functions.add(func);
 	}

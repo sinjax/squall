@@ -2,7 +2,6 @@ package org.openimaj.squall.compile.jena;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
@@ -15,7 +14,6 @@ import org.openimaj.squall.compile.data.jena.TripleConsequence;
 import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
 import org.openimaj.util.data.Context;
 
-import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
@@ -26,7 +24,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class JenaRuleCompiler implements Compiler<Context,Context,SourceRulePair>{
+public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 	
 	private final class CombinedContextFunction extends
 			CombinedIVFunction<Context, Context> {

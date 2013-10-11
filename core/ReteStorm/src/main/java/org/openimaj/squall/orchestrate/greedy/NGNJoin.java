@@ -15,18 +15,15 @@ public class NGNJoin extends NGNIVFunction {
 
 	
 
-	private NamedNode<? extends IVFunction<Context, Context>> left;
-	private NamedNode<? extends IVFunction<Context, Context>> right;
 	
 	/**
+	 * @param parent 
 	 * @param name 
 	 * @param left
 	 * @param right
 	 */
 	public NGNJoin(OrchestratedProductionSystem parent, String name, NamedNode<? extends IVFunction<Context, Context>> left,NamedNode<? extends IVFunction<Context, Context>> right) {
 		super(parent, name, new FixedJoinFunction(left.getData(), right.getData()));
-		this.left = left;
-		this.right = right;
 		left.connect(this.leftNamedStream(), this);
 		right.connect(this.rightNamedStream(), this);
 	}

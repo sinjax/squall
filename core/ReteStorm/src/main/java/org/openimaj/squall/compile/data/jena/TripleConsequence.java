@@ -5,10 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
-import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.function.Function;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;

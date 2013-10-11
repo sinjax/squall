@@ -63,6 +63,7 @@ public class TripleFilterFunction implements IVFunction<Context, Context> {
 	}
 	@Override
 	public List<Context> apply(Context inc) {
+		List<Context> ctxs = new ArrayList<Context>();
 		logger.debug(String.format("Context(%s) sent to Filter(%s)" , inc, this.clause));
 		Triple in = inc.getTyped("triple");
 //		if(!in.getSubject().matches(this.extended.getMatchSubject())) return null;
@@ -78,7 +79,6 @@ public class TripleFilterFunction implements IVFunction<Context, Context> {
 		// We have a match!
 		Context out = new Context();
 		out.put("bindings", extractVars(in));
-		List<Context> ctxs = new ArrayList<Context>();
 		ctxs.add(out);
 		return ctxs ;
 	}

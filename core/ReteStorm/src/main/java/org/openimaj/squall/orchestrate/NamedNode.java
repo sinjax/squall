@@ -1,7 +1,5 @@
 package org.openimaj.squall.orchestrate;
 
-import org.openimaj.squall.compile.data.IFunction;
-import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
@@ -13,17 +11,10 @@ import org.openimaj.util.stream.Stream;
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * 
- * A {@link NamedNode} provides a unique name for a function. This name should be used by builders
- * to guarantee that the output of a node goes to the correct children. The function provided
- * by a {@link NamedNode} takes as input a {@link Context} and returns a {@link Context}. Exactly
- * how these {@link Context} instances are transmitted is entirley the choice of the builder, but it must be 
- * guaranteed that:
- * 	- The output of a given node is transmitted to all its children
- *  - If two nodes share the same child, the same instance of the child is transmitted outputs from both nodes
- *  
- *  It is the job of the builder to guarantee consistent instances based on the {@link NamedNode}'s name
+ * A {@link NamedNode} provides a unique name for a component of a production system. 
+ * This name should be used by builders to guarantee that the output of a node goes to the correct children. 
  * 
- * The {@link NamedNode} is a function itself which wraps the internal {@link Function} call
+ * 
  * @param <DATA> 
  */
 public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DATA>{
@@ -79,7 +70,7 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	}
 
 	/**
-	 * @return
+	 * @return The name of this node
 	 */
 	public String getName() {
 		return this.name;

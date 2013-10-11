@@ -11,7 +11,6 @@ import org.openimaj.util.pair.Pair;
  *
  * @param <NODE>
  * @param <EDGE>
- * @param <DATA>
  */
 public abstract class DirectedGraph<NODE extends DGNode<NODE, EDGE, ?>,EDGE> {
 	
@@ -23,7 +22,6 @@ public abstract class DirectedGraph<NODE extends DGNode<NODE, EDGE, ?>,EDGE> {
 	 * @return set of nodes with no children
 	 */
 	public Set<NODE> getLeaves() {
-		Set<NODE> visited = new HashSet<NODE>();
 		Set<NODE> leaves = new HashSet<NODE>();
 		for (Pair<NODE> node : this.edges.values()) {
 			if(node.secondObject().childCount() == 0)
