@@ -280,6 +280,24 @@ public abstract class StormReteBolt extends BaseRichBolt implements RETEStormSin
 		fields.addAll(Arrays.asList(Component.strings()));
 		return new Fields(fields);
 	}
+	
+	/**
+	 * For a given number of variables declare the fields present in the values.
+	 * The default fields (the elements of {@link Component}) are always present
+	 * and
+	 * appended to the end.
+	 *
+	 * @param variableCount
+	 * @return fields
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public static Fields declaredFields(String... fs) {
+		List<String> fields = new ArrayList<String>();
+		for (int i = 0; i < fs.length; i++)
+			fields.add(fs[i]);
+		fields.addAll(Arrays.asList(Component.strings()));
+		return new Fields(fields);
+	}
 
 	/**
 	 * To allow the variable name independant defenition of fields return the
@@ -362,6 +380,7 @@ public abstract class StormReteBolt extends BaseRichBolt implements RETEStormSin
 	 * Given a Jena {@link Graph} construct a {@link Values} instance which is
 	 * the subject, predicate and object of the triple calling
 	 * {@link Node#toString()}
+	 * @param parsed 
 	 *
 	 * @param isAdd
 	 *            add or remove
@@ -371,8 +390,10 @@ public abstract class StormReteBolt extends BaseRichBolt implements RETEStormSin
 	 *            the time
 	 * @return a {@link Values} instance
 	 */
-	public static Values asValues(boolean isAdd, Graph graph, long timestamp) {
+	public static Values asValues(boolean isAdd, Graph graph, long timestamp, Object... vals) {
 		Values values = new Values();
+		for (Object o : vals)
+			values.add(o);
 		for (Component cmp : Component.values()) {
 			switch (cmp) {
 			case isAdd:

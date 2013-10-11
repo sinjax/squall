@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.openimaj.rdf.storm.spout.NTripleSpout;
 import org.openimaj.rdf.storm.spout.NTriplesSpout;
 import org.openimaj.rdf.storm.topology.ReteRuleUtil;
 import org.openimaj.util.pair.IndependentPair;
@@ -98,9 +99,11 @@ public class ReteFilterBolt extends ReteBolt {
 			ClauseEntry clauseEntry = ReteRuleUtil.extractRuleBodyIndex(ruleString, clauseIndex);
 			logger.debug(String.format("Executing: %s",clauseEntry));
 		}
-		Triple t = NTriplesSpout.asTriple(input);
-		logger.debug(String.format("Filter recieved triple: %s",t));
-		this.clauseNode.fire(t, true);
+		Triple t = NTripleSpout.asTriple(input);
+		if (t != null){
+			logger.debug(String.format("Filter recieved triple: %s",t));
+			this.clauseNode.fire(t, true);
+		}
 		if(toFire == null){
 			logger.debug(String.format("Rule did not fire"));
 			collector.ack(input);

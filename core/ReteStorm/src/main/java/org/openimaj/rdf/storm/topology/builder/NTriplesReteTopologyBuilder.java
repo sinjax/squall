@@ -29,6 +29,7 @@
  */
 package org.openimaj.rdf.storm.topology.builder;
 
+import org.openimaj.rdf.storm.spout.NTripleSpout;
 import org.openimaj.rdf.storm.spout.NTriplesSpout;
 
 import backtype.storm.topology.TopologyBuilder;
@@ -56,7 +57,7 @@ public class NTriplesReteTopologyBuilder extends BaseReteTopologyBuilder {
 
 	@Override
 	public String prepareSourceSpout(TopologyBuilder builder) {
-		NTriplesSpout tripleSpout = new NTriplesSpout(nTriples);
+		NTripleSpout tripleSpout = new NTripleSpout(nTriples);
 		builder.setSpout(TRIPLE_SPOUT, tripleSpout, 1);
 		return TRIPLE_SPOUT;
 	}
