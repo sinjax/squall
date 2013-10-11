@@ -38,17 +38,17 @@ public abstract class CombinedIVFunction<A,B> implements IVFunction<A,B> {
 	}
 	
 	@Override
-	public B apply(A in) {
-		B out = initial();
+	public List<B> apply(A in) {
+		List<B> out = initial();
 		for (IVFunction<A,B> func: this.functions) {
 			out = combine(out,func.apply(in));
 		}
 		return out;
 	}
 
-	protected abstract B combine(B out, B apply) ;
+	protected abstract List<B> combine(List<B> out, List<B> apply) ;
 
-	protected abstract B initial() ;
+	protected abstract List<B> initial() ;
 	
 	@Override
 	public List<String> variables() {

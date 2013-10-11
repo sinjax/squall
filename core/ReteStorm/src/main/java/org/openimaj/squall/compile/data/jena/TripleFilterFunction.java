@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
@@ -21,8 +22,9 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
  *
  */
 public class TripleFilterFunction implements IVFunction<Context, Context> {
+	private final Logger logger = Logger.getLogger(TripleFilterFunction.class);
 	private TriplePattern clause;
-	private TripleMatch extended;
+	private Triple extended;
 	private List<String> variables;
 
 	/**
@@ -30,7 +32,7 @@ public class TripleFilterFunction implements IVFunction<Context, Context> {
 	 */
 	public TripleFilterFunction(TriplePattern clause) {
 		this.clause = clause;
-		this.extended = asExtendedTripleMatch(clause);
+		this.extended = asExtendedTripleMatch(clause).asTriple();
 	}
 	private TripleMatch asExtendedTripleMatch(TriplePattern tp){
 		this.variables = new ArrayList<String>();
@@ -60,16 +62,25 @@ public class TripleFilterFunction implements IVFunction<Context, Context> {
 		return n;
 	}
 	@Override
-	public Context apply(Context inc) {
+	public List<Context> apply(Context inc) {
+		logger.debug(String.format("Context(%s) sent to Filter(%s)" , inc, this.clause));
 		Triple in = inc.getTyped("triple");
-		if(!in.getSubject().matches(this.extended.getMatchSubject())) return null;
-		if(!in.getPredicate().matches(this.extended.getMatchPredicate())) return null;
-		if(!in.getObject().matches(this.extended.getMatchObject())) return null;
+//		if(!in.getSubject().matches(this.extended.getMatchSubject())) return null;
+//		if(!in.getPredicate().matches(this.extended.getMatchPredicate())) return null;
+//		if(!in.getObject().matches(this.extended.getMatchObject())) return null;
+		if(!this.extended.matches(in)){
+			logger.debug(String.format("No match!"));
+			return null;
+		}
+		
+		logger.debug(String.format("Match at Filter(%s)", this.clause));
 		
 		// We have a match!
 		Context out = new Context();
 		out.put("bindings", extractVars(in));
-		return out;
+		List<Context> ctxs = new ArrayList<Context>();
+		ctxs.add(out);
+		return ctxs ;
 	}
 
 	private Map<String, Node> extractVars(Triple t) {

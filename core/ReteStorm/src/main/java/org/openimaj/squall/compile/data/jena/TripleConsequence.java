@@ -37,7 +37,7 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 	}
 
 	@Override
-	public Context apply(Context in) {
+	public List<Context> apply(Context in) {
 		Map<String,Node> bindings = in.getTyped("bindings");
 		BindingVector env = BindingsUtils.mapToBindings(bindings, ruleVariables);
 		Triple t = env.instantiate((TriplePattern) this.clause);
@@ -46,8 +46,10 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 			ret.add(t);
 		}
 		Context out = new Context();
-		out.put("triples", ret);
-		return out;
+		out.put("triple", ret);
+		List<Context> ctxs = new ArrayList<Context>();
+		ctxs.add(out);
+		return ctxs;
 	}
 
 	@Override

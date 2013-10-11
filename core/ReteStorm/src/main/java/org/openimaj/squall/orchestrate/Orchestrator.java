@@ -1,6 +1,7 @@
 package org.openimaj.squall.orchestrate;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
+import org.openimaj.squall.compile.data.IOperation;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -12,8 +13,9 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
  */
 public interface Orchestrator<INPUT,OUTPUT> {
 	/**
-	 * @param sys
+	 * @param sys the system to be orchestrated
+	 * @param op the final operation (given the output of all final consequences)
 	 * @return an {@link OrchestratedProductionSystem} ready to be built
 	 */
-	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem<INPUT,OUTPUT> sys);
+	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem<INPUT,OUTPUT> sys, IOperation<OUTPUT> op);
 }

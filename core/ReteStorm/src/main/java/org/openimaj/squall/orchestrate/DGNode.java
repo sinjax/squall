@@ -16,8 +16,9 @@ import java.util.List;
 public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> implements Iterable<NODE>{
 	List<NODE> children;
 	List<NODE> parents;
-	List<EDGE> edges;
+	List<EDGE> childEdges;
 	private DirectedGraph<NODE, EDGE> root;
+	private ArrayList<EDGE> parentEdges;
 	
 	/**
 	 * @param root 
@@ -27,7 +28,8 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> impleme
 	public DGNode(DirectedGraph<NODE, EDGE> root) {
 		this.children = new ArrayList<NODE>();
 		this.parents = new ArrayList<NODE>();
-		this.edges = new ArrayList<EDGE>();
+		this.childEdges = new ArrayList<EDGE>();
+		this.parentEdges = new ArrayList<EDGE>();
 		this.root = root;
 		this.root.addVertex((NODE) this);
 	}
@@ -49,15 +51,67 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> impleme
 	/**
 	 * @return
 	 */
-	public Iterator<NODE> childiterator() {
+	private Iterator<NODE> childiterator() {
 		return this.children.iterator();
 	}
 	
 	/**
 	 * @return
 	 */
-	public Iterator<NODE> parentiterator() {
+	private Iterator<NODE> parentiterator() {
 		return this.parents.iterator();
+	}
+	
+	/**
+	 * @return iterable of the parents
+	 */
+	public Iterable<NODE> parents(){
+		return new Iterable<NODE>() {
+
+			@Override
+			public Iterator<NODE> iterator() {
+				return parentiterator();
+			}
+		};
+	}
+	
+	/**
+	 * @return the edges going this Node's children
+	 */
+	public Iterable<EDGE> childEdges() {
+		return new Iterable<EDGE>() {
+
+			@Override
+			public Iterator<EDGE> iterator() {
+				return childEdges.iterator();
+			}
+		};
+	}
+	
+	/**
+	 * @return the edges going this Node's children
+	 */
+	public Iterable<EDGE> parentEdges() {
+		return new Iterable<EDGE>() {
+
+			@Override
+			public Iterator<EDGE> iterator() {
+				return parentEdges.iterator();
+			}
+		};
+	}
+	
+	/**
+	 * @return iterable of the parents
+	 */
+	public Iterable<NODE> children(){
+		return new Iterable<NODE>() {
+
+			@Override
+			public Iterator<NODE> iterator() {
+				return childiterator();
+			}
+		};
 	}
 
 	/**
@@ -70,7 +124,11 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> impleme
 	}
 	
 	void addEdge(EDGE edge){
-		this.edges.add(edge);
+		this.childEdges.add(edge);
+	}
+	
+	void addParentEdge(EDGE edge){
+		this.parentEdges.add(edge);
 	}
 	
 	/**
@@ -82,6 +140,7 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> impleme
 		this.addChild(child);
 		child.addParent((NODE) this);
 		this.addEdge(edge);
+		child.addParentEdge(edge);
 		this.root.addEdge(edge, (NODE) this, child);
 	}
 	

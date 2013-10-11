@@ -6,6 +6,8 @@ import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
+import org.openimaj.util.function.MultiFunction;
+import org.openimaj.util.function.Operation;
 import org.openimaj.util.stream.Stream;
 
 /**
@@ -69,7 +71,7 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	/**
 	 * @return {@link Function} returned if this node is not a Source, {@link UnsupportedOperationException} otherwise
 	 */
-	public abstract Function<Context,Context> getFunction();
+	public abstract MultiFunction<Context,Context> getFunction();
 	
 	@Override
 	public String toString() {
@@ -92,4 +94,16 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	 * @return whether this node is {@link Initialisable}
 	 */
 	public abstract boolean isInitialisable() ;
+
+	/**
+	 * @return is this node an operation
+	 */
+	public abstract boolean isOperation();
+	
+	/**
+	 * @return is this node an operation
+	 */
+	public abstract Operation<Context> getOperation();
+
+	
 }

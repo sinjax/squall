@@ -1,12 +1,12 @@
 package org.openimaj.squall.compile.jena;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
-import org.openimaj.squall.compile.TripleTripleListCPS;
 import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.jena.CombinedIVFunction;
 import org.openimaj.squall.compile.data.jena.FunctorConsequence;
@@ -31,15 +31,13 @@ public class JenaRuleCompiler implements Compiler<Context,Context,SourceRulePair
 	private final class CombinedContextFunction extends
 			CombinedIVFunction<Context, Context> {
 		@Override
-		protected Context initial() {
-			return new Context();
+		protected List<Context> initial() {
+			return new ArrayList<Context>();
 		}
 
 		@Override
-		protected Context combine(Context out, Context apply) {
-			for (String key : apply.keySet()) {
-				out.put(key, apply.get(key));
-			}
+		protected List<Context> combine(List<Context> out, List<Context> apply) {
+			out.addAll(apply);
 			return out;
 		}
 	}
@@ -78,12 +76,13 @@ public class JenaRuleCompiler implements Compiler<Context,Context,SourceRulePair
 				for (int i = 0; i < rule.headLength(); i++) {
 					ClauseEntry clause = rule.getHeadElement(i);
 					if (clause instanceof TriplePattern) {
-						ruleret.setConsequence(new TripleConsequence(rule, (TriplePattern)clause));
+						comb.addFunction(new TripleConsequence(rule, (TriplePattern)clause));
 					} 
 					else if (clause instanceof Functor){
-						ruleret.setConsequence(new FunctorConsequence(rule, (Functor)clause));
+						comb.addFunction(new FunctorConsequence(rule, (Functor)clause));
 					}	
 				}
+				ruleret.setConsequence(comb);
 			}
 		}
 		return ret;

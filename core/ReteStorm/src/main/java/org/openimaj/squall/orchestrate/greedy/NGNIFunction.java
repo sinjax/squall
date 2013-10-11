@@ -8,13 +8,14 @@ import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
+import org.openimaj.util.function.Operation;
 import org.openimaj.util.stream.Stream;
 
-class NamedIFunctionNode extends NamedNode<IFunction<Context, Context>>{
+class NGNIFunction extends NamedNode<IFunction<Context, Context>>{
 
 	private IFunction<Context, Context> varfunc;
 
-	public NamedIFunctionNode(OrchestratedProductionSystem parent, String name, IFunction<Context, Context> func) {
+	public NGNIFunction(OrchestratedProductionSystem parent, String name, IFunction<Context, Context> func) {
 		super(parent, name);
 		this.varfunc = func;
 	}
@@ -60,6 +61,17 @@ class NamedIFunctionNode extends NamedNode<IFunction<Context, Context>>{
 
 	@Override
 	public VariableHolder getVariableHolder() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isOperation() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Operation<Context> getOperation() {
 		throw new UnsupportedOperationException();
 	}
 	

@@ -1,23 +1,21 @@
 package org.openimaj.squall.build;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.openimaj.squall.build.utils.TripleContenxtWrapper;
-import org.openimaj.squall.compile.data.IFunction;
-import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.orchestrate.NamedNode;
-import org.openimaj.squall.orchestrate.NamedSourceNode;
+import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.JoinStream;
 import org.openimaj.util.data.NonBlockingStream;
-import org.openimaj.util.function.Function;
+import org.openimaj.util.function.MultiFunction;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.SplitStream;
 import org.openimaj.util.stream.Stream;
@@ -34,44 +32,44 @@ public class OIStreamBuilder implements Builder{
 
 	private CollectionStream<Triple> triples;
 
+	/**
+	 * 
+	 */
 	public OIStreamBuilder() {
 	}
 
 	@Override
 	public void build(OrchestratedProductionSystem ops) {
-		Stream<Context> answer = buildStream(ops.root);
+		Set<NamedNode<?>> rootset = new HashSet<>();
+		rootset.addAll(ops.root);
+		buildStream(ops,new HashMap<String,Stream<Context>>(),rootset);
 	}
 
-	private Stream<Context> buildStream(List<NamedSourceNode> root) {
-		Map<String,Stream<Context>> state = new HashMap<String,Stream<Context>>();
-		List<NamedNode<?>> disconnected = new ArrayList<NamedNode<?>>();
-		for (NamedSourceNode namedSourceNode : root) {
-			IStream<Context> source = namedSourceNode.getData();
-			source.setup();
-			state.put(namedSourceNode.getName(), new NonBlockingStream<Context>(source));
-			for (Iterator<NamedNode<?>> iterator = namedSourceNode.childiterator(); iterator.hasNext();) {
-				disconnected.add(iterator.next());
-			}
-		}
-		return buildStream(state,disconnected); 
-	}
-
-	private Stream<Context> buildStream(Map<String, Stream<Context>> state, List<NamedNode<?>> disconnected) {
+	private void buildStream(OrchestratedProductionSystem ops, Map<String, Stream<Context>> state, Set<? extends NamedNode<?>> disconnected) {
 		
-		if(disconnected.size() == 1 && disconnected.get(0).childCount() == 0){
-			NamedNode<?> last = disconnected.get(0);
-			Stream<Context> lastStream = null;
+		if(disconnected.size() == 1 && disconnected.iterator().next().childCount() == 0){
+			NamedNode<?> last = disconnected.iterator().next();
 			if(last.isInitialisable()){
 				Initialisable init = last.getInit();
 				init.setup();
 			}
 			
-			if(!containsAllParents(state,last)){
+			if(!containsAllParents(state,last) || !last.isOperation()){
 				throw new RuntimeException("Could not build stream: Multiple final terminals is bad and shouldn't ever happen");
 			}
-			return lastStream;
+			List<Stream<Context>> parents = extractParentStreams(ops,state, last);
+			Stream<Context> stream = null;
+			if(parents.size() == 1){
+				stream = parents.get(0);
+			}
+			else{
+				stream = new JoinStream<Context>(parents);
+			}
+			stream.forEach(last.getOperation());
+			return;
 		}
-		Iterator<NamedNode<?>> iter = disconnected.iterator();
+		Iterator<? extends NamedNode<?>> iter = disconnected.iterator();
+		Set<NamedNode<?>> newdisconnected = new HashSet<NamedNode<?>>();
 		while(iter.hasNext()){
 			NamedNode<?> namedNode = iter.next();
 			String name = namedNode.getName();
@@ -83,20 +81,23 @@ public class OIStreamBuilder implements Builder{
 					Initialisable init = namedNode.getInit();
 					init.setup();
 				}
-				Stream<Context> source = namedNode.getSource();
-				state.put(name, new NonBlockingStream<Context>(source));
+				Stream<Context> source = new NonBlockingStream<Context>(namedNode.getSource());
+				if(namedNode.childCount() > 1){
+					source = new SplitStream<Context>(source);
+				}
+				state.put(name, source);
 				remove = true;
 			}
 			if(namedNode.isFunction()){
 				if(containsAllParents(state,namedNode)){
 					// ready for connection!
-					List<Stream<Context>> parents = extractParentStreams(state,namedNode);
+					List<Stream<Context>> parents = extractParentStreams(ops,state,namedNode);
 					if(namedNode.isInitialisable()){
 						Initialisable init = namedNode.getInit();
 						init.setup();
 					}
 					Stream<Context> funStream;
-					Function<Context, Context> fun = namedNode.getFunction();
+					MultiFunction<Context, Context> fun = namedNode.getFunction();
 					if(parents.size() > 1) {
 						funStream = new JoinStream<Context>(parents).map(fun);
 					} else {
@@ -105,21 +106,39 @@ public class OIStreamBuilder implements Builder{
 					if(namedNode.childCount() > 1){
 						funStream = new SplitStream<Context>(funStream);
 					}
-					
 					state.put(name, funStream);
 					remove = true;
 				}
 			}
+			if(!remove){
+				newdisconnected.add(namedNode);
+			}
+			else{
+				// add the children!
+				for (NamedNode<?> child : namedNode.children()) {
+					newdisconnected.add(child);
+				}
+			}
 		}
-		return buildStream(state,disconnected);
+		buildStream(ops,state,newdisconnected);
 	}
 
-	private List<Stream<Context>> extractParentStreams(Map<String, Stream<Context>> state, NamedNode<?> namedNode) {
-		return null;
+	private List<Stream<Context>> extractParentStreams(OrchestratedProductionSystem ops, Map<String, Stream<Context>> state, NamedNode<?> namedNode) {
+		List<Stream<Context>> ret = new ArrayList<Stream<Context>>();
+		for (NamedStream edge : namedNode.parentEdges()) {
+			ret.add(state.get(ops.getEdgeSource(edge).getName()).map(edge.getFunction()));
+		}
+		return ret;
 	}
 
 	private boolean containsAllParents(Map<String, Stream<Context>> state,NamedNode<?> namedNode) {
-		return false;
+		
+		for (NamedNode<?> par : namedNode.parents()) {
+			if(!state.containsKey(par.getName())){
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

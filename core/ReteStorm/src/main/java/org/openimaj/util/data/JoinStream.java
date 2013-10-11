@@ -1,6 +1,7 @@
 package org.openimaj.util.data;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -30,10 +31,23 @@ public class JoinStream<O> extends AbstractStream<O>{
 	}
 	
 	
+	/**
+	 * @param streamArr
+	 */
+	@SafeVarargs
+	public JoinStream(Stream<O>  ... streamArr) {
+		this.streams = new ArrayList<Stream<O>>();
+		for (Stream<O> stream : streamArr) {
+			this.streams.add(stream);
+		}
+	}
+
+
 	@Override
 	public boolean hasNext() {
 		for (Stream<O> s : this.streams) {
-			if(s.hasNext()) return true;
+			if(s.hasNext()) 
+				return true;
 		}
 		return false;
 	}
@@ -43,6 +57,7 @@ public class JoinStream<O> extends AbstractStream<O>{
 		int firstcurrent = current;
 		for (int i = 0; i < streams.size(); i++) {
 			int check = (firstcurrent + i) % streams.size();
+			if(!this.streams.get(check).hasNext()) continue;
 			O ret = this.streams.get(check).next();
 			if(ret != null)
 			{

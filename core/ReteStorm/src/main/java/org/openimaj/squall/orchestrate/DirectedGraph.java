@@ -20,6 +20,22 @@ public abstract class DirectedGraph<NODE extends DGNode<NODE, EDGE, ?>,EDGE> {
 	private HashMap<EDGE,Pair<NODE>> edges = new HashMap<EDGE, Pair<NODE>>();
 	
 	/**
+	 * @return set of nodes with no children
+	 */
+	public Set<NODE> getLeaves() {
+		Set<NODE> visited = new HashSet<NODE>();
+		Set<NODE> leaves = new HashSet<NODE>();
+		for (Pair<NODE> node : this.edges.values()) {
+			if(node.secondObject().childCount() == 0)
+			{
+				leaves.add(node.secondObject());
+			}
+		}
+		return leaves;
+		
+	}
+	
+	/**
 	 * @return the verticies of this graph
 	 */
 	public Set<NODE> vertexSet() {

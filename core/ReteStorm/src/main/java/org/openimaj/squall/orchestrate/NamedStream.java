@@ -3,6 +3,9 @@ package org.openimaj.squall.orchestrate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openimaj.util.data.Context;
+import org.openimaj.util.function.Function;
+
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * A {@link NamedStream} has a name, a start node, an end node and an ordered list of variables. 
@@ -14,6 +17,7 @@ import java.util.List;
 public class NamedStream {
 	
 	
+	protected static final String STREAM_KEY = "stream";
 	String name;
 	List<String> variables;
 	
@@ -35,7 +39,7 @@ public class NamedStream {
 	 * @param end
 	 * @param variables 
 	 */
-	public NamedStream(String name, NamedNode<?> start, NamedNode<?> end, List<String> variables) {
+	public NamedStream(String name, List<String> variables) {
 		this.name = name;
 		this.variables = variables;
 	}
@@ -43,6 +47,15 @@ public class NamedStream {
 	public String getName() {
 		return this.name;
 	}
-	
-	
+
+	public Function<Context,Context> getFunction(){
+		return new Function<Context, Context>() {
+			
+			@Override
+			public Context apply(Context in) {
+				in.put(STREAM_KEY, name);
+				return in;
+			}
+		};
+	}
 }

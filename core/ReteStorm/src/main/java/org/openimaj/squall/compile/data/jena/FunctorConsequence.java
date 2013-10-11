@@ -1,6 +1,7 @@
 package org.openimaj.squall.compile.data.jena;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
@@ -29,7 +30,7 @@ public class FunctorConsequence extends AbstractFunctorFunction<Context,Context>
 	}
 	
 	@Override
-	public Context apply(Context in) {
+	public List<Context> apply(Context in) {
 		Builtin imp = this.clause.getImplementor();
 		Map<String, Node> typed = in.getTyped("bindings");
 		BindingVector be = mapToB(typed);
@@ -51,9 +52,11 @@ public class FunctorConsequence extends AbstractFunctorFunction<Context,Context>
 		} finally{
 			
 		}
+		List<Context> ctxs = new ArrayList<Context>();
 		Context out = new Context();
-		out.put("triples", toret);
-		return out;
+		out.put("triple", toret);
+		ctxs.add(out);
+		return ctxs;
 	}
 
 }

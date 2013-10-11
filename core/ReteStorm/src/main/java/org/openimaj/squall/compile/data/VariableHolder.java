@@ -16,6 +16,7 @@ public interface VariableHolder{
 	 */
 	public List<String> variables();
 	
+	
 	/**
 	 * Given a varmap, produce an anonimised name for this function such that
 	 * all variables this function contains in the map are replaces with the 

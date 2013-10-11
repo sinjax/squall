@@ -4,9 +4,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.squall.compile.CompiledProductionSystem;
+import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.jena.JenaRuleCompiler;
@@ -22,6 +24,7 @@ import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
+import org.openimaj.util.function.Operation;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
 
@@ -51,12 +54,29 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 	private int join = 0;
 
 	@Override
-	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem<Context,Context> sys) {
+	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem<Context,Context> sys, IOperation<Context> op) {
 		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();		
 		ret.root = new ArrayList<NamedSourceNode>();
 		orchestrateSources(sys,ret);
-		orchestrate(ret,sys);
+		NamedNode<? extends IVFunction<Context, Context>> finalsys = orchestrate(ret,sys);
+		if(finalsys != null){			
+			orchestrateOperation(ret,op, finalsys);
+		} else {
+			orchestrateOperation(ret,op);
+		}
 		return ret;
+	}
+
+	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op) {
+		NamedNode<?> opNode = new NGNOperation(ret, "OPERATION", op);
+		for (NamedNode<?> namedNode : ret.getLeaves()) {			
+			namedNode.connect(new NamedStream("link"), opNode);
+		}
+	}
+
+	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op, NamedNode<? extends IVFunction<Context, Context>> finalsys) {
+		NamedNode<?> opNode = new NGNOperation(ret, "OPERATION", op);
+		finalsys.connect(new NamedStream("link"), opNode);
 	}
 
 	private void orchestrateSources(
@@ -99,6 +119,7 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 			joinedCPS.add(combinedFilters);
 		}
 //		aggregations = orchestrateAggregations(joinedCPS,sys.getAggregations());
+		if(sys.getConequences() == null){ return null; }
 		return orchestrateConsequences(root, joinedCPS,sys.getConequences());
 	}
 
@@ -118,7 +139,7 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 			OrchestratedProductionSystem root,
 			List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS,
 			IVFunction<Context,Context> function) {
-		NamedIVFunctionNode consequenceNode = new NamedIVFunctionNode(
+		NGNIVFunction consequenceNode = new NGNIVFunction(
 			root,
 			nextConsequenceName(), 
 			function
@@ -139,7 +160,7 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 			List<IVFunction<Context,Context>> list) {
 		
 		for (IVFunction<Context, Context> pred : list) {
-			NamedIVFunctionNode prednode = new NamedIVFunctionNode(
+			NGNIVFunction prednode = new NGNIVFunction(
 				root,
 				nextPredicateName(),
 				pred
@@ -177,7 +198,7 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 			NamedNode<? extends IVFunction<Context, Context>> left,
 			NamedNode<? extends IVFunction<Context, Context>> right) {
 		
-		NamedJoinNode joined = new NamedJoinNode(root,nextJoinName(), left, right);
+		NGNJoin joined = new NGNJoin(root,nextJoinName(), left, right);
 		return joined;
 	}
 
@@ -185,10 +206,10 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 		return String.format("JOIN_%d",join ++ );
 	}
 
-	private NamedIVFunctionNode createFilterNode(
+	private NGNIVFunction createFilterNode(
 			OrchestratedProductionSystem root,
 			IVFunction<Context,Context> filterFunc) {
-		NamedIVFunctionNode currentNode = new NamedIVFunctionNode(
+		NGNIVFunction currentNode = new NGNIVFunction(
 				root, 
 				nextFilterName(), 
 				filterFunc
@@ -205,7 +226,7 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 	
 	public static void main(String[] args) {
 		InputStream nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
-		InputStream ruleStream = TestJenaRuleCompiler.class.getResourceAsStream("/test.rules");
+		InputStream ruleStream = TestJenaRuleCompiler.class.getResourceAsStream("/test.singlejoin.complex.rules");
 		
 		Stream<Context> tripleContextStream = 
 			new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
@@ -214,7 +235,18 @@ public class GreedyOrchestrator implements Orchestrator<Context,Context>{
 		List<Rule> rules = JenaUtils.readRules(ruleStream);
 		
 		GreedyOrchestrator go = new GreedyOrchestrator();
-		OrchestratedProductionSystem ops = go.orchestrate(new JenaRuleCompiler().compile(SourceRulePair.simplePair(tripleContextStream, rules)));
+		IOperation<Context> op = new IOperation<Context>() {
+			
+			@Override
+			public void setup() { }
+			
+			@Override
+			public void cleanup() { }
+			
+			@Override
+			public void perform(Context object) { }
+		};
+		OrchestratedProductionSystem ops = go.orchestrate(new JenaRuleCompiler().compile(SourceRulePair.simplePair(tripleContextStream, rules)), op);
 		
 		OPSDisplayUtils.display(ops);
 		

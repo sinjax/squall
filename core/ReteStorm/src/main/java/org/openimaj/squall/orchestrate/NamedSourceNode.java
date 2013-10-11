@@ -6,6 +6,7 @@ import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
+import org.openimaj.util.function.Operation;
 import org.openimaj.util.stream.Stream;
 
 /**
@@ -107,6 +108,20 @@ public class NamedSourceNode extends NamedNode<IStream<Context>> {
 
 	@Override
 	public VariableHolder getVariableHolder() {
+		throw new UnsupportedOperationException();
+	}
+
+
+
+	@Override
+	public boolean isOperation() {
+		return false;
+	}
+
+
+
+	@Override
+	public Operation<Context> getOperation() {
 		throw new UnsupportedOperationException();
 	}
 

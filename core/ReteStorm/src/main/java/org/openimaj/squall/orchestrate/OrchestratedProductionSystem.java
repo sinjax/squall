@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
+import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.function.Operation;
 
@@ -29,10 +30,10 @@ public class OrchestratedProductionSystem extends DirectedGraph<NamedNode<?>,Nam
 	 * The source nodes which are connected to the children
 	 */
 	public List<NamedSourceNode> root;
-	/**
-	 * 
-	 */
+	
+	
 	public OrchestratedProductionSystem() {
+		
 		
 	}
 	
@@ -45,6 +46,8 @@ public class OrchestratedProductionSystem extends DirectedGraph<NamedNode<?>,Nam
 		}
 		return buf.toString();
 	}
+
+	
 
 	
 

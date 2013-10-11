@@ -1,0 +1,7 @@
+[eligibleDriver: 
+	(?0 http://example.com/accidentsNumber 0) 
+	(?0 http://example.com/certificateType http://example.com/DriverSchoolCertificate) 
+	(?0 http://www.w3.org/1999/02/22-rdf-syntax-ns#type http://example.com/Driver) 
+	-> 
+	(?0 http://www.w3.org/1999/02/22-rdf-syntax-ns#type http://example.com/EligibleDriver) 
+]

@@ -1,5 +1,7 @@
 package org.openimaj.squall.compile.data.jena;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
@@ -27,14 +29,17 @@ public class FunctorFunction extends AbstractFunctorFunction<Context,Context> {
 	}
 
 	@Override
-	public Context apply(Context in) {
+	public List<Context> apply(Context in) {
 		Map<String,Node> object = in.getTyped("bindings");
 		BindingVector be = mapToB(object);
 		RuleContext context = new ReteTopologyRuleContext.IgnoreAdd(this.rule, be);
 		clause.evalAsBodyClause(context);
 		Context out = new Context();
 		out.put("bindings", bToMap(be));
-		return out;
+		
+		List<Context> ret = new ArrayList<Context>();
+		ret.add(out);
+		return ret;
 	}
 
 	

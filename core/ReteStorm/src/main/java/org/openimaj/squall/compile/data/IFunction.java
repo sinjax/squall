@@ -1,6 +1,7 @@
 package org.openimaj.squall.compile.data;
 
 import org.openimaj.util.function.Function;
+import org.openimaj.util.function.MultiFunction;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -9,6 +10,6 @@ import org.openimaj.util.function.Function;
  * @param <I>
  * @param <O>
  */
-public interface IFunction<I,O> extends Function<I,O>, Initialisable{
+public interface IFunction<I,O> extends MultiFunction<I,O>, Initialisable{
 	
 }
