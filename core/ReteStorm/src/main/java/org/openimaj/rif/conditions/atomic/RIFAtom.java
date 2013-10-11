@@ -1,8 +1,11 @@
-package org.openimaj.rdf.rules;
+package org.openimaj.rif.conditions.atomic;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.openimaj.rif.conditions.data.RIFData;
+import org.openimaj.rif.conditions.data.datum.RIFConst;
 
 /**
  * @author david.monks

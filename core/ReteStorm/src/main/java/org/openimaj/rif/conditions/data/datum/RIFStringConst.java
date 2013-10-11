@@ -1,4 +1,4 @@
-package org.openimaj.rdf.rules;
+package org.openimaj.rif.conditions.data.datum;
 
 /**
  * @author david.monks

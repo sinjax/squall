@@ -1,7 +1,9 @@
-package org.openimaj.rdf.rules;
+package org.openimaj.rif.conditions.atomic;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.openimaj.rif.conditions.data.RIFData;
 
 /**
  * @author david.monks

@@ -1,4 +1,4 @@
-package org.openimaj.rdf.rules;
+package org.openimaj.rif.rules;
 
 import java.util.HashSet;
 import java.util.Iterator;

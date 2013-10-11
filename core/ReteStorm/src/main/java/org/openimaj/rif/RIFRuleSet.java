@@ -1,4 +1,4 @@
-package org.openimaj.rdf.rules;
+package org.openimaj.rif;
 
 import java.io.IOException;
 import java.net.URI;
@@ -14,6 +14,25 @@ import java.util.Stack;
 
 import javax.xml.parsers.*;
 
+import org.openimaj.rif.conditions.atomic.RIFAtom;
+import org.openimaj.rif.conditions.atomic.RIFFrame;
+import org.openimaj.rif.conditions.data.RIFData;
+import org.openimaj.rif.conditions.data.RIFExternal;
+import org.openimaj.rif.conditions.data.RIFList;
+import org.openimaj.rif.conditions.data.datum.RIFConst;
+import org.openimaj.rif.conditions.data.datum.RIFIRIConst;
+import org.openimaj.rif.conditions.data.datum.RIFStringConst;
+import org.openimaj.rif.conditions.data.datum.RIFVar;
+import org.openimaj.rif.conditions.formula.RIFAnd;
+import org.openimaj.rif.conditions.formula.RIFEqual;
+import org.openimaj.rif.conditions.formula.RIFExists;
+import org.openimaj.rif.conditions.formula.RIFFormula;
+import org.openimaj.rif.conditions.formula.RIFMember;
+import org.openimaj.rif.conditions.formula.RIFOr;
+import org.openimaj.rif.rules.RIFForAll;
+import org.openimaj.rif.rules.RIFGroup;
+import org.openimaj.rif.rules.RIFRule;
+import org.openimaj.rif.rules.RIFSentence;
 import org.xml.sax.*;
 import org.xml.sax.ext.LexicalHandler;
 import org.xml.sax.helpers.*;

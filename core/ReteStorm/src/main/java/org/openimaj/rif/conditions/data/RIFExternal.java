@@ -1,4 +1,7 @@
-package org.openimaj.rdf.rules;
+package org.openimaj.rif.conditions.data;
+
+import org.openimaj.rif.conditions.atomic.RIFAtom;
+import org.openimaj.rif.conditions.formula.RIFFormula;
 
 /**
  * @author david.monks
