@@ -23,9 +23,9 @@ public class NamedStream {
 	public NamedStream(String name) {
 		this.name = name;
 	}
-
+	
 	/**
-	 * @return the name of this {@link NamedStream}
+	 * @return its name
 	 */
 	public String getName() {
 		return this.name;

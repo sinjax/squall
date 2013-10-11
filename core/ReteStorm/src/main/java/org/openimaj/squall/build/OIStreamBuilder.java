@@ -27,7 +27,6 @@ import org.openimaj.util.stream.Stream;
  *
  */
 public class OIStreamBuilder implements Builder{
-
 	/**
 	 * 
 	 */
@@ -69,7 +68,6 @@ public class OIStreamBuilder implements Builder{
 			stream.forEach(last.getOperation());
 			return;
 		}
-		
 		/**
 		 * Try to connect each currently disconnected node
 		 */

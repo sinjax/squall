@@ -14,10 +14,8 @@ import org.openimaj.util.data.Context;
 public class NGNJoin extends NGNIVFunction {
 
 	
-
-	
 	/**
-	 * @param parent 
+	 * @param parent
 	 * @param name 
 	 * @param left
 	 * @param right
