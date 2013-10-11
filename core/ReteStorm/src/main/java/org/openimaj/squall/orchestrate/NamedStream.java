@@ -11,13 +11,11 @@ import java.util.List;
  * @param <T> The {@link DGNode} this edge supports
  *
  */
-public class NamedStream<T extends DGNode<?, NamedStream<T>,?>> {
+public class NamedStream {
 	
 	
 	String name;
 	List<String> variables;
-	T start;
-	T end;
 	
 	/**
 	 * Simple link, named, with a start and end
@@ -25,11 +23,9 @@ public class NamedStream<T extends DGNode<?, NamedStream<T>,?>> {
 	 * @param start
 	 * @param end
 	 */
-	public NamedStream(String name, T start, T end) {
+	public NamedStream(String name) {
 		this.name = name;
 		this.variables = new ArrayList<String>();
-		this.start = start;
-		this.end = end;
 	}
 	
 	/**
@@ -39,11 +35,13 @@ public class NamedStream<T extends DGNode<?, NamedStream<T>,?>> {
 	 * @param end
 	 * @param variables 
 	 */
-	public NamedStream(String name, T start, T end, List<String> variables) {
+	public NamedStream(String name, NamedNode<?> start, NamedNode<?> end, List<String> variables) {
 		this.name = name;
 		this.variables = variables;
-		this.start = start;
-		this.end = end;
+	}
+
+	public String getName() {
+		return this.name;
 	}
 	
 	

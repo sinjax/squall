@@ -9,13 +9,8 @@ import org.openimaj.util.function.Function;
  * Apply a function to some input, producing an appropriate result.
  * Also provide a method to become anonymised (i.e. present the underlying {@link Function} as a variable independant string)
  * and become annonimised with certained variables set by a {@link Map}
- * 
- * @param <IN>
- *            the type of the input to the function.
- * @param <OUT>
- *            the type of the result.
  */
-public interface VariableFunction<IN, OUT> extends Function<IN, OUT>{
+public interface VariableHolder{
 	/**
 	 * @return the variables used in this function
 	 */

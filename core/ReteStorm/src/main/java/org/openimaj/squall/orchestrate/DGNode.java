@@ -13,17 +13,23 @@ import java.util.List;
  * @param <DATA> The type of data held by the node
  *
  */
-public abstract class DGNode<NODE extends DGNode<NODE,EDGE,DATA>,EDGE,DATA> implements Iterable<NODE>{
+public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> implements Iterable<NODE>{
 	List<NODE> children;
 	List<NODE> parents;
 	List<EDGE> edges;
+	private DirectedGraph<NODE, EDGE> root;
 	
 	/**
+	 * @param root 
 	 * 
 	 */
-	public DGNode() {
+	@SuppressWarnings("unchecked")
+	public DGNode(DirectedGraph<NODE, EDGE> root) {
 		this.children = new ArrayList<NODE>();
 		this.parents = new ArrayList<NODE>();
+		this.edges = new ArrayList<EDGE>();
+		this.root = root;
+		this.root.addVertex((NODE) this);
 	}
 	
 	/**
@@ -76,11 +82,26 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,DATA>,EDGE,DATA> impl
 		this.addChild(child);
 		child.addParent((NODE) this);
 		this.addEdge(edge);
+		this.root.addEdge(edge, (NODE) this, child);
 	}
 	
 	/**
 	 * @return the data held by the node
 	 */
 	public abstract DATA getData();
+	
+	/**
+	 * @return number of child nodes
+	 */
+	public int childCount() {
+		return this.children.size();
+	}
+	
+	/**
+	 * @return number of parent nodes
+	 */
+	public int parentCount() {
+		return this.parents.size();
+	}
 	
 }

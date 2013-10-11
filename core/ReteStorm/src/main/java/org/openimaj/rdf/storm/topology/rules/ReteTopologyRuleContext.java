@@ -167,7 +167,7 @@ public abstract class ReteTopologyRuleContext extends RETERuleContext {
 		 * @param vector
 		 *            the context bound variables
 		 */
-		public IgnoreAdd(Rule rule, BindingVector vector) {
+		public IgnoreAdd(Rule rule, BindingEnvironment vector) {
 			super(rule, vector);
 		}
 

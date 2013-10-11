@@ -1,5 +1,9 @@
 package org.openimaj.squall.orchestrate;
 
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.IStream;
+import org.openimaj.squall.compile.data.Initialisable;
+import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.Stream;
@@ -19,11 +23,11 @@ import org.openimaj.util.stream.Stream;
  * 
  * The {@link NamedSourceNode} is a function itself which wraps the internal {@link Function} call
  */
-public class NamedSourceNode extends NamedNode<Stream<Context>> {
+public class NamedSourceNode extends NamedNode<IStream<Context>> {
 	
 	
 	
-	private Stream<Context> wrapped;
+	private IStream<Context> wrapped;
 
 
 
@@ -31,8 +35,8 @@ public class NamedSourceNode extends NamedNode<Stream<Context>> {
 	 * @param name the name of the node
 	 * @param strm the source of triples
 	 */
-	public NamedSourceNode(String name, Stream<Context> strm) {
-		super(name);
+	public NamedSourceNode(OrchestratedProductionSystem parent, String name, IStream<Context> strm) {
+		super(parent,name);
 		this.wrapped = strm.map(new Function<Context, Context>() {
 			
 			@Override
@@ -46,7 +50,7 @@ public class NamedSourceNode extends NamedNode<Stream<Context>> {
 
 
 	@Override
-	public Stream<Context> getData() {
+	public IStream<Context> getData() {
 		return wrapped;
 	}
 
@@ -67,16 +71,47 @@ public class NamedSourceNode extends NamedNode<Stream<Context>> {
 
 
 	@Override
-	public Stream<Context> getSource() {
+	public IStream<Context> getSource() {
 		return this.wrapped;
 	}
 
 
 
 	@Override
-	public Function<Context, Context> getFunction() {
+	public IFunction<Context, Context> getFunction() {
 		throw new UnsupportedOperationException();
 	}
+
+
+
+	@Override
+	public Initialisable getInit() {
+		return this.wrapped;
+	}
+
+
+
+	@Override
+	public boolean isInitialisable() {
+		return true;
+	}
+
+
+
+	@Override
+	public boolean isVariableHolder() {
+		return false;
+	}
+
+
+
+	@Override
+	public VariableHolder getVariableHolder() {
+		throw new UnsupportedOperationException();
+	}
+
+
+
 	
 	
 	

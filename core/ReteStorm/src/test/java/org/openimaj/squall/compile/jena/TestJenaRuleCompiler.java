@@ -1,12 +1,21 @@
 package org.openimaj.squall.compile.jena;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.openimaj.rdf.storm.topology.ReteTopologyTest;
+import org.openimaj.squall.build.OIStreamBuilder;
+import org.openimaj.squall.compile.ContextCPS;
+import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.squall.utils.JenaUtils;
+import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
 
@@ -19,22 +28,34 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  */
 public class TestJenaRuleCompiler {
 	
-	List<Rule> rules;
 	private SourceRulePair sourceRules;
-	private List<Stream<Triple>> sources;
-	private Collection<Triple> tripleCol;
+	
+	
+	@org.junit.Rule
+	public TemporaryFolder folder = new TemporaryFolder();
+	private File output;
+	private File input;
 	
 	/**
+	 * @throws IOException 
 	 * 
 	 */
 	@Before
-	public void before(){
-		this.rules = JenaUtils.readRules(TestJenaRuleCompiler.class.getResourceAsStream("/test.rules"));
-		sources = new ArrayList<Stream<Triple>>();
-		sources.add(new CollectionStream<Triple>(tripleCol));
-		sourceRules = new SourceRulePair(sources, rules);
+	public void before() throws IOException{
+		InputStream nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
+		InputStream ruleStream = TestJenaRuleCompiler.class.getResourceAsStream("/test.single.rules");
+		
+		Stream<Context> tripleContextStream = 
+			new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
+			.map(new ContextWrapper("triple")
+		);
+		
+		List<Rule> rules = JenaUtils.readRules(ruleStream);
+		sourceRules = SourceRulePair.simplePair(tripleContextStream,rules);
 		
 	}
+
+	
 	
 	/**
 	 * 
@@ -42,7 +63,11 @@ public class TestJenaRuleCompiler {
 	@Test
 	public void testCompiler(){
 		JenaRuleCompiler jrc = new JenaRuleCompiler();
-		jrc.compile(sourceRules);
+		ContextCPS comp = jrc.compile(sourceRules);
+		GreedyOrchestrator go = new GreedyOrchestrator();
+		OrchestratedProductionSystem orchestrated = go.orchestrate(comp);
+		OIStreamBuilder builder = new OIStreamBuilder();
+		builder.build(orchestrated);
 	}
 
 }

@@ -1,14 +1,19 @@
 package org.openimaj.squall.compile.jena;
 
 import java.util.List;
+import java.util.Map;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
-import org.openimaj.squall.compile.TripleTripleCPS;
-import org.openimaj.squall.compile.data.FunctorFunction;
-import org.openimaj.squall.compile.data.TripleConsequence;
-import org.openimaj.squall.compile.data.TripleFilterFunction;
-import org.openimaj.util.stream.Stream;
+import org.openimaj.squall.compile.ContextCPS;
+import org.openimaj.squall.compile.TripleTripleListCPS;
+import org.openimaj.squall.compile.data.IStream;
+import org.openimaj.squall.compile.data.jena.CombinedIVFunction;
+import org.openimaj.squall.compile.data.jena.FunctorConsequence;
+import org.openimaj.squall.compile.data.jena.FunctorFunction;
+import org.openimaj.squall.compile.data.jena.TripleConsequence;
+import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
+import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
@@ -21,14 +26,30 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class JenaRuleCompiler implements Compiler<Triple,Triple,SourceRulePair>{
+public class JenaRuleCompiler implements Compiler<Context,Context,SourceRulePair>{
 	
+	private final class CombinedContextFunction extends
+			CombinedIVFunction<Context, Context> {
+		@Override
+		protected Context initial() {
+			return new Context();
+		}
+
+		@Override
+		protected Context combine(Context out, Context apply) {
+			for (String key : apply.keySet()) {
+				out.put(key, apply.get(key));
+			}
+			return out;
+		}
+	}
+
 	@Override
-	public TripleTripleCPS compile(SourceRulePair sourceRules) {
+	public ContextCPS compile(SourceRulePair sourceRules) {
 		List<Rule> rules = sourceRules.secondObject();
-		List<Stream<Triple>> sources = sourceRules.firstObject();
-		TripleTripleCPS ret = new TripleTripleCPS();
-		for (Stream<Triple> stream : sources) {
+		List<IStream<Context>> sources = sourceRules.firstObject();
+		ContextCPS ret = new ContextCPS();
+		for (IStream<Context> stream : sources) {
 			ret.addSource(stream);
 		}
 		for (Rule rule : rules) {
@@ -37,8 +58,8 @@ public class JenaRuleCompiler implements Compiler<Triple,Triple,SourceRulePair>{
 			}
 			else
 			{
-				TripleTripleCPS ruleret = new TripleTripleCPS();
-				ret.addSystem(ruleret);
+				ContextCPS ruleret = new ContextCPS();
+				ret.addSeperateSystem(ruleret);
 
 				// Extract all the parts of the body
 				for (int i = 0; i < rule.bodyLength(); i++) {
@@ -47,14 +68,21 @@ public class JenaRuleCompiler implements Compiler<Triple,Triple,SourceRulePair>{
 						ruleret.addFilter(new TripleFilterFunction((TriplePattern)clause));
 					} 
 					else if (clause instanceof Functor){
-						ruleret.addPredicate(new FunctorFunction((Functor) clause));
+						ruleret.addPredicate(new FunctorFunction(rule,(Functor) clause));
 					}
 				}
 				
+				
+				CombinedIVFunction<Context, Context> comb = new CombinedContextFunction();
 				// Extract all the head parts
 				for (int i = 0; i < rule.headLength(); i++) {
 					ClauseEntry clause = rule.getHeadElement(i);
-					ruleret.addConsequence(new TripleConsequence((TriplePattern)clause));
+					if (clause instanceof TriplePattern) {
+						ruleret.setConsequence(new TripleConsequence(rule, (TriplePattern)clause));
+					} 
+					else if (clause instanceof Functor){
+						ruleret.setConsequence(new FunctorConsequence(rule, (Functor)clause));
+					}	
 				}
 			}
 		}

@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.VariableFunction;
-import org.openimaj.util.function.Function;
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.IStream;
+import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
+import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 
 
@@ -30,47 +33,43 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	/**
 	 * A stream of triples is the source of ourproduction systems
 	 */
-	List<Stream<INPUT>> sources;
+	List<IStream<Context>> sources;
 	
 	/**
 	 * List of production systems that this compilation is made from
 	 */
-	List<CompiledProductionSystem<INPUT,OUTPUT>> systems;	
+	List<List<CompiledProductionSystem<Context,Context>>> systems;	
 	/**
 	 * Filters match triples and assign variables to values within the triple.
 	 */
-	List<VariableFunction<INPUT,Map<String,String>>> filters;
+	List<IVFunction<Context,Context>> filters;
 	
 	/**
 	 * Predicates confirm or deny certain bindings. Empty means no predicates
-	 * FIXME: Make this into a {@link VariableFunction} of bindings
 	 */
-	List<VariableFunction<Map<String, String>,Map<String, String>>> predicates;
+	List<IVFunction<Context,Context>> predicates;
 	
-	/**
-	 * Groups suggest a join order for filters and binding predicates. Empty means no preffered order
-	 */
-	List<CompiledProductionSystem<INPUT,OUTPUT>> groups;
 	
 	/**
 	 * Aggregations consume lists of bindings and produce bindings. Empty means no aggregations
 	 */
-	List<Function<List<Map<String,String>>,Map<String,String>>> aggregations;
-	
+	List<IVFunction<List<Context>, Context>> aggregations;
+	 
 	/**
 	 * Consequences consume bindings and perform some operation
 	 */
-	List<Function<Map<String,String>,OUTPUT>> consequences;
+	IVFunction<Context, Context> consequence;
+	
 	/**
 	 * Initialise all system parts as empty, a fairly boring production system
 	 */
 	public CompiledProductionSystem() {
-		systems = new ArrayList<CompiledProductionSystem<INPUT,OUTPUT>>();
-		filters = new ArrayList<VariableFunction<INPUT, Map<String, String>>>();
-		predicates = new ArrayList<VariableFunction<Map<String, String>, Map<String, String>>>();
-		groups = new ArrayList<CompiledProductionSystem<INPUT,OUTPUT>>();
-		aggregations = new ArrayList<Function<List<Map<String,String>>,Map<String,String>>>();
-		consequences = new ArrayList<Function<Map<String,String>,OUTPUT>>();
+		sources = new ArrayList<IStream<Context>>();
+		systems = new ArrayList<List<CompiledProductionSystem<Context, Context>>>();
+		filters = new ArrayList<IVFunction<Context, Context>>();
+		predicates = new ArrayList<IVFunction<Context, Context>>();
+		aggregations = new ArrayList<IVFunction<List<Context>, Context>>();
+		consequence = null;
 	}
 	
 	/**
@@ -78,18 +77,30 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 * @param stream
 	 * @return a {@link Stream} of input 
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addSource(Stream<INPUT> stream) {
+	public CompiledProductionSystem<INPUT,OUTPUT> addSource(IStream<Context> stream) {
 		this.sources.add(stream);
 		return this;
 	}
 	
 	/**
-	 * Add a system as a part of this production system
+	 * Add a system as a part of this production system, this system is added to the 0th {@link List} of {@link CompiledProductionSystem}
 	 * @param sys
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addSystem(CompiledProductionSystem<INPUT,OUTPUT> sys){
-		this.systems.add(sys);
+	public CompiledProductionSystem<INPUT,OUTPUT> addSystem(CompiledProductionSystem<Context,Context> sys){
+		addFirst(systems,sys);
+		return this;
+	}
+	
+	/**
+	 * Add a system as a part of this production system, this system is added to the 0th {@link List} of {@link CompiledProductionSystem}
+	 * @param sys
+	 * @return return this system (useful for chaining)
+	 */
+	public CompiledProductionSystem<INPUT,OUTPUT> addSeperateSystem(CompiledProductionSystem<Context,Context> sys){
+		List<CompiledProductionSystem<Context, Context>> l = new ArrayList<CompiledProductionSystem<Context, Context>>();
+		l.add(sys);
+		this.systems.add(l);
 		return this;
 	}
 	
@@ -99,29 +110,27 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 * @param filter
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addFilter(VariableFunction<INPUT, Map<String, String>> filter){
-		this.filters.add(filter);
+	public CompiledProductionSystem<INPUT,OUTPUT> addFilter(IVFunction<Context,Context> filter){
+		filters.add(filter);
 		return this;
 	}
 	
+	private <T> void addFirst(List<List<T>> listlist,T item) {
+		if(listlist.size() == 0){
+			listlist.add(new ArrayList<T>());
+		}
+		listlist.get(0).add(item);
+		
+	}
+
 	/**
 	 * Add a predicate. Predicates consume bindings and decide whether they pass
 	 * a given filter function
 	 * @param predicate
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addPredicate(VariableFunction<Map<String, String>, Map<String, String>> predicate){
+	public CompiledProductionSystem<INPUT,OUTPUT> addPredicate(IVFunction<Context,Context> predicate){
 		this.predicates.add(predicate);
-		return this;
-	}
-	
-	/**
-	 * Specifiy a group
-	 * @param comp 
-	 * @return return this system (useful for chaining) 
-	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addGroup(CompiledProductionSystem<INPUT,OUTPUT> comp){
-		this.groups.add(comp);
 		return this;
 	}
 	
@@ -129,43 +138,50 @@ public abstract class CompiledProductionSystem<INPUT,OUTPUT> {
 	 * @param item
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem<INPUT,OUTPUT> addConsequence(Function<Map<String, String>, OUTPUT> item){
-		this.consequences.add(item);
+	public CompiledProductionSystem<INPUT,OUTPUT> setConsequence(IVFunction<Context, Context> item){
+		this.consequence = item;
 		return this;
 	}
 
 	/**
 	 * @return the filters of this system
 	 */
-	public List<VariableFunction<INPUT, Map<String, String>>> getFilters() {
+	public List<IVFunction<Context, Context>> getFilters() {
 		return this.filters;
 	}
 
 	/**
 	 * @return the predicates of this system
 	 */
-	public List<VariableFunction<Map<String, String>, Map<String, String>>> getPredicates() {
+	public List<IVFunction<Context, Context>> getPredicates() {
 		return this.predicates;
 	}
 
 	/**
 	 * @return the sub systems of this {@link CompiledProductionSystem}
 	 */
-	public List<CompiledProductionSystem<INPUT,OUTPUT>> getSystems() {
+	public List<List<CompiledProductionSystem<Context, Context>>> getSystems() {
 		return this.systems;
 	}
 
 	/**
 	 * @return the consequences of this compiled system
 	 */
-	public List<Function<Map<String, String>, OUTPUT>> getConequences() {
-		return this.consequences;
+	public IVFunction<Context, Context> getConequences() {
+		return this.consequence;
 	}
 
 	/**
 	 * @return the sources
 	 */
-	public List<Stream<INPUT>> getSources() {
+	public List<IStream<Context>> getSources() {
 		return this.sources;
+	}
+
+	/**
+	 * @return the bindings aggregations
+	 */
+	public List<IVFunction<List<Context>, Context>> getAggregations() {
+		return this.aggregations;
 	}
 }

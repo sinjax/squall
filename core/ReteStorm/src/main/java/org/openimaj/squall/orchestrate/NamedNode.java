@@ -1,5 +1,9 @@
 package org.openimaj.squall.orchestrate;
 
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.IStream;
+import org.openimaj.squall.compile.data.Initialisable;
+import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.Stream;
@@ -20,16 +24,18 @@ import org.openimaj.util.stream.Stream;
  * The {@link NamedNode} is a function itself which wraps the internal {@link Function} call
  * @param <DATA> 
  */
-public abstract class NamedNode<DATA> extends DGNode<NamedNode<DATA>,NamedStream<NamedNode<DATA>>,DATA>{
+public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DATA>{
 	/**
 	 * key used to insert this node's name into the returned context
 	 */
 	public static final String NAME_KEY = "information";
 	private String name;
 	/**
+	 * @param parent 
 	 * @param name the name of the node
 	 */
-	public NamedNode(String name) {
+	public NamedNode(OrchestratedProductionSystem parent, String name) {
+		super(parent);
 		this.name = name;
 	}
 	
@@ -47,6 +53,16 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<DATA>,NamedStream
 	public abstract boolean isFunction();
 	
 	/**
+	 * @return true if {@link #getVariableHolder()} will return
+	 */
+	public abstract boolean isVariableHolder();
+	
+	/**
+	 * @return return the {@link VariableHolder} held otherwise fail horibbly
+	 */
+	public abstract VariableHolder getVariableHolder();
+	
+	/**
 	 * @return {@link Stream} returned if this node is a Source, {@link UnsupportedOperationException} otherwise
 	 */
 	public abstract Stream<Context> getSource();
@@ -54,4 +70,26 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<DATA>,NamedStream
 	 * @return {@link Function} returned if this node is not a Source, {@link UnsupportedOperationException} otherwise
 	 */
 	public abstract Function<Context,Context> getFunction();
+	
+	@Override
+	public String toString() {
+		return String.format(this.name + "(children=%d)",this.children.size());
+	}
+
+	/**
+	 * @return
+	 */
+	public String getName() {
+		return this.name;
+	}
+
+	/**
+	 * @return the {@link Initialisable} instance if {@link #isInitialisable()}, otherwise fail 
+	 */ 
+	public abstract Initialisable getInit();
+
+	/**
+	 * @return whether this node is {@link Initialisable}
+	 */
+	public abstract boolean isInitialisable() ;
 }
