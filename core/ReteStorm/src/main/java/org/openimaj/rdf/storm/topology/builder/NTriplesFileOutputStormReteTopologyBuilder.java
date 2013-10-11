@@ -39,7 +39,7 @@ import org.openimaj.rdf.storm.topology.bolt.ReteConflictSetBolt;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk), David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class NTriplesFileOutputStormReteTopologyBuilder extends NTriplesReteTopologyBuilder {
+public class NTriplesFileOutputStormReteTopologyBuilder extends NTriplesStormReteTopologyBuilder {
 
 	private String output;
 
