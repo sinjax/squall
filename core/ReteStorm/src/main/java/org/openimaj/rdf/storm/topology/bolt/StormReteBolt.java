@@ -56,6 +56,8 @@ import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
+import com.hp.hpl.jena.reasoner.rulesys.Rule;
+import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
 
 /**
  *
@@ -462,6 +464,26 @@ public abstract class StormReteBolt extends BaseRichBolt implements RETEStormSin
 		return out;
 	}
 
+	
+//	BLASPHEMY
+	protected BindingVector extractBindings(Tuple input, Rule rule) {
+//		SerialisableNodes snodes = (SerialisableNodes) input.getValue(0);
+//		Node[] nodes = snodes.getNodes();
+		Node[] nodes = new Node[rule.getNumVars()];
+		for (int i = 0; i < nodes.length; i++)
+			nodes[i] = (Node)input.getValue(i);
+		BindingVector env = new BindingVector(nodes);
+		return env;
+	}
+	
+	protected Values implantBindings(BindingVector output) {
+//		SerialisableNodes snodes = (SerialisableNodes) input.getValue(0);
+//		Node[] nodes = snodes.getNodes();
+		Values vals = new Values();
+		for (int i = 0; i < output.getEnvironment().length; i++)
+			vals.add(output.getEnvironment()[i]);
+		return vals;
+	}
 
 
 }
