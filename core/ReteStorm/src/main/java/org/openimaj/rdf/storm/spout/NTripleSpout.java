@@ -30,6 +30,8 @@
 package org.openimaj.rdf.storm.spout;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.topology.bolt.StormReteBolt;
@@ -41,7 +43,12 @@ import org.openjena.riot.lang.LangNTriples;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
+import backtype.storm.tuple.Fields;
+import backtype.storm.tuple.Tuple;
+import backtype.storm.tuple.Values;
+
 import com.hp.hpl.jena.graph.Graph;
+import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.mem.GraphMem;
 
@@ -54,6 +61,8 @@ import com.hp.hpl.jena.mem.GraphMem;
  */
 @SuppressWarnings({ "rawtypes", "serial" })
 public class NTripleSpout extends SimpleSpout implements Sink<Triple> {
+	
+	public static final String TRIPLES_FIELD = "triples";
 
 	private String nTriplesURL;
 	private LangNTriples parser;
@@ -81,10 +90,11 @@ public class NTripleSpout extends SimpleSpout implements Sink<Triple> {
 	@Override
 	public void nextTuple() {
 		if (parser.hasNext()) {
+			Triple parsed = parser.next();
 			Graph graph = new GraphMem();
-			graph.add(parser.next());
+			graph.add(parsed);
 			try {
-				this.collector.emit(StormReteBolt.asValues(true,graph,0l));
+				this.collector.emit(StormReteBolt.asValues(true,graph,0l,parsed));
 			} catch (Exception e) {
 
 			}
@@ -93,7 +103,21 @@ public class NTripleSpout extends SimpleSpout implements Sink<Triple> {
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(StormReteBolt.declaredFields(0));
+		declarer.declare(StormReteBolt.declaredFields(TRIPLES_FIELD));
+	}
+	
+	/**
+	 * Given a Jena {@link Triple} construct a {@link Values} instance which is
+	 * the subject, predicate and value of the triple calling
+	 * {@link Node#toString()}
+	 * 
+	 * @param t
+	 * @return a Values instances
+	 */
+	public static Values asValue(Triple t) {
+		Graph graph = new GraphMem();
+		graph.add(t);
+		return StormReteBolt.asValues(true, graph, 0l, t);
 	}
 
 	@Override
@@ -109,6 +133,14 @@ public class NTripleSpout extends SimpleSpout implements Sink<Triple> {
 
 	@Override
 	public void flush() {
+	}
+
+	public static Triple asTriple(Tuple input) {
+		try {
+			return (Triple)input.getValueByField(TRIPLES_FIELD);
+		} catch (Exception e){
+			return null;
+		}
 	}
 
 }

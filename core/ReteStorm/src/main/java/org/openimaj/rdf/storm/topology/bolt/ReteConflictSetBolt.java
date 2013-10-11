@@ -30,7 +30,7 @@
 package org.openimaj.rdf.storm.topology.bolt;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rdf.storm.spout.NTriplesSpout;
+import org.openimaj.rdf.storm.spout.NTripleSpout;
 import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
 
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -130,19 +130,19 @@ public class ReteConflictSetBolt extends ReteBolt {
 
 	/**
 	 * called when a new {@link Triple} is infered and should be emitted.
-	 * The default behaviour is to emit the {@link Triple} as a tuple in the {@link NTriplesSpout#TRIPLES_FIELD} field.
+	 * The default behaviour is to emit the {@link Triple} as a tuple in the {@link NTripleSpout#TRIPLES_FIELD} field.
 	 * @param input
 	 *
 	 * @param t
 	 */
 	protected void emitTriple(Tuple input, Triple t) {
 		logger.debug(String.format("Emitting tripple: %s",t.toString()));
-		this.collector.emit(input,NTriplesSpout.asValue(t));
+		this.collector.emit(input,NTripleSpout.asValue(t));
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(NTriplesSpout.TRIPLES_FIELD);
+		declarer.declare(StormReteBolt.declaredFields(NTripleSpout.TRIPLES_FIELD));
 	}
 
 	@Override
