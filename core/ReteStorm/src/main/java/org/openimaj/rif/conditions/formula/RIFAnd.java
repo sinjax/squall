@@ -1,4 +1,4 @@
-package org.openimaj.rdf.rules;
+package org.openimaj.rif.conditions.formula;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -8,14 +8,14 @@ import java.util.Set;
  * @author david.monks
  *
  */
-public class RIFOr implements RIFFormula, Iterable<RIFFormula> {
+public class RIFAnd implements RIFFormula, Iterable<RIFFormula> {
 	
 	private Set<RIFFormula> formuli;
 	
 	/**
 	 * 
 	 */
-	public RIFOr(){
+	public RIFAnd(){
 		this.formuli = new HashSet<RIFFormula>();
 	}
 	
@@ -30,5 +30,5 @@ public class RIFOr implements RIFFormula, Iterable<RIFFormula> {
 	public Iterator<RIFFormula> iterator(){
 		return this.formuli.iterator();
 	}
-	
+
 }

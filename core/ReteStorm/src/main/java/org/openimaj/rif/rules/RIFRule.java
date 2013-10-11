@@ -1,8 +1,11 @@
-package org.openimaj.rdf.rules;
+package org.openimaj.rif.rules;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import org.openimaj.rif.conditions.atomic.RIFAtomic;
+import org.openimaj.rif.conditions.formula.RIFFormula;
 
 /**
  * @author david.monks
