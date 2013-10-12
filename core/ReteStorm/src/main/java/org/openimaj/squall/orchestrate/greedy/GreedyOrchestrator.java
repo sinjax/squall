@@ -11,7 +11,6 @@ import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.jena.JenaRuleCompiler;
 import org.openimaj.squall.compile.jena.SourceRulePair;
-import org.openimaj.squall.compile.jena.TestJenaRuleCompiler;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedSourceNode;
 import org.openimaj.squall.orchestrate.NamedStream;
@@ -230,7 +229,7 @@ public class GreedyOrchestrator implements Orchestrator{
 	 */
 	public static void main(String[] args) {
 		InputStream nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
-		InputStream ruleStream = TestJenaRuleCompiler.class.getResourceAsStream("/test.singlejoin.complex.rules");
+		InputStream ruleStream = GreedyOrchestrator.class.getResourceAsStream("/test.singlejoin.complex.rules");
 		
 		Stream<Context> tripleContextStream = 
 			new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))

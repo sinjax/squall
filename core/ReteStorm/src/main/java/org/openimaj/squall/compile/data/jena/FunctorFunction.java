@@ -30,15 +30,13 @@ public class FunctorFunction extends AbstractFunctorFunction<Context,Context> {
 
 	@Override
 	public List<Context> apply(Context in) {
+		List<Context> ret = new ArrayList<Context>();
 		Map<String,Node> object = in.getTyped("bindings");
 		BindingVector be = mapToB(object);
 		RuleContext context = new ReteTopologyRuleContext.IgnoreAdd(this.rule, be);
-		clause.evalAsBodyClause(context);
-		Context out = new Context();
-		out.put("bindings", bToMap(be));
+		if(!clause.evalAsBodyClause(context)) return ret;
 		
-		List<Context> ret = new ArrayList<Context>();
-		ret.add(out);
+		ret.add(new Context("bindings", bToMap(be)));
 		return ret;
 	}
 

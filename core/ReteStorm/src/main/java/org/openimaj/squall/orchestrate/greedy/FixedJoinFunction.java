@@ -127,6 +127,13 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 	public List<String> variables() {
 		return this.vars;
 	}
+	
+	/**
+	 * @return the shared variables of this join
+	 */
+	public List<String> sharedVars() {
+		return this.shared;
+	}
 
 	@Override
 	public String anonimised(Map<String, Integer> varmap) {

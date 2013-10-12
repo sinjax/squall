@@ -30,14 +30,14 @@ public class NGNJoin extends NGNIVFunction {
 	 * @return named stream representing the link between the left and this join
 	 */
 	public NamedStream leftNamedStream() {
-		return new NamedStream("left");
+		return new NamedStream("left",((FixedJoinFunction)this.getFunction()).sharedVars());
 	}
 	
 	/**
 	 * @return named stream representing the link between the right and this join
 	 */
 	public NamedStream rightNamedStream() {
-		return new NamedStream("right");
+		return new NamedStream("right",((FixedJoinFunction)this.getFunction()).sharedVars());
 	}
 
 }
