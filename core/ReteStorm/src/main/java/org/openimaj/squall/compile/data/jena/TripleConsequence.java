@@ -33,12 +33,21 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 		this.clause = clause;
 		this.ruleVariables = BindingsUtils.extractRuleVariables(r);
 	}
+	
+	/**
+	 * @param rvs 
+	 * @param clause
+	 */
+	public TripleConsequence(Node_RuleVariable[] rvs,TriplePattern clause) {
+		this.clause = clause;
+		this.ruleVariables = rvs;
+	}
 
 	@Override
 	public List<Context> apply(Context in) {
 		Map<String,Node> bindings = in.getTyped("bindings");
 		BindingVector env = BindingsUtils.mapToBindings(bindings, ruleVariables);
-		Triple t = env.instantiate((TriplePattern) this.clause);
+		Triple t = env.instantiate(this.clause);
 		List<Triple> ret = new ArrayList<Triple>();
 		if (!Functor.isFunctor(t.getSubject())) {
 			ret.add(t);
@@ -63,6 +72,7 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 
 	@Override
 	public String anonimised(Map<String, Integer> varmap) {
+		// TODO correct behaviour
 		return anonimised();
 	}
 
