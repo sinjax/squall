@@ -54,6 +54,8 @@ import com.hp.hpl.jena.graph.compose.MultiUnion;
 import com.hp.hpl.jena.graph.impl.LiteralLabel;
 import com.hp.hpl.jena.mem.GraphMem;
 import com.hp.hpl.jena.rdf.model.AnonId;
+import com.hp.hpl.jena.reasoner.TriplePattern;
+import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 import com.hp.hpl.jena.shared.AddDeniedException;
 import com.hp.hpl.jena.sparql.core.BasicPattern;
@@ -181,6 +183,32 @@ public class JenaStormUtils {
 		}
 
 	}
+	
+	
+	/**
+	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+	 * 
+	 */
+	public static class NodeSerialiser_RuleVariable extends Serializer<Node_RuleVariable> {
+
+		@Override
+		public void write(Kryo kryo, Output output, Node_RuleVariable object) {
+			final String blankNodeString = object.toString();
+			output.writeString(blankNodeString);
+			output.writeInt(object.getIndex());
+			
+		}
+
+		@Override
+		public Node_RuleVariable read(Kryo kryo, Input input, Class<Node_RuleVariable> type) {
+			String label = input.readString();
+			label = label.replaceFirst("\\?", "");
+			int index = input.readInt();
+			Node_RuleVariable rv = new Node_RuleVariable(label, index);
+			return rv;
+		}
+
+	}
 
 	/**
 	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -204,6 +232,32 @@ public class JenaStormUtils {
 			final Node p = (Node) kryo.readClassAndObject(input);
 			final Node o = (Node) kryo.readClassAndObject(input);
 			return new Triple(s, p, o);
+		}
+
+	}
+	
+	/**
+	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+	 * 
+	 */
+	public static class TriplePatternSerialiser extends Serializer<TriplePattern> {
+
+		@Override
+		public void write(Kryo kryo, Output output, TriplePattern object) {
+			final Node s = object.getSubject();
+			final Node p = object.getPredicate();
+			final Node o = object.getObject();
+			kryo.writeClassAndObject(output, s);
+			kryo.writeClassAndObject(output, p);
+			kryo.writeClassAndObject(output, o);
+		}
+
+		@Override
+		public TriplePattern read(Kryo kryo, Input input, Class<TriplePattern> type) {
+			final Node s = (Node) kryo.readClassAndObject(input);
+			final Node p = (Node) kryo.readClassAndObject(input);
+			final Node o = (Node) kryo.readClassAndObject(input);
+			return new TriplePattern(s, p, o);
 		}
 
 	}
@@ -277,6 +331,31 @@ public class JenaStormUtils {
 		}
 
 	}
+	
+	/**
+	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+	 * 
+	 */
+	public static class NodeSerialiser_RuleVariableARRAY extends Serializer<Node_RuleVariable[]> {
+
+		@Override
+		public void write(Kryo kryo, Output output, Node_RuleVariable[] object) {
+			output.writeInt(object.length);
+			for (final Node_RuleVariable node : object) {
+				kryo.writeClassAndObject(output, node);
+			}
+		}
+
+		@Override
+		public Node_RuleVariable[] read(Kryo kryo, Input input, Class<Node_RuleVariable[]> type) {
+			final Node_RuleVariable[] out = new Node_RuleVariable[input.readInt()];
+			for (int i = 0; i < out.length; i++) {
+				out[i] = (Node_RuleVariable) kryo.readClassAndObject(input);
+			}
+			return out;
+		}
+
+	}
 
 	/**
 	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -325,6 +404,7 @@ public class JenaStormUtils {
 		conf.registerSerialization(Node_Literal.class, NodeSerialiser_Literal.class);
 		conf.registerSerialization(Node_Blank.class, NodeSerialiser_Blank.class);
 		conf.registerSerialization(Node_Variable.class, NodeSerialiser_Variable.class);
+		conf.registerSerialization(TriplePattern.class, TriplePatternSerialiser.class);
 		conf.registerSerialization(Triple.class, TripleSerialiser.class);
 		conf.registerSerialization(ArrayList.class);
 		conf.registerSerialization(KestrelServerSpec.class, KestrelServerSpec_Serializer.class);
@@ -336,5 +416,25 @@ public class JenaStormUtils {
 		conf.registerSerialization(ElementFilter.class);
 		// conf.registerSerialization(Node_NULL.class);
 		// conf.registerSerialization(Node_Blank.class);
+	}
+
+	public static void registerSerializers(Kryo conf) {
+		conf.addDefaultSerializer(Node_URI.class, NodeSerialiser_URI.class);
+		conf.addDefaultSerializer(Node_Literal.class, NodeSerialiser_Literal.class);
+		conf.addDefaultSerializer(Node_Blank.class, NodeSerialiser_Blank.class);
+		conf.addDefaultSerializer(Node_RuleVariable.class, NodeSerialiser_RuleVariable.class);
+		conf.addDefaultSerializer(Node_Variable.class, NodeSerialiser_Variable.class);
+		conf.addDefaultSerializer(TriplePattern.class, TriplePatternSerialiser.class);
+		conf.addDefaultSerializer(Triple.class, TripleSerialiser.class);
+		conf.register(ArrayList.class);
+		conf.addDefaultSerializer(KestrelServerSpec.class, KestrelServerSpec_Serializer.class);
+		conf.addDefaultSerializer(Rule.class, RuleSerializer.class);
+		conf.addDefaultSerializer(Graph.class, GraphSerialiser.class);
+		conf.addDefaultSerializer(GraphMem.class, GraphSerialiser.class);
+		conf.addDefaultSerializer(MultiUnion.class, GraphSerialiser.class);
+		conf.addDefaultSerializer(Template.class, TemplateSerialiser.class);
+		conf.register(ElementFilter.class);
+		conf.addDefaultSerializer(Node_RuleVariable[].class, NodeSerialiser_RuleVariableARRAY.class);
+		conf.addDefaultSerializer(Node[].class, NodeSerialiser_ARRAY.class);
 	}
 }

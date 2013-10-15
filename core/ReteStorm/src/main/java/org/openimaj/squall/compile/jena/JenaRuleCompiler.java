@@ -26,8 +26,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  */
 public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 	
-	private final class CombinedContextFunction extends
-			CombinedIVFunction<Context, Context> {
+	private final class CombinedContextFunction extends CombinedIVFunction<Context, Context> {
 		@Override
 		protected List<Context> initial() {
 			return new ArrayList<Context>();

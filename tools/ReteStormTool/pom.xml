@@ -18,9 +18,9 @@
 	</properties>
 	<dependencies>
 		<dependency>
-	      <groupId>org.openimaj.storm.tools</groupId>
+	      <groupId>org.openimaj.squall.tools</groupId>
 	      <artifactId>core-storm-tool</artifactId>
-	      <version>${openimajversion}</version>
+	      <version>1.0.0-SNAPSHOT</version>
 	      <scope>compile</scope>
 	    </dependency>
 		<dependency>

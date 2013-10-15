@@ -28,7 +28,7 @@ public class NamedStream implements VariableHolder{
 	 */
 	public NamedStream(String name) {
 		this.name = name;
-		this.streamVars = new ArrayList<String>();
+		this.streamVars = null;
 	}
 	
 	/**
