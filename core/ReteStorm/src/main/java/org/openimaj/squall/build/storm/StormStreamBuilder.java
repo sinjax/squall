@@ -15,6 +15,7 @@ import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.function.Operation;
 import org.openimaj.util.pair.IndependentPair;
 
+import backtype.storm.LocalCluster;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.scheduler.Cluster;
 import backtype.storm.topology.BoltDeclarer;
@@ -35,7 +36,7 @@ public class StormStreamBuilder implements Builder{
 	/**
 	 * @param topop
 	 */
-	private StormStreamBuilder(Operation<StormTopology> topop) {
+	public StormStreamBuilder(Operation<StormTopology> topop) {
 		this.topop = topop;
 	}
 
@@ -105,7 +106,7 @@ public class StormStreamBuilder implements Builder{
 						NamedStream strm = p.firstObject();
 						NamedNode<?> parent = p.secondObject();
 						if(strm.variables().size() == 0){
-							dec.shuffleGrouping(parent.getName(), strm.getName());
+							dec.allGrouping(parent.getName(), strm.getName());
 						}
 						else{							
 							dec.customGrouping(parent.getName(), strm.getName(), new ContextVariableGrouping(strm.variables()));
@@ -157,6 +158,22 @@ public class StormStreamBuilder implements Builder{
 			}
 		}
 		return true;
+	}
+
+	static class LocalClusterOperation implements Operation<StormTopology>{
+
+		@Override
+		public void perform(StormTopology object) {
+			LocalCluster cluster = new LocalCluster();
+			
+		}
+		
+	}
+	/**
+	 * @return build a {@link StormStreamBuilder} deployed on a local cluster
+	 */
+	public static StormStreamBuilder localClusterBuilder() {
+		return new StormStreamBuilder(new LocalClusterOperation());
 	}
 
 }

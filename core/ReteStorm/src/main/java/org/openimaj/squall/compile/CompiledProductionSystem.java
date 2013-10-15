@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
@@ -25,7 +26,6 @@ import com.hp.hpl.jena.graph.Triple;
  */
 public abstract class CompiledProductionSystem {
 	
-	
 	/**
 	 * A stream of triples is the source of our production systems
 	 */
@@ -34,11 +34,11 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * List of production systems that this compilation is made from
 	 */
-	List<List<CompiledProductionSystem>> systems;	
+	List<CompiledProductionSystem> systems;	
 	/**
 	 * Filters match triples and assign variables to values within the triple.
 	 */
-	List<IVFunction<Context,Context>> filters;
+	List<JoinComponent<?>> joinlist;
 	
 	/**
 	 * Predicates confirm or deny certain bindings. Empty means no predicates
@@ -61,8 +61,8 @@ public abstract class CompiledProductionSystem {
 	 */
 	public CompiledProductionSystem() {
 		sources = new ArrayList<IStream<Context>>();
-		systems = new ArrayList<List<CompiledProductionSystem>>();
-		filters = new ArrayList<IVFunction<Context, Context>>();
+		systems = new ArrayList<CompiledProductionSystem>();
+		joinlist = new ArrayList<JoinComponent<?>>();
 		predicates = new ArrayList<IVFunction<Context, Context>>();
 		aggregations = new ArrayList<IVFunction<List<Context>, Context>>();
 		consequence = null;
@@ -84,19 +84,7 @@ public abstract class CompiledProductionSystem {
 	 * @return return this system (useful for chaining)
 	 */
 	public CompiledProductionSystem addSystem(CompiledProductionSystem sys){
-		addFirst(systems,sys);
-		return this;
-	}
-	
-	/**
-	 * Add a system as a part of this production system, this system is added to the 0th {@link List} of {@link CompiledProductionSystem}
-	 * @param sys
-	 * @return return this system (useful for chaining)
-	 */
-	public CompiledProductionSystem addSeperateSystem(CompiledProductionSystem sys){
-		List<CompiledProductionSystem> l = new ArrayList<CompiledProductionSystem>();
-		l.add(sys);
-		this.systems.add(l);
+		systems.add(sys);
 		return this;
 	}
 	
@@ -106,18 +94,26 @@ public abstract class CompiledProductionSystem {
 	 * @param filter
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem addFilter(IVFunction<Context,Context> filter){
-		filters.add(filter);
+	public CompiledProductionSystem addJoinComponent(JoinComponent<?> filter){
+		joinlist.add(filter);
 		return this;
 	}
 	
-	private <T> void addFirst(List<List<T>> listlist,T item) {
-		if(listlist.size() == 0){
-			listlist.add(new ArrayList<T>());
-		}
-		listlist.get(0).add(item);
-		
+	/**
+	 * @param filter add this filter as a {@link JoinComponent}
+	 */
+	public void addJoinComponent(IVFunction<Context,Context> filter) {
+		this.addJoinComponent(new JoinComponent.IVFunctionJoinComponent(filter));
 	}
+	
+	/**
+	 * @param filter add this filter as a {@link JoinComponent}
+	 */
+	public void addJoinComponent(CompiledProductionSystem filter) {
+		this.addJoinComponent(new JoinComponent.CPSJoinComponent(filter));
+	}
+	
+	
 
 	/**
 	 * Add a predicate. Predicates consume bindings and decide whether they pass
@@ -142,8 +138,8 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @return the filters of this system
 	 */
-	public List<IVFunction<Context, Context>> getFilters() {
-		return this.filters;
+	public List<JoinComponent<?>> getJoinComponents() {
+		return this.joinlist;
 	}
 
 	/**
@@ -156,7 +152,7 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @return the sub systems of this {@link CompiledProductionSystem}
 	 */
-	public List<List<CompiledProductionSystem>> getSystems() {
+	public List<CompiledProductionSystem> getSystems() {
 		return this.systems;
 	}
 

@@ -65,7 +65,7 @@ public class NamedStream implements VariableHolder{
 			public Context apply(Context in) {
 				Context clone = in.clone();
 				clone.put(STREAM_KEY, name);
-				return in;
+				return clone;
 			}
 		};
 	}

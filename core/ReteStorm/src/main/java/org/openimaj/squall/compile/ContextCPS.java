@@ -20,13 +20,11 @@ public class ContextCPS extends CompiledProductionSystem{
 		for (IStream<Context> source : this.sources){
 			clone.addSource(source);
 		}
-		for (List<CompiledProductionSystem> list : this.systems){
-			for (CompiledProductionSystem cps : list){
-				clone.addSeperateSystem(cps.clone());
-			}
+		for (CompiledProductionSystem cps : this.systems){
+				clone.addSystem(cps.clone());
 		}
-		for (IVFunction<Context,Context> func : this.filters){
-			clone.addFilter(func);
+		for (JoinComponent<?> func : this.joinlist){
+			clone.addJoinComponent(func);
 		}
 		for (IVFunction<Context,Context> func : this.predicates){
 			clone.addPredicate(func);

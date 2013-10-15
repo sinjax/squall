@@ -55,13 +55,13 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 			else
 			{
 				ContextCPS ruleret = new ContextCPS();
-				ret.addSeperateSystem(ruleret);
+				ret.addSystem(ruleret);
 
 				// Extract all the parts of the body
 				for (int i = 0; i < rule.bodyLength(); i++) {
 					ClauseEntry clause = rule.getBodyElement(i);
 					if (clause instanceof TriplePattern) {
-						ruleret.addFilter(new TripleFilterFunction((TriplePattern)clause));
+						ruleret.addJoinComponent(new TripleFilterFunction((TriplePattern)clause));
 					} 
 					else if (clause instanceof Functor){
 						ruleret.addPredicate(new FunctorFunction(rule,(Functor) clause));
