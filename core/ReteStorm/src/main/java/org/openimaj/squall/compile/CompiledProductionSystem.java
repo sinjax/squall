@@ -21,13 +21,13 @@ import com.hp.hpl.jena.graph.Triple;
  * A {@link CompiledProductionSystem} may also suggest groupings of the "AND" parts in the form 
  * of a list of {@link CompiledProductionSystem}
  * 
- * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ * @author Sina Samangooei (ss@ecs.soton.ac.uk), David Monks <dm11g08@ecs.soton.ac.uk>
  */
 public abstract class CompiledProductionSystem {
 	
 	
 	/**
-	 * A stream of triples is the source of ourproduction systems
+	 * A stream of triples is the source of our production systems
 	 */
 	List<IStream<Context>> sources;
 	
@@ -180,4 +180,13 @@ public abstract class CompiledProductionSystem {
 	public List<IVFunction<List<Context>, Context>> getAggregations() {
 		return this.aggregations;
 	}
+	
+	/**
+	 * @return CompiledProductionSystem
+	 * 				A duplicate of the referenced CompiledProductionSystem in the state it held at the time of the call.
+	 * 				All sub CPSs are distinct from those of the original CompiledProductionSystem, but equal to them.
+	 * 				All other state is copied by reference.
+	 */
+	public abstract CompiledProductionSystem clone();
+	
 }
