@@ -27,7 +27,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class TestJenaRuleCompilerGreedyOrchestrator {
+public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 	
 	private final class PrintAllOperation implements IOperation<Context> {
 		@Override
@@ -89,7 +89,7 @@ public class TestJenaRuleCompilerGreedyOrchestrator {
 
 
 	private List<Rule> loadRules(String stream) {
-		InputStream ruleStream = TestJenaRuleCompilerGreedyOrchestrator.class.getResourceAsStream(stream);
+		InputStream ruleStream = TestJenaRuleCompilerGreedyOrchestratorOIBuilder.class.getResourceAsStream(stream);
 		List<Rule> rules = JenaUtils.readRules(ruleStream);
 		return rules;
 	}

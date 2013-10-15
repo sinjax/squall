@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.squall.compile.CompiledProductionSystem;
+import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.IVFunction;
@@ -82,29 +83,22 @@ public class GreedyOrchestrator implements Orchestrator{
 				root.root.add(new NamedSourceNode(root,nextSourceName(root), sourceS));
 			}
 		}
-		for (List<CompiledProductionSystem> syslist: sys.getSystems()) {
-			for (CompiledProductionSystem cps : syslist) {
-				orchestrateSources(cps, root);
-			}
+		for (CompiledProductionSystem cps: sys.getSystems()) {
+			orchestrateSources(cps, root);
 		}
 	}
 
 	private NamedNode<? extends IVFunction<Context,Context>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem sys) {
-		NamedNode<? extends IVFunction<Context, Context>> combinedFilters = orchestrateFilters(root,sys.getFilters());
+		NamedNode<? extends IVFunction<Context, Context>> combinedFilters = orchestrateJoinComponents(root,sys.getJoinComponents());
 		combinedFilters = orchestratePredicates(root,combinedFilters,sys.getPredicates());
 		
 		List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS = new ArrayList<NamedNode<? extends IVFunction<Context, Context>>>();
-		for (List<CompiledProductionSystem> subsyslist : sys.getSystems()) {
-			NamedNode<? extends IVFunction<Context, Context>> combined = null;
-			for (CompiledProductionSystem subsys : subsyslist) {
-				NamedNode<? extends IVFunction<Context, Context>> next = orchestrate(root,subsys);
-				if(combined == null){
-					combined = next;
-				} else{
-					combined = createJoinNode(root, combined, next);
-				}
+		for (CompiledProductionSystem cps : sys.getSystems()) {
+			NamedNode<? extends IVFunction<Context, Context>> combined = orchestrate(root,cps);
+			if(combined == null){
+				throw new RuntimeException("No consequence of or'ed "); 
 			}
-			if(combined!=null && combinedFilters != null){ // join the sub systems to any filters
+			if(combinedFilters != null){ // join the sub systems to any filters
 				combined = createJoinNode(root, combined,combinedFilters);
 			}
 			joinedCPS.add(combined);
@@ -174,14 +168,24 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("PREDICATE_%d",predicate ++ );
 	}
 
-	private NamedNode<? extends IVFunction<Context, Context>> orchestrateFilters(
+	private NamedNode<? extends IVFunction<Context, Context>> orchestrateJoinComponents(
 			OrchestratedProductionSystem root, 
-			List<IVFunction<Context,Context>> list
+			List<JoinComponent<?>> list
 	) {
 		
 		NamedNode<? extends IVFunction<Context, Context>> ret = null;
-		for (IVFunction<Context,Context> filter : list) {
-			NamedNode<? extends IVFunction<Context,Context>> next = createFilterNode(root, filter);
+		for (JoinComponent<?> jc : list) {
+			NamedNode<? extends IVFunction<Context,Context>> next;
+			if(jc.isFunction()){				
+				IVFunction<Context, Context> typedComponent = jc.getTypedComponent();
+				next = createFilterNode(root, typedComponent);
+			} else if (jc.isCPS()){
+				CompiledProductionSystem cps = jc.getTypedComponent();
+				next = orchestrate(root, cps);
+			} else{
+				// ignore unknown join comp
+				throw new RuntimeException();
+			}
 			if(ret == null){
 				ret = next;
 			}
@@ -229,7 +233,7 @@ public class GreedyOrchestrator implements Orchestrator{
 	 */
 	public static void main(String[] args) {
 		InputStream nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
-		InputStream ruleStream = GreedyOrchestrator.class.getResourceAsStream("/test.singlejoin.complex.rules");
+		InputStream ruleStream = GreedyOrchestrator.class.getResourceAsStream("/test.rules");
 		
 		Stream<Context> tripleContextStream = 
 			new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))

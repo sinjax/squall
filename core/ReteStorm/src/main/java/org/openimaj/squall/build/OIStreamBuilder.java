@@ -15,6 +15,7 @@ import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.JoinStream;
 import org.openimaj.util.data.NonBlockingStream;
+import org.openimaj.util.function.Function;
 import org.openimaj.util.function.MultiFunction;
 import org.openimaj.util.stream.NullCatch;
 import org.openimaj.util.stream.SplitStream;
@@ -149,7 +150,10 @@ public class OIStreamBuilder implements Builder{
 	private List<Stream<Context>> extractParentStreams(OrchestratedProductionSystem ops, Map<String, Stream<Context>> state, NamedNode<?> namedNode) {
 		List<Stream<Context>> ret = new ArrayList<Stream<Context>>();
 		for (NamedStream edge : namedNode.parentEdges()) {
-			ret.add(state.get(ops.getEdgeSource(edge).getName()).map(edge.getFunction()));
+			Function<Context, Context> edgeFunction = edge.getFunction();
+			String sourceName = ops.getEdgeSource(edge).getName();
+			Stream<Context> sourceStream = state.get(sourceName);
+			ret.add(sourceStream.map(edgeFunction));
 		}
 		return ret;
 	}
