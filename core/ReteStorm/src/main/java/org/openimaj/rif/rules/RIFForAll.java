@@ -54,5 +54,15 @@ public class RIFForAll implements RIFSentence {
 			}
 		};
 	}
+	
+	/**
+	 * @param varName
+	 * @return
+	 */
+	public boolean containsVar(String varName){
+		for (RIFVar var : universalVars())
+			if (var.getName().equals(varName)) return true;
+		return false;
+	}
 
 }

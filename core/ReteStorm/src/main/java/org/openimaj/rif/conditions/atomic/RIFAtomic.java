@@ -2,6 +2,7 @@ package org.openimaj.rif.conditions.atomic;
 
 import org.openimaj.rif.conditions.formula.RIFFormula;
 import org.openimaj.rif.rules.RIFStatement;
+import org.openimaj.rif.rules.RIFSentence;
 
 /**
  * @author david.monks

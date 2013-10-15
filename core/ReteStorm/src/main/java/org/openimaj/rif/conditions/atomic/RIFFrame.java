@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openimaj.rif.conditions.data.RIFData;
+import org.openimaj.rif.conditions.data.datum.RIFDatum;
 
 /**
  * @author david.monks
@@ -11,7 +12,7 @@ import org.openimaj.rif.conditions.data.RIFData;
  */
 public class RIFFrame extends RIFAtomic {
 	
-	private RIFData subject;
+	private RIFDatum subject;
 	private List<PredObPair> predObs;
 	
 	/**
@@ -22,12 +23,12 @@ public class RIFFrame extends RIFAtomic {
 		this.predObs.add(new PredObPair());
 	}
 	
-	private RIFFrame(RIFData s){
+	private RIFFrame(RIFDatum s){
 		this();
 		this.subject = s;
 	}
 	
-	private RIFFrame(RIFData s, List<PredObPair> pol){
+	private RIFFrame(RIFDatum s, List<PredObPair> pol){
 		this();
 		this.subject = s;
 		this.predObs = pol;
@@ -36,21 +37,21 @@ public class RIFFrame extends RIFAtomic {
 	/**
 	 * @param sub
 	 */
-	public void setSubject(RIFData sub){
+	public void setSubject(RIFDatum sub){
 		this.subject = sub;
 	}
 	
 	/**
 	 * @param pred
 	 */
-	public void setPredicate(RIFData pred){
+	public void setPredicate(RIFDatum pred){
 		this.predObs.get(this.predObs.size() - 1).setPredicate(pred);
 	}
 	
 	/**
 	 * @param obj
 	 */
-	public void setObject(RIFData obj){
+	public void setObject(RIFDatum obj){
 		this.predObs.get(this.predObs.size() - 1).setObject(obj);
 	}
 	
@@ -64,7 +65,7 @@ public class RIFFrame extends RIFAtomic {
 	/**
 	 * @return
 	 */
-	public RIFData getSubject(){
+	public RIFDatum getSubject(){
 		return this.subject;
 	}
 	
@@ -79,28 +80,28 @@ public class RIFFrame extends RIFAtomic {
 	 * @param index
 	 * @return
 	 */
-	public RIFData getPredicate(int index){
+	public RIFDatum getPredicate(int index){
 		return this.predObs.get(index).getPredicate();
 	}
 	
 	/**
 	 * @return
 	 */
-	public RIFData getObject(int index){
+	public RIFDatum getObject(int index){
 		return this.predObs.get(index).getObject();
 	}
 	
 	/**
 	 * @return
 	 */
-	public RIFData getPredicate(){
+	public RIFDatum getPredicate(){
 		return this.getPredicate(this.getPredicateObjectPairCount() - 1);
 	}
 	
 	/**
 	 * @return
 	 */
-	public RIFData getObject(){
+	public RIFDatum getObject(){
 		return this.getObject(this.getPredicateObjectPairCount() - 1);
 	}
 	
@@ -117,26 +118,26 @@ public class RIFFrame extends RIFAtomic {
 	
 	private static class PredObPair {
 		
-		private RIFData predicate;
-		private RIFData object;
+		private RIFDatum predicate;
+		private RIFDatum object;
 		
 		public PredObPair(){
 			
 		}
 		
-		public void setPredicate(RIFData data){
+		public void setPredicate(RIFDatum data){
 			this.predicate = data;
 		}
 		
-		public void setObject(RIFData data){
+		public void setObject(RIFDatum data){
 			this.object = data;
 		}
 		
-		public RIFData getPredicate(){
+		public RIFDatum getPredicate(){
 			return this.predicate;
 		}
 		
-		public RIFData getObject(){
+		public RIFDatum getObject(){
 			return this.object;
 		}
 		

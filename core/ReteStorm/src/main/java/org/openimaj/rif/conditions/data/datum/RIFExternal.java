@@ -1,4 +1,4 @@
-package org.openimaj.rif.conditions.data;
+package org.openimaj.rif.conditions.data.datum;
 
 import org.openimaj.rif.conditions.atomic.RIFAtom;
 import org.openimaj.rif.conditions.formula.RIFFormula;
@@ -7,7 +7,7 @@ import org.openimaj.rif.conditions.formula.RIFFormula;
  * @author david.monks
  *
  */
-public class RIFExternal implements RIFData, RIFFormula {
+public class RIFExternal implements RIFDatum, RIFFormula {
 
 	private RIFAtom command;
 	

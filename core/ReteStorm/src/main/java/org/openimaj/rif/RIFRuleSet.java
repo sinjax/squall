@@ -17,11 +17,13 @@ import javax.xml.parsers.*;
 import org.openimaj.rif.conditions.atomic.RIFAtom;
 import org.openimaj.rif.conditions.atomic.RIFFrame;
 import org.openimaj.rif.conditions.data.RIFData;
-import org.openimaj.rif.conditions.data.RIFExternal;
 import org.openimaj.rif.conditions.data.RIFList;
 import org.openimaj.rif.conditions.data.datum.RIFConst;
+import org.openimaj.rif.conditions.data.datum.RIFDatum;
+import org.openimaj.rif.conditions.data.datum.RIFExternal;
 import org.openimaj.rif.conditions.data.datum.RIFIRIConst;
 import org.openimaj.rif.conditions.data.datum.RIFStringConst;
+import org.openimaj.rif.conditions.data.datum.RIFUnrecognisedConst;
 import org.openimaj.rif.conditions.data.datum.RIFVar;
 import org.openimaj.rif.conditions.formula.RIFAnd;
 import org.openimaj.rif.conditions.formula.RIFEqual;
@@ -47,6 +49,7 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 	 * @param args
 	 */
 	public static void main(String[] args){
+		System.out.println("%s %s".replaceFirst("%s", "Hello"));
 		try {
 			RIFRuleSet rs = RIFRuleSet.parse(new URI("http://www.w3.org/2005/rules/test/repository/tc/Frames/Frames-premise.rif"));
 			System.out.println(rs.toString());
@@ -568,7 +571,7 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 			currentLocation = null;
 			currentProfile = null;
 			
-			currentGroup = new Stack<RIFGroup>();
+			currentGroup = null;
 			currentFormula = new Stack<RIFFormula>();
 			currentExternal = new Stack<RIFExternal>();
 			currentList = new Stack<RIFList>();
@@ -734,8 +737,10 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 								descent.push(Element.GROUP);
 								lastSibling.push(null);
 								
-								currentGroup.push(new RIFGroup());
-								this.ruleSet.groups.add(currentGroup.peek());
+								if (currentGroup == null)
+									currentGroup = new Stack<RIFGroup>();
+								else
+									throw new SAXException("RIF: Should not have constructed the Group stack before first Group in payload.");
 								
 								break;
 							default:
@@ -770,7 +775,10 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 								lastSibling.push(null);
 								
 								RIFGroup g = new RIFGroup();
-								currentGroup.peek().addSentence(g);
+								if (currentGroup.isEmpty())
+									this.ruleSet.groups.add(g);
+								else
+									currentGroup.peek().addSentence(g);
 								currentGroup.push(g);
 								
 								break;
@@ -782,7 +790,10 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 										lastSibling.push(null);
 										
 										currentForAll = new RIFForAll();
-										currentGroup.peek().addSentence(currentForAll);
+										if (currentGroup.isEmpty())
+											this.ruleSet.groups.add(currentForAll);
+										else
+											currentGroup.peek().addSentence(currentForAll);
 										
 										break;
 									case 'r':
@@ -791,7 +802,10 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 										lastSibling.push(null);
 										
 										currentFrame = new RIFFrame();
-										currentForAll.setStatement(currentFrame);
+										if (currentGroup.isEmpty())
+											this.ruleSet.groups.add(currentFrame);
+										else
+											currentGroup.peek().addSentence(currentFrame);
 										
 										break;
 									default:
@@ -805,7 +819,10 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 								lastSibling.push(null);
 								
 								currentRule = new RIFRule();
-								currentGroup.peek().addSentence(currentRule);
+								if (currentGroup.isEmpty())
+									this.ruleSet.groups.add(currentRule);
+								else
+									currentGroup.peek().addSentence(currentRule);
 								
 								break;
 							case 'A':
@@ -814,7 +831,10 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 								lastSibling.push(null);
 								
 								currentAtom = new RIFAtom();
-								currentForAll.setStatement(currentAtom);
+								if (currentGroup.isEmpty())
+									this.ruleSet.groups.add(currentAtom);
+								else
+									currentGroup.peek().addSentence(currentAtom);
 								
 								break;
 							default:
@@ -1089,17 +1109,26 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 					case SLOT_FIRST:
 						if (lastSibling.peek() == null){
 							d = startTERM(localName,atts);
-							currentFrame.setPredicate(d);
+							if (d instanceof RIFDatum)
+								currentFrame.setPredicate((RIFDatum) d);
+							else
+								throw new SAXException("RIF: 'slot' elements must contain only 'Var', 'Const' or 'External' elements, i.e. base terms.");
 						}else{
 							descent.pop();
 							lastSibling.pop();
 							d = startTERM(localName,atts);
-							currentFrame.setObject(d);
+							if (d instanceof RIFDatum)
+								currentFrame.setObject((RIFDatum) d);
+							else
+								throw new SAXException("RIF: 'slot' elements must contain only 'Var', 'Const' or 'External' elements, i.e. base terms.");
 						}
 					case OBJECT:
 						if (d == null) {
 							d = startTERM(localName,atts);
-							currentFrame.setSubject(d);
+							if (d instanceof RIFDatum)
+								currentFrame.setSubject((RIFDatum) d);
+							else
+								throw new SAXException("RIF: 'object' elements must contain only 'Var', 'Const' or 'External' elements, i.e. base terms.");
 						}
 					case RIGHT:
 						if (d == null) {
@@ -1308,7 +1337,10 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 						lastSibling.pop();
 						lastSibling.push(null);
 						d = startGROUNDTERM(localName,atts);
-						currentAtom.addArg(d);
+						if(d instanceof RIFDatum)
+							currentAtom.addArg((RIFDatum) d);
+						else
+							throw new SAXException("RIF: 'arg' elements must contain only 'Const' and 'External' elements, i.e. base terms.");
 						if (d instanceof RIFList){
 							currentList.push((RIFList) d);
 						}
@@ -1317,7 +1349,10 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 						lastSibling.pop();
 						lastSibling.push(null);
 						d = startTERM(localName,atts);
-						currentAtom.addArg(d);
+						if(d instanceof RIFDatum)
+							currentAtom.addArg((RIFDatum) d);
+						else
+							throw new SAXException("RIF: 'arg' elements must contain only 'Var', 'Const' and 'External' elements, i.e. base terms.");
 						if (d instanceof RIFList){
 							currentList.push((RIFList) d);
 						}
@@ -1551,13 +1586,19 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 					descent.push(Element.CONST);
 					lastSibling.push(null);
 					
-					if (atts.getValue("type") != null
-							&& atts.getValue("type").equals(RIFIRIConst.datatype)){
+					if (atts.getValue("type") != null){
 //System.out.println(atts.getValue("type"));
+						URI uri = findURI(atts.getValue("type"));
+						if (uri.toString().equals(RIFIRIConst.datatype)){
 							currentConst = new RIFIRIConst();
-						}else{
+						}else if (uri.toString().equals(RIFStringConst.datatype)){
 							currentConst = new RIFStringConst();
+						}else{
+							currentConst = new RIFUnrecognisedConst(uri);
 						}
+					}else{
+						currentConst = new RIFStringConst();
+					}
 					return currentConst;
 				case 'V':
 					if (lastSibling.peek() != null) throw new SAXException("RIF: 'Var' element, if it exists, must be the sole child of an element.");
@@ -1715,7 +1756,10 @@ System.out.println("Looking up Prefix");
 						currentExternal.pop();
 						break;
 					case GROUP:
-						currentGroup.pop();
+						if (currentGroup.isEmpty())
+							currentGroup = null;
+						else
+							currentGroup.pop();
 						break;
 					case AND:
 					case OR:

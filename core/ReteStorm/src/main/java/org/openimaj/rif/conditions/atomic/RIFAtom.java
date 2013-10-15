@@ -6,21 +6,22 @@ import java.util.List;
 
 import org.openimaj.rif.conditions.data.RIFData;
 import org.openimaj.rif.conditions.data.datum.RIFConst;
+import org.openimaj.rif.conditions.data.datum.RIFDatum;
 
 /**
  * @author david.monks
  *
  */
-public class RIFAtom extends RIFAtomic implements Iterable<RIFData> {
+public class RIFAtom extends RIFAtomic implements Iterable<RIFDatum> {
 	
 	private RIFConst<?> op;
-	private List<RIFData> args;
+	private List<RIFDatum> args;
 	
 	/**
 	 * 
 	 */
 	public RIFAtom(){
-		this.args = new ArrayList<RIFData>();
+		this.args = new ArrayList<RIFDatum>();
 	}
 	
 	/**
@@ -40,7 +41,7 @@ public class RIFAtom extends RIFAtomic implements Iterable<RIFData> {
 	/**
 	 * @param arg
 	 */
-	public void addArg(RIFData arg){
+	public void addArg(RIFDatum arg){
 		this.args.add(arg);
 	}
 	
@@ -53,7 +54,7 @@ public class RIFAtom extends RIFAtomic implements Iterable<RIFData> {
 	}
 	
 	@Override
-	public Iterator<RIFData> iterator(){
+	public Iterator<RIFDatum> iterator(){
 		return this.args.iterator();
 	}
 

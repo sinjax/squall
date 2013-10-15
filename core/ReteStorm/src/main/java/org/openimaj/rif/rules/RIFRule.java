@@ -11,7 +11,7 @@ import org.openimaj.rif.conditions.formula.RIFFormula;
  * @author david.monks
  *
  */
-public class RIFRule implements RIFStatement, RIFSentence {
+public class RIFRule implements RIFStatement {
 	
 	private Set<RIFAtomic> head;
 	private RIFFormula body;

@@ -52,5 +52,15 @@ public class RIFExists implements RIFFormula {
 			}
 		};
 	}
+	
+	/**
+	 * @param varName
+	 * @return
+	 */
+	public boolean containsVar(String varName){
+		for (RIFVar var : existentialVars())
+			if (var.getName().equals(varName)) return true;
+		return false;
+	}
 
 }

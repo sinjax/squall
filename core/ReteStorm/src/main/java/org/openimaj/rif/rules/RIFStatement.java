@@ -4,6 +4,6 @@ package org.openimaj.rif.rules;
  * @author david.monks
  *
  */
-public interface RIFStatement {
+public interface RIFStatement extends RIFSentence{
 
 }
