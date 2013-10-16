@@ -1,6 +1,6 @@
 package org.openimaj.rif.conditions.formula;
 
-import org.openimaj.rif.conditions.data.RIFData;
+import org.openimaj.rif.conditions.data.datum.RIFDatum;
 
 /**
  * @author david.monks
@@ -8,8 +8,8 @@ import org.openimaj.rif.conditions.data.RIFData;
  */
 public class RIFEqual implements RIFFormula {
 
-	private RIFData left;
-	private RIFData right;
+	private RIFDatum left;
+	private RIFDatum right;
 	
 	/**
 	 * 
@@ -21,28 +21,28 @@ public class RIFEqual implements RIFFormula {
 	/**
 	 * @param l
 	 */
-	public void setLeft(RIFData l){
+	public void setLeft(RIFDatum l){
 		this.left = l;
 	}
 	
 	/**
 	 * @param r
 	 */
-	public void setRight(RIFData r){
+	public void setRight(RIFDatum r){
 		this.right = r;
 	}
 	
 	/**
 	 * @return
 	 */
-	public RIFData getRight(){
+	public RIFDatum getRight(){
 		return this.right;
 	}
 	
 	/**
 	 * @return
 	 */
-	public RIFData getLeft(){
+	public RIFDatum getLeft(){
 		return this.left;
 	}
 

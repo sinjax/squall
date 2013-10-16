@@ -69,12 +69,14 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 	 * Parses the RIF Rule Set from the XML document at the rulesURI.
 	 * @param rulesURI -
 	 * 			The URI of the rule set whose rules are to be converted.
+	 * @param conH -
+	 * 			The {@link RIFXMLContentHandler} with which the XML at the rulesURI should be parsed into a {@link RIFRuleSet}.
 	 * @return 
 	 * 			True if the rule set was successfully converted, false otherwise.
 	 * @throws SAXException 
 	 * @throws IOException 
 	 */
-	public static RIFRuleSet parse(URI rulesURI) throws IOException, SAXException {
+	public static RIFRuleSet parse(URI rulesURI, RIFXMLContentHandler conH) throws IOException, SAXException {
 		//Fetch the rules from the rulesURI and load into a SAX parser.
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 	    try {
@@ -86,12 +88,11 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 		}
 		
 	    SAXParser saxParser;
-	    RIFRuleSet ruleSet = new RIFRuleSet();
+	    RIFRuleSet ruleSet = conH.getRuleSet();
 	    
 		try {
 			saxParser = spf.newSAXParser();
 			XMLReader xmlReader = saxParser.getXMLReader();
-			RIFXMLContentHandler conH = new RIFXMLContentHandler(ruleSet);
 		    xmlReader.setContentHandler(conH);
 		    xmlReader.parse(new InputSource(rulesURI.toASCIIString()));
 		} catch (ParserConfigurationException e) {
@@ -101,6 +102,10 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 		
 		return ruleSet;
 	}
+	
+	//  Static Values
+	
+	public static final RIFCoreXMLContentHandler RIF_CORE = new RIFCoreXMLContentHandler();
 	
 	//  VARIABLES
 	
@@ -274,9 +279,9 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 	
 	//  RIFXMLContentHandler Class
 	
-	private static class RIFXMLContentHandler extends DefaultHandler {
+	public static abstract class RIFXMLContentHandler extends DefaultHandler {
 	
-		private enum Element {
+		protected enum Element {
 			//IRIMETA
 			ID("id")
 			,
@@ -521,35 +526,44 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 			}
 		}
 		
-		private RIFRuleSet ruleSet;
+		protected RIFRuleSet ruleSet;
 		
-		private RIFXMLContentHandler (RIFRuleSet rs){
-			this.ruleSet = rs;
+		protected RIFXMLContentHandler (){
+			this.ruleSet = new RIFRuleSet();
 		}
 		
-		private Stack<Element> descent;
-		private Stack<Element> lastSibling;
-		
-		private StringBuilder partialContent;
-		
-		private URI currentLocation;
-		private URI currentProfile;
+		/**
+		 * 
+		 * @return -
+		 * 		The {@link RIFRuleSet} originally handed to the ContentHandler.
+		 */
+		public RIFRuleSet getRuleSet() {
+			return this.ruleSet;
+		}
 
-		private Stack<RIFGroup> currentGroup;
+		protected Stack<Element> descent;
+		protected Stack<Element> lastSibling;
 		
-		private RIFForAll currentForAll;
-		private RIFRule currentRule;
-		private Stack<RIFFormula> currentFormula;
-		private RIFEqual currentEqual;
-		private RIFMember currentMember;
+		protected StringBuilder partialContent;
 		
-		private Stack<RIFExternal> currentExternal;
-		private RIFAtom currentAtom;
-		private RIFFrame currentFrame;
+		protected URI currentLocation;
+		protected URI currentProfile;
+
+		protected Stack<RIFGroup> currentGroup;
 		
-		private Stack<RIFList> currentList;
-		private RIFVar currentVar;
-		private RIFConst<?> currentConst;
+		protected RIFForAll currentForAll;
+		protected RIFRule currentRule;
+		protected Stack<RIFFormula> currentFormula;
+		protected RIFEqual currentEqual;
+		protected RIFMember currentMember;
+		
+		protected Stack<RIFExternal> currentExternal;
+		protected RIFAtom currentAtom;
+		protected RIFFrame currentFrame;
+		
+		protected Stack<RIFList> currentList;
+		protected RIFVar currentVar;
+		protected RIFConst<?> currentConst;
 		
 		//   !ENTITY HANDLING
 		
@@ -582,7 +596,40 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 			
 		}
 		
-		//   ELEMENT START HANDLING
+		protected URI findURI(String value) throws SAXException{
+			try {
+				return new URI(value);
+			} catch (URISyntaxException e) {
+//System.out.println("Looking up Prefix");
+				if (value.charAt(0) == '&'){
+					int endOfEntity = value.indexOf(';');
+					String prefix = value.substring(1, endOfEntity);
+					String uri = ruleSet.getPrefix(prefix).toString();
+					if (endOfEntity < value.length()){
+						uri += value.substring(endOfEntity + 1);
+					}
+					try {
+						return new URI(uri);
+					} catch (URISyntaxException ex) {
+						throw new SAXException("RIF: IRI <"+uri+"> does not follow URI syntax.",e);
+					}
+				}else{
+					throw new SAXException("RIF: IRI <"+value+"> does not follow URI syntax.",e);
+				}
+			}
+		}
+	
+	}
+	
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 *
+	 */
+	public static class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
+		
+		protected RIFCoreXMLContentHandler(){
+			super();
+		}
 		
 		@Override
 		public void startElement(		String namespaceURI,
@@ -1133,22 +1180,34 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 					case RIGHT:
 						if (d == null) {
 							d = startTERM(localName,atts);
-							currentEqual.setRight(d);
+							if (d instanceof RIFDatum)
+								currentEqual.setRight((RIFDatum) d);
+							else
+								throw new SAXException("RIF: 'object' elements must contain only 'Var', 'Const' or 'External' elements, i.e. base terms.");
 						}
 					case LEFT:
 						if (d == null) {
 							d = startTERM(localName,atts);
-							currentEqual.setLeft(d);
+							if (d instanceof RIFDatum)
+								currentEqual.setLeft((RIFDatum) d);
+							else
+								throw new SAXException("RIF: 'object' elements must contain only 'Var', 'Const' or 'External' elements, i.e. base terms.");
 						}
 					case INSTANCE:
 						if (d == null) {
 							d = startTERM(localName,atts);
-							currentMember.setInstance(d);
+							if (d instanceof RIFDatum)
+								currentMember.setInstance((RIFDatum) d);
+							else
+								throw new SAXException("RIF: 'instance' elements must contain only 'Var', 'Const' or 'External' elements, i.e. base terms.");
 						}
 					case CLASS:
 						if (d == null) {
 							d = startTERM(localName,atts);
-							currentMember.setInClass(d);
+							if (d instanceof RIFDatum)
+								currentMember.setInClass((RIFDatum) d);
+							else
+								throw new SAXException("RIF: 'class' elements must contain only 'Var', 'Const' or 'External' elements, i.e. base terms.");
 						}
 						if (d instanceof RIFList){
 							currentList.push((RIFList) d);
@@ -1660,29 +1719,6 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 		
 		//   CONTENT HANDLING
 		
-		private URI findURI(String value) throws SAXException{
-			try {
-				return new URI(value);
-			} catch (URISyntaxException e) {
-System.out.println("Looking up Prefix");
-				if (value.charAt(0) == '&'){
-					int endOfEntity = value.indexOf(';');
-					String prefix = value.substring(1, endOfEntity);
-					String uri = ruleSet.getPrefix(prefix).toString();
-					if (endOfEntity < value.length()){
-						uri += value.substring(endOfEntity + 1);
-					}
-					try {
-						return new URI(uri);
-					} catch (URISyntaxException ex) {
-						throw new SAXException("RIF: IRI <"+uri+"> does not follow URI syntax.",e);
-					}
-				}else{
-					throw new SAXException("RIF: IRI <"+value+"> does not follow URI syntax.",e);
-				}
-			}
-		}
-		
 		@Override
 		public void characters(char[] chars, int start, int length) throws SAXException{
 			StringBuilder filteredChars = new StringBuilder();
@@ -1731,6 +1767,7 @@ System.out.println("Looking up Prefix");
 		
 		//   ELEMENT END HANDLING
 		
+		@Override
 		public void endElement(		String uri,
 									String localName,
 								String qName)
@@ -1781,7 +1818,7 @@ System.out.println("Looking up Prefix");
 				}
 			}
 		}
-	
+		
 	}
 	
 }

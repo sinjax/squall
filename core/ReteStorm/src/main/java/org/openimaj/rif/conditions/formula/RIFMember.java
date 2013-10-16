@@ -1,6 +1,6 @@
 package org.openimaj.rif.conditions.formula;
 
-import org.openimaj.rif.conditions.data.RIFData;
+import org.openimaj.rif.conditions.data.datum.RIFDatum;
 
 /**
  * @author david.monks
@@ -8,8 +8,8 @@ import org.openimaj.rif.conditions.data.RIFData;
  */
 public class RIFMember implements RIFFormula {
 	
-	private RIFData instance;
-	private RIFData inClass;
+	private RIFDatum instance;
+	private RIFDatum inClass;
 	
 	/**
 	 * 
@@ -21,28 +21,28 @@ public class RIFMember implements RIFFormula {
 	/**
 	 * @param i
 	 */
-	public void setInstance(RIFData i){
+	public void setInstance(RIFDatum i){
 		this.instance = i;
 	}
 	
 	/**
 	 * @param c
 	 */
-	public void setInClass(RIFData c){
+	public void setInClass(RIFDatum c){
 		this.inClass = c;
 	}
 	
 	/**
 	 * @return
 	 */
-	public RIFData getInstance(){
+	public RIFDatum getInstance(){
 		return this.instance;
 	}
 	
 	/**
 	 * @return
 	 */
-	public RIFData getInClass(){
+	public RIFDatum getInClass(){
 		return this.inClass;
 	}
 
