@@ -51,7 +51,10 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 	public static void main(String[] args){
 		System.out.println("%s %s".replaceFirst("%s", "Hello"));
 		try {
-			RIFRuleSet rs = RIFRuleSet.parse(new URI("http://www.w3.org/2005/rules/test/repository/tc/Frames/Frames-premise.rif"));
+			RIFRuleSet rs = RIFRuleSet.parse(
+								new URI("http://www.w3.org/2005/rules/test/repository/tc/Frames/Frames-premise.rif"),
+								RIFRuleSet.RIF_CORE
+							);
 			System.out.println(rs.toString());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -105,6 +108,9 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 	
 	//  Static Values
 	
+	/**
+	 * A pre-built RIF-Core XML content handler for a XML SAX parser.
+	 */
 	public static final RIFCoreXMLContentHandler RIF_CORE = new RIFCoreXMLContentHandler();
 	
 	//  VARIABLES
