@@ -6,13 +6,14 @@ import java.util.List;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
-import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.jena.CombinedIVFunction;
 import org.openimaj.squall.compile.data.jena.FunctorConsequence;
 import org.openimaj.squall.compile.data.jena.FunctorFunction;
 import org.openimaj.squall.compile.data.jena.TripleConsequence;
 import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
+import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.stream.Stream;
 
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
@@ -42,9 +43,9 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 	@Override
 	public ContextCPS compile(SourceRulePair sourceRules) {
 		List<Rule> rules = sourceRules.secondObject();
-		List<IStream<Context>> sources = sourceRules.firstObject();
+		List<ISource<Stream<Context>>> sources = sourceRules.firstObject();
 		ContextCPS ret = new ContextCPS();
-		for (IStream<Context> stream : sources) {
+		for (ISource<Stream<Context>> stream : sources) {
 			ret.addSource(stream);
 		}
 		for (Rule rule : rules) {

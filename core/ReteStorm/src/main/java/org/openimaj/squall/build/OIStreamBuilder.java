@@ -92,7 +92,8 @@ public class OIStreamBuilder implements Builder{
 					Initialisable init = namedNode.getInit();
 					init.setup();
 				}
-				Stream<Context> source = new NonBlockingStream<Context>(namedNode.getSource()).map(new NullCatch<Context>());
+				
+				Stream<Context> source = new NonBlockingStream<Context>(namedNode.getSource().apply()).map(new NullCatch<Context>());
 				if(namedNode.childCount() > 1){
 					source = new SplitStream<Context>(source);
 				}

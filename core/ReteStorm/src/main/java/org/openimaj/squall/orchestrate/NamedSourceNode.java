@@ -1,12 +1,13 @@
 package org.openimaj.squall.orchestrate;
 
 import org.openimaj.squall.compile.data.IFunction;
-import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.compile.data.VariableHolder;
+import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.function.Operation;
+import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
 /**
@@ -24,12 +25,11 @@ import org.openimaj.util.stream.Stream;
  * 
  * The {@link NamedSourceNode} is a function itself which wraps the internal {@link Function} call
  */
-public class NamedSourceNode extends NamedNode<IStream<Context>> {
+public class NamedSourceNode extends NamedNode<ISource<Stream<Context>>> {
 	
 	
 	
-	private IStream<Context> wrapped;
-
+	private ISource<Stream<Context>> wrapped;
 
 
 	/**
@@ -37,27 +37,12 @@ public class NamedSourceNode extends NamedNode<IStream<Context>> {
 	 * @param name the name of the node
 	 * @param strm the source of triples
 	 */
-	public NamedSourceNode(OrchestratedProductionSystem parent, String name, IStream<Context> strm) {
+	public NamedSourceNode(OrchestratedProductionSystem parent, String name, ISource<Stream<Context>> strm) {
 		super(parent,name);
-		this.wrapped = strm.map(new Function<Context, Context>() {
-			
-			@Override
-			public Context apply(Context in) {
-				addName(in);
-				return in;
-			}
-		});
+		this.wrapped = new WrappedContextISource(strm, this);
 	}
-
-
-
-	@Override
-	public IStream<Context> getData() {
-		return wrapped;
-	}
-
-
-
+	
+	
 	@Override
 	public boolean isSource() {
 		return true;
@@ -69,15 +54,6 @@ public class NamedSourceNode extends NamedNode<IStream<Context>> {
 	public boolean isFunction() {
 		return false;
 	}
-
-
-
-	@Override
-	public IStream<Context> getSource() {
-		return this.wrapped;
-	}
-
-
 
 	@Override
 	public IFunction<Context, Context> getFunction() {
@@ -124,6 +100,18 @@ public class NamedSourceNode extends NamedNode<IStream<Context>> {
 	@Override
 	public Operation<Context> getOperation() {
 		throw new UnsupportedOperationException();
+	}
+
+
+	@Override
+	public ISource<Stream<Context>> getSource() {
+		return wrapped;
+	}
+
+
+	@Override
+	public ISource<Stream<Context>> getData() {
+		return wrapped;
 	}
 
 

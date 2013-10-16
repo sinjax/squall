@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
+import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
@@ -29,7 +29,7 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * A stream of triples is the source of ourproduction systems
 	 */
-	List<IStream<Context>> sources;
+	List<ISource<Stream<Context>>> sources;
 	
 	/**
 	 * List of production systems that this compilation is made from
@@ -60,7 +60,7 @@ public abstract class CompiledProductionSystem {
 	 * Initialise all system parts as empty, a fairly boring production system
 	 */
 	public CompiledProductionSystem() {
-		sources = new ArrayList<IStream<Context>>();
+		sources = new ArrayList<ISource<Stream<Context>>>();
 		systems = new ArrayList<CompiledProductionSystem>();
 		joinlist = new ArrayList<JoinComponent<?>>();
 		predicates = new ArrayList<IVFunction<Context, Context>>();
@@ -73,7 +73,7 @@ public abstract class CompiledProductionSystem {
 	 * @param stream
 	 * @return a {@link Stream} of input 
 	 */
-	public CompiledProductionSystem addSource(IStream<Context> stream) {
+	public CompiledProductionSystem addSource(ISource<Stream<Context>> stream) {
 		this.sources.add(stream);
 		return this;
 	}
@@ -166,7 +166,7 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @return the sources
 	 */
-	public List<IStream<Context>> getSources() {
+	public List<ISource<Stream<Context>>> getSources() {
 		return this.sources;
 	}
 

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.io.IOUtils;
+import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.storm.utils.StormUtils;
 import org.openimaj.util.data.Context;
@@ -28,7 +29,7 @@ public class MultiFunctionBolt extends ProcessingBolt {
 	 * 
 	 */
 	private static final long serialVersionUID = 2034257684933988838L;
-	private MultiFunction<Context, Context> fun;
+	private IVFunction<Context, Context> fun;
 	private byte[] serializedFun;
 	/**
 	 * @param nn
@@ -48,6 +49,7 @@ public class MultiFunctionBolt extends ProcessingBolt {
 	public void prepare(Map stormConf, TopologyContext context,OutputCollector collector) {
 		super.prepare(stormConf, context, collector);
 		this.fun = StormUtils.deserialiseFunction(kryo,this.serializedFun );
+		this.fun.setup();
 	}
 
 	@Override

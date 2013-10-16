@@ -3,6 +3,7 @@ package org.openimaj.squall.compile.jena;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.List;
 
 import org.junit.Before;
@@ -12,6 +13,7 @@ import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.squall.build.storm.StormStreamBuilder;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.IOperation;
+import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.squall.utils.JenaUtils;
@@ -29,7 +31,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  */
 public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	
-	private final class PrintAllOperation implements IOperation<Context> {
+	private static final class PrintAllOperation implements IOperation<Context>, Serializable {
 		@Override
 		public void setup() {
 			System.out.println("Starting Test");
@@ -71,12 +73,30 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	 */
 	@Before
 	public void before() throws IOException{
-		InputStream nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
 		
-		Stream<Context> tripleContextStream = 
-			new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
-			.map(new ContextWrapper("triple")
-		);
+		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
+			
+			private InputStream nTripleStream;
+
+			@Override
+			public Stream<Context> apply(Stream<Context> in) {
+				return apply();
+			}
+			
+			@Override
+			public Stream<Context> apply() {
+				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
+				.map(new ContextWrapper("triple"));
+			}
+			
+			@Override
+			public void setup() { 
+				nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
+			}
+			
+			@Override
+			public void cleanup() { }
+		};
 		
 		nojoinRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.nojoin.rules"));
 		singlejoinRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.singlejoin.rules"));
@@ -88,7 +108,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 
 
 	private StormStreamBuilder builder() {
-		StormStreamBuilder builder = StormStreamBuilder.localClusterBuilder();
+		StormStreamBuilder builder = StormStreamBuilder.localClusterBuilder(5000);
 		return builder;
 	}
 	
