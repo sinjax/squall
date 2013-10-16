@@ -27,13 +27,15 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.IStream;
+import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.jena.CombinedIVFunction;
 import org.openimaj.squall.compile.data.jena.FunctorConsequence;
 import org.openimaj.squall.compile.data.jena.FunctorFunction;
 import org.openimaj.squall.compile.data.jena.TripleConsequence;
 import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
 import org.openimaj.squall.compile.jena.JenaRuleCompiler;
-import org.openimaj.squall.compile.rif.data.ContextConsequence;
+import org.openimaj.squall.compile.rif.data.BindingConsequence;
+import org.openimaj.squall.compile.rif.data.PredicateEqualityFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.datatypes.BaseDatatype;
@@ -70,71 +72,57 @@ public class RIFRuleCompiler implements Compiler<SourceRulesetPair> {
 	private void translateRuleSet(RIFRuleSet set, ContextCPS ccps){
 		for (RIFSentence sentence : set){
 			ContextCPS ruleret = new ContextCPS();
-			List<ContextCPS> forkedCPSs = new ArrayList<ContextCPS>();
-			selectCompilation(sentence,forkedCPSs);
-			if (forkedCPSs.size() == 1){
-				ccps.addSeperateSystem(forkedCPSs.get(0));
-			}else if (forkedCPSs.size() > 1){
-				ccps.addSeperateSystem(ruleret);
-				for (ContextCPS fork : forkedCPSs){
-					ruleret.addSeperateSystem(fork);
-				}
-			}
+			ccps.addSystem(ruleret);
+			selectCompilation(sentence,ruleret);
 		}
 	}
 	
-	private void selectCompilation(RIFSentence sentence, List<ContextCPS> forkedCPSs){
-		CombinedContextFunction consequences = new CombinedContextFunction();
+	private void selectCompilation(RIFSentence sentence, ContextCPS ccps){
 		if (sentence instanceof RIFAtomic){
 			// how are we dealing with axioms?
 			throw new UnsupportedOperationException("RIF translation: Axioms are currently unsupported.");
 		} else {
 			if (sentence instanceof RIFGroup){
-				translate((RIFGroup) sentence, forkedCPSs);
+				translate((RIFGroup) sentence, ccps);
 			} else if (sentence instanceof RIFForAll){
-				translate((RIFForAll) sentence, forkedCPSs, consequences);
+				translate((RIFForAll) sentence, ccps);
 			} else if (sentence instanceof RIFRule){
-				translate((RIFRule) sentence, forkedCPSs, consequences);
+				translate((RIFRule) sentence, ccps);
 			}
 		}
 	}
 	
-	private void translate(RIFGroup g, List<ContextCPS> forkedCPSs){
+	private void translate(RIFGroup g, ContextCPS ccps){
 		for (RIFSentence sentence : g){
 			ContextCPS ruleret = new ContextCPS();
-			List<ContextCPS> newlyForkedCPSs = new ArrayList<ContextCPS>();
-			selectCompilation(sentence,newlyForkedCPSs);
-			if (newlyForkedCPSs.size() == 1){
-				forkedCPSs.add(newlyForkedCPSs.get(0));
-			}else if (forkedCPSs.size() > 1){
-				forkedCPSs.add(ruleret);
-				for (ContextCPS fork : forkedCPSs){
-					ruleret.addSeperateSystem(fork);
-				}
-			}
+			ccps.addSystem(ruleret);
+			selectCompilation(sentence,ruleret);
 		}
 	}
 	
-	private void translate(RIFForAll fa, List<ContextCPS> forkedCPSs, CombinedContextFunction consequences){
+	private void translate(RIFForAll fa, ContextCPS ccps){
 		if (fa.getStatement() instanceof RIFAtomic){
 			// how are we dealing with variable axioms???
 			throw new UnsupportedOperationException("RIF translation: Universal facts are currently unsupported.");
 		} else if (fa.getStatement() instanceof RIFRule) {
-			translate((RIFRule) fa.getStatement(), forkedCPSs, consequences); 
+			translate((RIFRule) fa.getStatement(), ccps); 
 		}
-		consequences.addFunction(new ContextConsequence());
-		for (ContextCPS ccps : forkedCPSs){
-			// TODO 
+		
+		IVFunction<Context,Context> consequence = new BindingConsequence();
+		if (ccps.getConequences() != null){
+			CombinedContextFunction consequences = new CombinedContextFunction();
+			consequences.addFunction(ccps.getConequences());
+			consequences.addFunction(consequence);
+			consequence = consequences;
 		}
+		ccps.setConsequence(consequence);
 	}
 	
-	private void translate(RIFRule r, List<ContextCPS> forkedCPSs, CombinedContextFunction consequences){
+	private void translate(RIFRule r, ContextCPS ccps){
 		Count varCount = new Count(0);
 		Map<String,Integer> bindingIndecies = new HashMap<String,Integer>();
 		
-		RIFFormula formula = r.getBody();
-		
-		translate(r.getBody(), forkedCPSs, bindingIndecies, varCount);
+		translate(r.getBody(), ccps, bindingIndecies, varCount);
 		
 		Node_RuleVariable[] ruleVars = new Node_RuleVariable[bindingIndecies.size()];
 		for (String name : bindingIndecies.keySet()){
@@ -142,46 +130,55 @@ public class RIFRuleCompiler implements Compiler<SourceRulesetPair> {
 			ruleVars[index] = new Node_RuleVariable(name,index);
 		}
 		
+		CombinedContextFunction consequences = new CombinedContextFunction();
 		if (ccps.getConequences() != null)
 			consequences.addFunction(ccps.getConequences());
 		for (RIFAtomic atomic : r.head()){
 			List<TriplePattern> triples = translate(atomic, ccps, bindingIndecies, varCount);
 			for (TriplePattern tp : triples){
-				consequences.addFunction(new TripleConsequence(ruleVars,tp));
+				consequences.addFunction(new TripleConsequence());
 			}
 		}
 		ccps.setConsequence(consequences);
-		for (ContextCPS fccps : forkedCPSs){
-			fccps.setConsequence(consequences);
-		}
 	}
 	
-	private void translate(RIFFormula formula, List<ContextCPS> forkedCPSs, Map<String,Integer> bindingIndecies, Count varCount){
+	private void translate(RIFFormula formula, ContextCPS ccps, Map<String,Integer> bindingIndecies, Count varCount){
 		if (formula instanceof RIFAtomic){
 			List<TriplePattern> triples = translate((RIFAtomic) formula, ccps, bindingIndecies, varCount);
 			for (TriplePattern tp : triples){
-				for (ContextCPS fccps : forkedCPSs){
-					fccps.addFilter(new TripleFilterFunction(tp));
-				}
+					ccps.addJoinComponent(new TripleFilterFunction(tp));
 			}
 		} else if (formula instanceof RIFAnd){
 			for (RIFFormula f : (RIFAnd) formula){
-				translate(f, forkedCPSs, bindingIndecies, varCount);
+				translate(f, ccps, bindingIndecies, varCount);
 			}
 		} else if (formula instanceof RIFOr){
-			List<ContextCPS> newlyForkedCPSs = new ArrayList<ContextCPS>();
 			for (RIFFormula f : (RIFOr) formula){
-				List<ContextCPS> newForks = new ArrayList<ContextCPS>();
-				for (ContextCPS ccps : forkedCPSs)
-					newForks.add(ccps.clone());
-				
-				newlyForkedCPSs.add(newCCPS);
-				newlyForkedCPSs.addAll(newForks);
+				ContextCPS ruleret = new ContextCPS();
+				ccps.addSystem(ruleret);
+				translate(f,ruleret, bindingIndecies, varCount);
 			}
 		} else if (formula instanceof RIFMember){
-			
+			RIFMember member = (RIFMember) formula;
+			ccps.addJoinComponent(
+				new TripleFilterFunction(
+					new TriplePattern(
+						translate(member.getInstance(),bindingIndecies,varCount),
+						Node.createURI(""/*TODO set as rdfs:typeOf*/),
+						translate(member.getInClass(),bindingIndecies,varCount)
+					)
+				)
+			);
 		} else if (formula instanceof RIFEqual){
-			
+			RIFEqual equal = (RIFEqual) formula;
+			Node[] equalData = new Node[2];
+			equalData[0] = translate(equal.getLeft(),bindingIndecies,varCount);
+			equalData[1] = translate(equal.getRight(),bindingIndecies,varCount);
+			ccps.addPredicate(
+				new PredicateEqualityFunction(
+					equalData
+				)
+			);
 		} else if (formula instanceof RIFExists){
 			
 		} else {
@@ -251,41 +248,6 @@ public class RIFRuleCompiler implements Compiler<SourceRulesetPair> {
 		
 		translateRuleSet(ruleSet,ret);
 		
-		for (Rule rule : rules) {
-			if (rule.isAxiom()) {
-				// how are we dealing with axioms?
-			}
-			else
-			{
-				ContextCPS ruleret = new ContextCPS();
-				ret.addSeperateSystem(ruleret);
-
-				// Extract all the parts of the body
-				for (int i = 0; i < rule.bodyLength(); i++) {
-					ClauseEntry clause = rule.getBodyElement(i);
-					if (clause instanceof TriplePattern) {
-						ruleret.addFilter(new TripleFilterFunction((TriplePattern)clause));
-					} 
-					else if (clause instanceof Functor){
-						ruleret.addPredicate(new FunctorFunction(rule,(Functor) clause));
-					}
-				}
-				
-				
-				CombinedIVFunction<Context, Context> comb = new CombinedContextFunction();
-				// Extract all the head parts
-				for (int i = 0; i < rule.headLength(); i++) {
-					ClauseEntry clause = rule.getHeadElement(i);
-					if (clause instanceof TriplePattern) {
-						comb.addFunction(new TripleConsequence(rule, (TriplePattern)clause));
-					} 
-					else if (clause instanceof Functor){
-						comb.addFunction(new FunctorConsequence(rule, (Functor)clause));
-					}	
-				}
-				ruleret.setConsequence(comb);
-			}
-		}
 		return ret;
 	}
 

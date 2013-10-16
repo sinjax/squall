@@ -16,7 +16,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  * @author david.monks
  *
  */
-public class ContextConsequence implements IVFunction<Context,Context> {
+public class BindingConsequence implements IVFunction<Context,Context> {
 
 	private Node_RuleVariable[] inVariables;
 	private Node_RuleVariable[] outVariables;
@@ -24,7 +24,7 @@ public class ContextConsequence implements IVFunction<Context,Context> {
 	/**
 	 * @param rule
 	 */
-	public ContextConsequence(Rule rule){
+	public BindingConsequence(Rule rule){
 		this.inVariables = BindingsUtils.extractRuleVariables(rule.getBody()).toArray(this.inVariables);
 		this.outVariables = BindingsUtils.extractRuleVariables(rule.getHead()).toArray(this.outVariables);
 	}
@@ -71,6 +71,12 @@ public class ContextConsequence implements IVFunction<Context,Context> {
 	public String anonimised() {
 		// TODO
 		return "";//VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
+	}
+
+	@Override
+	public void mapVariables(Map<String, String> varmap) {
+		// TODO Implement Variable Mapping
+		
 	}
 
 }
