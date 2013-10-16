@@ -73,4 +73,9 @@ public abstract class AbstractFunctorFunction<T1, T2>  implements IVFunction<T1,
 	
 	@Override
 	public void cleanup() { }
+	
+	@Override
+	public void mapVariables(Map<String, String> varmap) {
+		//TODO implement variable mapping
+	}
 }

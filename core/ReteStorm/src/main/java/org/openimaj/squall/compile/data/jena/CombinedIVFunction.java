@@ -83,5 +83,11 @@ public abstract class CombinedIVFunction<A,B> implements IVFunction<A,B> {
 			func.cleanup();
 		}
 	}
+	
+	@Override
+	public void mapVariables(Map<String, String> varmap) {
+		// TODO Implement Variable Mapping
+		
+	}
 
 }

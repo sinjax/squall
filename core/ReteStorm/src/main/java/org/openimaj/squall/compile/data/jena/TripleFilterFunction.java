@@ -171,4 +171,9 @@ public class TripleFilterFunction implements IVFunction<Context, Context> {
 	public void setup() { }
 	@Override
 	public void cleanup() { }
+	@Override
+	public void mapVariables(Map<String, String> varmap) {
+		// TODO Implement Variable Mapping
+		
+	}
 }

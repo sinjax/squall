@@ -21,15 +21,30 @@ public interface VariableHolder{
 	 * Given a varmap, produce an anonimised name for this function such that
 	 * all variables this function contains in the map are replaces with the 
 	 * integer specified, and all other variables are replaced with the string
-	 * "<VAR>"
+	 * "<VAR>".
 	 * @param varmap
+	 * 			The map of translation-time variable name keys to anonimised
+	 * 			variable number.
 	 * @return anonimised name
 	 */
 	public String anonimised(Map<String,Integer> varmap);
 	
 	/**
-	 * The name of this function with all variables replaced with "<VAR>"
+	 * Using this function as the root, produce an anonimised name for this
+	 * function such that all variables joined before or in this function are
+	 * replaced with the integer dictated by the order in which they first appear
+	 * in the function. All other variables are replaced with the string "<VAR>".
 	 * @return anonimised name
 	 */
 	public String anonimised();
+
+
+	/**
+	 * Informs the function of the mapping between the runtime variable names it
+	 * will receive and the translation-time variables it was created with.  
+	 * @param varmap -
+	 * 			The map of translation-time variable name keys to runtime
+	 * 			variable name values.
+	 */
+	public void mapVariables(Map<String, String> varmap);
 }

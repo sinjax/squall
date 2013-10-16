@@ -33,15 +33,6 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 		this.clause = clause;
 		this.ruleVariables = BindingsUtils.extractRuleVariables(r);
 	}
-	
-	/**
-	 * @param rvs 
-	 * @param clause
-	 */
-	public TripleConsequence(Node_RuleVariable[] rvs,TriplePattern clause) {
-		this.clause = clause;
-		this.ruleVariables = rvs;
-	}
 
 	@Override
 	public List<Context> apply(Context in) {
@@ -67,6 +58,7 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 
 	@Override
 	public List<String> variables() {
+		// TODO
 		return new ArrayList<String>();
 	}
 
@@ -79,6 +71,12 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 	@Override
 	public String anonimised() {
 		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
+	}
+
+	@Override
+	public void mapVariables(Map<String, String> varmap) {
+		// TODO Implement Variable Mapping
+		
 	}
 
 
