@@ -8,20 +8,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.openimaj.rdf.storm.utils.JenaStormUtils;
 import org.openimaj.squall.build.Builder;
+import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.util.function.Operation;
 import org.openimaj.util.pair.IndependentPair;
 
+import scala.collection.JavaConversions.JEnumerationWrapper;
+import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.generated.StormTopology;
-import backtype.storm.scheduler.Cluster;
 import backtype.storm.topology.BoltDeclarer;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.TopologyBuilder;
+import backtype.storm.utils.Utils;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -31,17 +36,23 @@ import backtype.storm.topology.TopologyBuilder;
  */
 public class StormStreamBuilder implements Builder{
 
-	private Operation<StormTopology> topop;
+	private Config conf;
+	private TopologyOperationFactory topopf;
 
 	/**
-	 * @param topop
+	 * @param localClusterOperationTOF
+	 * @param conf 
 	 */
-	public StormStreamBuilder(Operation<StormTopology> topop) {
-		this.topop = topop;
+	public StormStreamBuilder(LocalClusterOperationTOF localClusterOperationTOF, Config conf) {
+		
+		this.topopf = localClusterOperationTOF;
+		this.conf = conf;
 	}
 
 	@Override
 	public void build(OrchestratedProductionSystem ops) {
+		IOperation<StormTopology> topop = topopf.topop(conf);
+		topop.setup();
 		Set<NamedNode<?>> rootset = new HashSet<>();
 		rootset.addAll(ops.root);
 		TopologyBuilder tb = new TopologyBuilder();
@@ -52,6 +63,7 @@ public class StormStreamBuilder implements Builder{
 		}
 		StormTopology top = tb.createTopology();
 		topop.perform(top);
+		topop.cleanup();
 	}
 
 	private void buildTopology(TopologyBuilder tb, OrchestratedProductionSystem ops, Map<String, NamedNode<?>> state, Set<? extends NamedNode<?>> disconnected) throws Exception {
@@ -105,13 +117,17 @@ public class StormStreamBuilder implements Builder{
 					for (IndependentPair<NamedStream, NamedNode<?>> p : parentStreams) {
 						NamedStream strm = p.firstObject();
 						NamedNode<?> parent = p.secondObject();
-						if(strm.variables().size() == 0){
+						if(strm.variables() == null){
+							dec.shuffleGrouping(parent.getName(), strm.getName());
+						}
+						else if(strm.variables().size() == 0){
 							dec.allGrouping(parent.getName(), strm.getName());
 						}
 						else{							
 							dec.customGrouping(parent.getName(), strm.getName(), new ContextVariableGrouping(strm.variables()));
 						}
 					}
+					state.put(name, namedNode);
 					remove = true;
 				}
 			}
@@ -160,12 +176,81 @@ public class StormStreamBuilder implements Builder{
 		return true;
 	}
 
-	static class LocalClusterOperation implements Operation<StormTopology>{
+	static class LocalClusterOperation implements IOperation<StormTopology>{		
+		long DEFAULT_SLEEP_TIME = 5000;
+		
+		private Config conf;
+		private String name = "local";
+		private int sleepTime = -1;
+
+		private LocalCluster cluster;
+
+		public LocalClusterOperation(Config conf) {
+			this.conf = conf;
+		}
 
 		@Override
 		public void perform(StormTopology object) {
-			LocalCluster cluster = new LocalCluster();
+			cluster.submitTopology(name, conf, object);
+		}
+
+		@Override
+		public void setup() {
+			this.cluster = new LocalCluster();
+			conf = new Config();
+			JenaStormUtils.registerSerializers(conf);
+			conf.setFallBackOnJavaSerialization(true);
+		}
+
+		@Override
+		public void cleanup() {
+			try {
+				if (sleepTime < 0) {
+					while (true) {
+						Utils.sleep(DEFAULT_SLEEP_TIME);
+					}
+				} else {
+					Utils.sleep(sleepTime);
+
+				}
+			} finally {
+				cluster.killTopology(name);
+				cluster.shutdown();
+			}
 			
+		}
+		
+	}
+	
+	/**
+	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+	 *
+	 */
+	public abstract static class TopologyOperationFactory {
+		public abstract IOperation<StormTopology> topop(Config conf);
+	}
+	
+	/**
+	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+	 *
+	 */
+	public static class LocalClusterOperationTOF extends TopologyOperationFactory{
+
+		private static LocalClusterOperationTOF instance = null;
+
+		@Override
+		public IOperation<StormTopology> topop(Config conf) {
+			return new LocalClusterOperation(conf);
+		}
+
+		/**
+		 * @return
+		 */
+		public static LocalClusterOperationTOF instance() {
+			if(instance == null){
+				instance  = new LocalClusterOperationTOF();
+			}
+			return instance;
 		}
 		
 	}
@@ -173,7 +258,9 @@ public class StormStreamBuilder implements Builder{
 	 * @return build a {@link StormStreamBuilder} deployed on a local cluster
 	 */
 	public static StormStreamBuilder localClusterBuilder() {
-		return new StormStreamBuilder(new LocalClusterOperation());
+		Config conf = new Config();
+		JenaStormUtils.registerSerializers(conf);
+		return new StormStreamBuilder(LocalClusterOperationTOF.instance(), conf);
 	}
 
 }

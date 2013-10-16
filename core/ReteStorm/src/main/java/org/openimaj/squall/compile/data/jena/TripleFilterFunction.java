@@ -22,11 +22,16 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
  *
  */
 public class TripleFilterFunction implements IVFunction<Context, Context> {
-	private final Logger logger = Logger.getLogger(TripleFilterFunction.class);
+	private final static Logger logger = Logger.getLogger(TripleFilterFunction.class);
 	private TriplePattern clause;
 	private Triple extended;
 	private List<String> variables;
 
+	/**
+	 * 
+	 */
+	public TripleFilterFunction() {
+	}
 	/**
 	 * @param clause construct using a {@link TriplePattern}
 	 */

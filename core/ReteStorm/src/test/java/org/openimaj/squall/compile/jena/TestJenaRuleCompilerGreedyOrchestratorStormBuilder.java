@@ -17,11 +17,8 @@ import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextWrapper;
-import org.openimaj.util.function.Operation;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
-
-import backtype.storm.generated.StormTopology;
 
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
@@ -90,27 +87,43 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	}
 
 
+	private StormStreamBuilder builder() {
+		StormStreamBuilder builder = StormStreamBuilder.localClusterBuilder();
+		return builder;
+	}
+	
 
+
+	private JenaRuleCompiler compiler() {
+		JenaRuleCompiler jrc = new JenaRuleCompiler();
+		return jrc;
+	}
+
+
+
+	private GreedyOrchestrator orchestrator() {
+		GreedyOrchestrator go = new GreedyOrchestrator();
+		return go;
+	}
+	
+	
 	private List<Rule> loadRules(String stream) {
 		InputStream ruleStream = TestJenaRuleCompilerGreedyOrchestratorStormBuilder.class.getResourceAsStream(stream);
 		List<Rule> rules = JenaUtils.readRules(ruleStream);
 		return rules;
 	}
-
-	
-	
 	
 	/**
 	 * 
 	 */
 	@Test
 	public void testBuilderNoJoin(){
-		JenaRuleCompiler jrc = new JenaRuleCompiler();
+		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(nojoinRules);
-		GreedyOrchestrator go = new GreedyOrchestrator();
+		GreedyOrchestrator go = orchestrator();
 		IOperation<Context> op = new PrintAllOperation();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
-		StormStreamBuilder builder = StormStreamBuilder.localClusterBuilder();
+		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);
 	}
 	
@@ -119,12 +132,12 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testBuilderSingleJoin(){
-		JenaRuleCompiler jrc = new JenaRuleCompiler();
+		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(singlejoinRules);
-		GreedyOrchestrator go = new GreedyOrchestrator();
+		GreedyOrchestrator go = orchestrator();
 		IOperation<Context> op = new PrintAllOperation();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
-		OIStreamBuilder builder = new OIStreamBuilder();
+		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);
 	}
 	
@@ -133,12 +146,12 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testBuilderSingleComplexJoin(){
-		JenaRuleCompiler jrc = new JenaRuleCompiler();
+		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(singlejoinComplexRules);
-		GreedyOrchestrator go = new GreedyOrchestrator();
+		GreedyOrchestrator go = orchestrator();
 		IOperation<Context> op = new PrintAllOperation();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
-		OIStreamBuilder builder = new OIStreamBuilder();
+		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);
 	}
 	
@@ -147,12 +160,12 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testBuilderSingleFunctorJoin(){
-		JenaRuleCompiler jrc = new JenaRuleCompiler();
+		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(singlefunctorRules);
-		GreedyOrchestrator go = new GreedyOrchestrator();
+		GreedyOrchestrator go = orchestrator();
 		IOperation<Context> op = new PrintAllOperation();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
-		OIStreamBuilder builder = new OIStreamBuilder();
+		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);
 	}
 	
@@ -161,13 +174,17 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testBuilderAll(){
-		JenaRuleCompiler jrc = new JenaRuleCompiler();
+		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(allRules);
-		GreedyOrchestrator go = new GreedyOrchestrator();
+		GreedyOrchestrator go = orchestrator();
 		IOperation<Context> op = new PrintAllOperation();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
-		OIStreamBuilder builder = new OIStreamBuilder();
+		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);
 	}
+
+
+
+
 
 }

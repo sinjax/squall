@@ -1,14 +1,20 @@
 package org.openimaj.squall.build.storm;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.openimaj.rdf.storm.utils.JenaStormUtils;
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.orchestrate.NamedNode;
+import org.openimaj.squall.orchestrate.NamedStream;
+import org.openimaj.storm.utils.StormUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
+
+import com.esotericsoftware.kryo.Kryo;
 
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IComponent;
@@ -22,18 +28,32 @@ import backtype.storm.tuple.Values;
  *
  */
 public abstract class NamedNodeComponent implements IComponent{
+	
+	protected static final Kryo kryo;
+	static{
+		kryo = new Kryo();
+		JenaStormUtils.registerSerializers(kryo);
+	}
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 843143889101579968L;
 	private Initialisable init;
 	private Set<String> streams;
+	private byte[] serializedInit;
+	private List<String> outputStreams;
 	/**
 	 * @param nn
 	 */
 	public NamedNodeComponent(NamedNode<?> nn) {
-		if(nn.isInitialisable()) this.init = nn.getInit();
+		if(nn.isInitialisable()) {
+			this.serializedInit = StormUtils.serialiseFunction(kryo,nn.getInit());
+		}
 		new HashMap<String,Function<Context, Context>>();
+		this.outputStreams = new ArrayList<String>();
+		for (NamedStream edge : nn.childEdges()) {
+			this.outputStreams.add(edge.getName());
+		}
 	}
 	
 	/**
@@ -41,7 +61,10 @@ public abstract class NamedNodeComponent implements IComponent{
 	 * @param context
 	 */
 	public void setup(@SuppressWarnings("rawtypes") Map conf, TopologyContext context) {
-		if(init!=null) init.setup();
+		if(this.serializedInit!=null) {
+			init = StormUtils.deserialiseFunction(kryo,serializedInit);
+			init.setup();
+		}
 		this.streams = context.getThisStreams();
 	}
 	
@@ -54,7 +77,9 @@ public abstract class NamedNodeComponent implements IComponent{
 	
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("context"));
+		for (String strm : this.outputStreams) {			
+			declarer.declareStream(strm,new Fields("context"));
+		}
 	}
 
 	@Override
