@@ -23,7 +23,7 @@ import org.openimaj.rif.conditions.data.datum.RIFDatum;
 import org.openimaj.rif.conditions.data.datum.RIFExternal;
 import org.openimaj.rif.conditions.data.datum.RIFIRIConst;
 import org.openimaj.rif.conditions.data.datum.RIFStringConst;
-import org.openimaj.rif.conditions.data.datum.RIFUnrecognisedConst;
+import org.openimaj.rif.conditions.data.datum.RIFTypedConst;
 import org.openimaj.rif.conditions.data.datum.RIFVar;
 import org.openimaj.rif.conditions.formula.RIFAnd;
 import org.openimaj.rif.conditions.formula.RIFEqual;
@@ -38,6 +38,8 @@ import org.openimaj.rif.rules.RIFSentence;
 import org.xml.sax.*;
 import org.xml.sax.ext.LexicalHandler;
 import org.xml.sax.helpers.*;
+
+import com.hp.hpl.jena.graph.Node;
 
 /**
  * Converts a set of rules expressed in RIF/XML to a set of rules in a different format.
@@ -1656,10 +1658,8 @@ public class RIFRuleSet implements Iterable<RIFSentence> {
 						URI uri = findURI(atts.getValue("type"));
 						if (uri.toString().equals(RIFIRIConst.datatype)){
 							currentConst = new RIFIRIConst();
-						}else if (uri.toString().equals(RIFStringConst.datatype)){
-							currentConst = new RIFStringConst();
 						}else{
-							currentConst = new RIFUnrecognisedConst(uri);
+							currentConst = new RIFTypedConst(uri);
 						}
 					}else{
 						currentConst = new RIFStringConst();

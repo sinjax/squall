@@ -1,43 +1,47 @@
 package org.openimaj.rif.conditions.data.datum;
 
-import java.net.URI;
+import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
+import com.hp.hpl.jena.graph.Node_Concrete;
 
 /**
- * @author david.monks
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  * @param <T> 
  *
  */
 public abstract class RIFConst <T> implements RIFDatum {
 
-	public static final String datatype = "http://www.w3.org/2001/XMLSchema#thing";
-	protected T data;
+	private static final String datatype = "#anySimpleType";
+	
+	protected Node_Concrete node;
 	
 	/**
 	 * 
 	 */
 	public RIFConst(){
-		
+		this.node = null;
 	}
 	
 	/**
 	 * @param data
 	 */
-	public void setData(T data){
-		this.data = data;
-	}
+	public abstract void setData(T data);
 	
 	/**
 	 * @return
 	 */
-	public T getData(){
-		return this.data;
+	public Node_Concrete getNode(){
+		return this.node;
 	}
 	
 	/**
 	 * @return
 	 */
 	public String getDatatype(){
-		return datatype;
+		return this.node == null
+					? XSDDatatype.XSD+RIFConst.datatype
+					: this.node.isLiteral()
+						? this.node.getLiteralDatatype().getURI()
+						: XSDDatatype.XSDstring.getURI();
 	}
 	
 }
