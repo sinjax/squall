@@ -110,5 +110,11 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 	public void cleanup() {
 		
 	}
+
+	@Override
+	public void mapVariables(Map<String, String> varmap) {
+		// TODO Implement Variable Mapping
+		
+	}
 	
 }

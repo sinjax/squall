@@ -1,20 +1,12 @@
 package org.openimaj.squall.build.storm;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.io.IOUtils;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.storm.utils.StormUtils;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.function.MultiFunction;
-
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.tuple.Tuple;
@@ -46,7 +38,7 @@ public class MultiFunctionBolt extends ProcessingBolt {
 	}
 	
 	@Override
-	public void prepare(Map stormConf, TopologyContext context,OutputCollector collector) {
+	public void prepare(@SuppressWarnings("rawtypes") Map stormConf, TopologyContext context,OutputCollector collector) {
 		super.prepare(stormConf, context, collector);
 		this.fun = StormUtils.deserialiseFunction(kryo,this.serializedFun );
 		this.fun.setup();

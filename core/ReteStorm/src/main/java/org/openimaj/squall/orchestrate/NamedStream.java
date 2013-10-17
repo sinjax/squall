@@ -84,4 +84,10 @@ public class NamedStream implements VariableHolder{
 	public String anonimised() {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void mapVariables(Map<String, String> varmap) {
+		// TODO Implement Variable Mapping
+		
+	}
 }
