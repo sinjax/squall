@@ -177,12 +177,4 @@ public abstract class CompiledProductionSystem {
 		return this.aggregations;
 	}
 	
-	/**
-	 * @return CompiledProductionSystem
-	 * 				A duplicate of the referenced CompiledProductionSystem in the state it held at the time of the call.
-	 * 				All sub CPSs are distinct from those of the original CompiledProductionSystem, but equal to them.
-	 * 				All other state is copied by reference.
-	 */
-	public abstract CompiledProductionSystem clone();
-	
 }
