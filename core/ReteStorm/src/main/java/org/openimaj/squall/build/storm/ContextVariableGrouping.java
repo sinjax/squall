@@ -46,7 +46,7 @@ public class ContextVariableGrouping implements CustomStreamGrouping {
 		for (String bind : this.bindingVars) {
 			nodes.add(bindings.get(bind));
 		}
-		int index = this.tasks.size() % nodes.hashCode();
+		int index = nodes.hashCode() % this.tasks.size();
 		return Arrays.asList(this.tasks.get(index));
 	}
 

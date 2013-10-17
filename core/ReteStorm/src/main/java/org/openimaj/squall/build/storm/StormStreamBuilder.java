@@ -14,11 +14,8 @@ import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
-import org.openimaj.squall.utils.JenaUtils;
-import org.openimaj.util.function.Operation;
 import org.openimaj.util.pair.IndependentPair;
 
-import scala.collection.JavaConversions.JEnumerationWrapper;
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
 import backtype.storm.generated.StormTopology;
@@ -36,6 +33,7 @@ import backtype.storm.utils.Utils;
  */
 public class StormStreamBuilder implements Builder{
 
+	private static final String SLEEPKEY = "org.openimaj.squall.build.storm.sleep";
 	private Config conf;
 	private TopologyOperationFactory topopf;
 
@@ -82,7 +80,6 @@ public class StormStreamBuilder implements Builder{
 		Set<NamedNode<?>> newdisconnected = new HashSet<NamedNode<?>>();
 		while(iter.hasNext()){
 			NamedNode<?> namedNode = iter.next();
-			if(namedNode.childCount() == 0) continue; // this is the last node! deal with it later.
 			String name = namedNode.getName();
 			
 			boolean remove = false;
@@ -117,14 +114,15 @@ public class StormStreamBuilder implements Builder{
 					for (IndependentPair<NamedStream, NamedNode<?>> p : parentStreams) {
 						NamedStream strm = p.firstObject();
 						NamedNode<?> parent = p.secondObject();
+						String streamName = NamedNodeComponent.constructStreamName(parent,strm,namedNode);
 						if(strm.variables() == null){
-							dec.shuffleGrouping(parent.getName(), strm.getName());
+							dec.shuffleGrouping(parent.getName(), streamName);
 						}
 						else if(strm.variables().size() == 0){
-							dec.allGrouping(parent.getName(), strm.getName());
+							dec.allGrouping(parent.getName(), streamName);
 						}
 						else{							
-							dec.customGrouping(parent.getName(), strm.getName(), new ContextVariableGrouping(strm.variables()));
+							dec.customGrouping(parent.getName(), streamName, new ContextVariableGrouping(strm.variables()));
 						}
 					}
 					state.put(name, namedNode);
@@ -137,7 +135,8 @@ public class StormStreamBuilder implements Builder{
 			else{
 				// add the children!
 				for (NamedNode<?> child : namedNode.children()) {
-					newdisconnected.add(child);
+					if(!disconnected.contains(child))
+						newdisconnected.add(child);
 				}
 			}
 		}
@@ -181,7 +180,6 @@ public class StormStreamBuilder implements Builder{
 		
 		private Config conf;
 		private String name = "local";
-		private int sleepTime = -1;
 
 		private LocalCluster cluster;
 
@@ -197,13 +195,13 @@ public class StormStreamBuilder implements Builder{
 		@Override
 		public void setup() {
 			this.cluster = new LocalCluster();
-			conf = new Config();
 			JenaStormUtils.registerSerializers(conf);
 			conf.setFallBackOnJavaSerialization(true);
 		}
 
 		@Override
 		public void cleanup() {
+			long sleepTime = (Long) conf.get(SLEEPKEY);
 			try {
 				if (sleepTime < 0) {
 					while (true) {
@@ -227,6 +225,10 @@ public class StormStreamBuilder implements Builder{
 	 *
 	 */
 	public abstract static class TopologyOperationFactory {
+		/**
+		 * @param conf
+		 * @return an operation which handles a {@link StormTopology}
+		 */
 		public abstract IOperation<StormTopology> topop(Config conf);
 	}
 	
@@ -244,7 +246,7 @@ public class StormStreamBuilder implements Builder{
 		}
 
 		/**
-		 * @return
+		 * @return the instance of this factory
 		 */
 		public static LocalClusterOperationTOF instance() {
 			if(instance == null){
@@ -255,11 +257,21 @@ public class StormStreamBuilder implements Builder{
 		
 	}
 	/**
+	 * Calls {@link #localClusterBuilder(long)} with -1 (sleep forever)
 	 * @return build a {@link StormStreamBuilder} deployed on a local cluster
 	 */
 	public static StormStreamBuilder localClusterBuilder() {
+		return localClusterBuilder(-1);
+	}
+	/**
+	 * 
+	 * @param sleep how long to sleep
+	 * @return build a {@link StormStreamBuilder} deployed on a local cluster
+	 */
+	public static StormStreamBuilder localClusterBuilder(long sleep) {
 		Config conf = new Config();
 		JenaStormUtils.registerSerializers(conf);
+		conf.put(SLEEPKEY, sleep);
 		return new StormStreamBuilder(LocalClusterOperationTOF.instance(), conf);
 	}
 

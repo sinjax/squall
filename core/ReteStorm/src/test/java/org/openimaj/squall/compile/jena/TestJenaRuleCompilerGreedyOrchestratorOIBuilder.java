@@ -12,6 +12,7 @@ import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.squall.build.OIStreamBuilder;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.IOperation;
+import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.squall.utils.JenaUtils;
@@ -71,12 +72,30 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 	 */
 	@Before
 	public void before() throws IOException{
-		InputStream nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
 		
-		Stream<Context> tripleContextStream = 
-			new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
-			.map(new ContextWrapper("triple")
-		);
+		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
+			
+			private InputStream nTripleStream;
+
+			@Override
+			public Stream<Context> apply(Stream<Context> in) {
+				return apply();
+			}
+			
+			@Override
+			public Stream<Context> apply() {
+				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
+				.map(new ContextWrapper("triple"));
+			}
+			
+			@Override
+			public void setup() { 
+				nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
+			}
+			
+			@Override
+			public void cleanup() { }
+		};
 		
 		nojoinRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.nojoin.rules"));
 		singlejoinRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.singlejoin.rules"));
@@ -101,11 +120,14 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 	 */
 	@Test
 	public void testBuilderNoJoin(){
+		IOperation<Context> op = new PrintAllOperation();
+
 		JenaRuleCompiler jrc = new JenaRuleCompiler();
 		ContextCPS comp = jrc.compile(nojoinRules);
+		
 		GreedyOrchestrator go = new GreedyOrchestrator();
-		IOperation<Context> op = new PrintAllOperation();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
+		
 		OIStreamBuilder builder = new OIStreamBuilder();
 		builder.build(orchestrated);
 	}

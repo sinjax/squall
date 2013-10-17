@@ -163,4 +163,11 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> impleme
 		return this.parents.size();
 	}
 	
+	/**
+	 * @return the {@link DirectedGraph} this {@link DGNode} is a part of
+	 */
+	public DirectedGraph<NODE, EDGE> getRoot(){
+		return this.root;
+	}
+	
 }

@@ -42,6 +42,7 @@ public abstract class NamedNodeComponent implements IComponent{
 	private Set<String> streams;
 	private byte[] serializedInit;
 	private List<String> outputStreams;
+	private HashMap<String, String> correctedStreamName;
 	/**
 	 * @param nn
 	 */
@@ -52,7 +53,12 @@ public abstract class NamedNodeComponent implements IComponent{
 		new HashMap<String,Function<Context, Context>>();
 		this.outputStreams = new ArrayList<String>();
 		for (NamedStream edge : nn.childEdges()) {
-			this.outputStreams.add(edge.getName());
+			this.outputStreams.add(constructStreamName(nn,edge,nn.getRoot().getEdgeTarget(edge)));
+		}
+		this.correctedStreamName = new HashMap<String,String>();
+		for (NamedStream edge : nn.parentEdges()) {
+			String stormName = constructStreamName(nn.getRoot().getEdgeSource(edge),edge,nn);
+			this.correctedStreamName.put(stormName, edge.getName());
 		}
 	}
 	
@@ -94,7 +100,7 @@ public abstract class NamedNodeComponent implements IComponent{
 	 */
 	public Context getContext(Tuple t) {
 		Context ctx = (Context) t.getValueByField("context");
-		ctx.put("stream", t.getSourceStreamId());
+		ctx.put("stream", this.correctedStreamName.get(t.getSourceStreamId()));
 		return ctx;
 	}
 	
@@ -123,9 +129,12 @@ public abstract class NamedNodeComponent implements IComponent{
 	 * @param ret
 	 */
 	public void fire(Tuple anchor, List<Context> ret) {
-		for (Context context : ret) {
-			fire(anchor,context);
+		if(ret != null){			
+			for (Context context : ret) {
+				fire(anchor,context);
+			}
 		}
+		
 	}
 
 	/**
@@ -134,5 +143,17 @@ public abstract class NamedNodeComponent implements IComponent{
 	 * @param ctx this value to emit
 	 */
 	public abstract void fire(String strm, Tuple anchor, Values ctx) ;
+
+	/**
+	 * Given a parent, a stream and a namedNode construct the stream name in the right way
+	 * @param parent
+	 * @param strm
+	 * @param namedNode
+	 * @return stream named
+	 */
+	public static String constructStreamName(NamedNode<?> parent,NamedStream strm, NamedNode<?> namedNode) {
+		
+		return parent.getName() + "_" + strm.getName() + "_" + namedNode.getName();
+	}
 
 }

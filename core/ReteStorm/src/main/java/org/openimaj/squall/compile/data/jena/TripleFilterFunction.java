@@ -162,6 +162,10 @@ public class TripleFilterFunction implements IVFunction<Context, Context> {
 	public List<String> variables() {
 		return this.variables;
 	}
+	
+	public void mapVars(Map<String,String> a){
+//		this.variables == alter
+	}
 
 	@Override
 	public String anonimised(Map<String, Integer> varmap) {

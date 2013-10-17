@@ -202,7 +202,7 @@ public class JenaStormUtils {
 		@Override
 		public Node_RuleVariable read(Kryo kryo, Input input, Class<Node_RuleVariable> type) {
 			String label = input.readString();
-			label = label.replaceFirst("\\?", "");
+//			label = label.replaceFirst("\\?", "");
 			int index = input.readInt();
 			Node_RuleVariable rv = new Node_RuleVariable(label, index);
 			return rv;
@@ -399,10 +399,11 @@ public class JenaStormUtils {
 	 *            register some Jena serialisers to this configuration
 	 */
 	public static void registerSerializers(Config conf) {
-		conf.registerSerialization(Node[].class, NodeSerialiser_ARRAY.class);
+		
 		conf.registerSerialization(Node_URI.class, NodeSerialiser_URI.class);
 		conf.registerSerialization(Node_Literal.class, NodeSerialiser_Literal.class);
 		conf.registerSerialization(Node_Blank.class, NodeSerialiser_Blank.class);
+		conf.registerSerialization(Node_RuleVariable.class, NodeSerialiser_RuleVariable.class);
 		conf.registerSerialization(Node_Variable.class, NodeSerialiser_Variable.class);
 		conf.registerSerialization(TriplePattern.class, TriplePatternSerialiser.class);
 		conf.registerSerialization(Triple.class, TripleSerialiser.class);
@@ -416,6 +417,8 @@ public class JenaStormUtils {
 		conf.registerSerialization(ElementFilter.class);
 		// conf.registerSerialization(Node_NULL.class);
 		// conf.registerSerialization(Node_Blank.class);
+		conf.registerSerialization(Node_RuleVariable[].class, NodeSerialiser_RuleVariableARRAY.class);
+		conf.registerSerialization(Node[].class, NodeSerialiser_ARRAY.class);
 	}
 
 	public static void registerSerializers(Kryo conf) {

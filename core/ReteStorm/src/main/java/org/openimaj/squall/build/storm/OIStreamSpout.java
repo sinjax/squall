@@ -2,6 +2,7 @@ package org.openimaj.squall.build.storm;
 
 import java.util.Map;
 
+import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.storm.utils.StormUtils;
 import org.openimaj.util.data.Context;
@@ -26,8 +27,9 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 	 */
 	private static final long serialVersionUID = 1803166504917265930L;
 	private Stream<Context> stream;
+	private ISource<Stream<Context>> streamSource;
 	private SpoutOutputCollector collector;
-	private byte[] serializedStream;
+	private byte[] serializedStreamSource;
 
 	/**
 	 * @param namedNode
@@ -36,7 +38,7 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 	public OIStreamSpout(NamedNode<?> namedNode) throws Exception {
 		super(namedNode);
 		if(namedNode.isSource()) {
-			this.serializedStream = StormUtils.serialiseFunction(kryo,namedNode.getSource());
+			this.serializedStreamSource = StormUtils.serialiseFunction(kryo,namedNode.getSource());
 		}
 		else{
 			throw new Exception("Inappropriate node");
@@ -48,7 +50,9 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 	public void open(@SuppressWarnings("rawtypes") Map conf, TopologyContext context, SpoutOutputCollector collector) {
 		setup(conf,context);
 		this.collector = collector;
-		this.stream = StormUtils.deserialiseFunction(kryo,serializedStream);
+		this.streamSource = StormUtils.deserialiseFunction(kryo,serializedStreamSource);
+		this.streamSource.setup();
+		this.stream = this.streamSource.apply();
 	}
 
 	@Override
@@ -66,7 +70,8 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 
 	@Override
 	public void nextTuple() {
-		Context item = this.stream.next();
+		Context item = null;
+		if(this.stream.hasNext()) item = this.stream.next();
 		if (item != null) {
 			this.fire(item);
 		} else { 

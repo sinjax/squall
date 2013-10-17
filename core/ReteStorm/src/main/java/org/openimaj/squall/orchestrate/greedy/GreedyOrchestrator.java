@@ -8,10 +8,10 @@ import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.data.IOperation;
-import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.jena.JenaRuleCompiler;
 import org.openimaj.squall.compile.jena.SourceRulePair;
+import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedSourceNode;
 import org.openimaj.squall.orchestrate.NamedStream;
@@ -79,7 +79,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			CompiledProductionSystem sys,
 			OrchestratedProductionSystem root) {
 		if(sys.getSources().size()>0){
-			for (IStream<Context> sourceS: sys.getSources()) {				
+			for (ISource<Stream<Context>> sourceS: sys.getSources()) {				
 				root.root.add(new NamedSourceNode(root,nextSourceName(root), sourceS));
 			}
 		}
@@ -232,12 +232,32 @@ public class GreedyOrchestrator implements Orchestrator{
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		InputStream nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
 		InputStream ruleStream = GreedyOrchestrator.class.getResourceAsStream("/test.rules");
 		
-		Stream<Context> tripleContextStream = 
-			new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
-			.map(new ContextWrapper("triple"));
+		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
+			
+			private InputStream nTripleStream;
+
+			@Override
+			public Stream<Context> apply(Stream<Context> in) {
+				return apply();
+			}
+			
+			@Override
+			public Stream<Context> apply() {
+				new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
+				.map(new ContextWrapper("triple"));
+				return null;
+			}
+			
+			@Override
+			public void setup() { 
+				nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
+			}
+			
+			@Override
+			public void cleanup() { }
+		};
 		
 		List<Rule> rules = JenaUtils.readRules(ruleStream);
 		
@@ -253,7 +273,12 @@ public class GreedyOrchestrator implements Orchestrator{
 			@Override
 			public void perform(Context object) { }
 		};
-		OrchestratedProductionSystem ops = go.orchestrate(new JenaRuleCompiler().compile(SourceRulePair.simplePair(tripleContextStream, rules)), op);
+		OrchestratedProductionSystem ops = go.orchestrate(
+				new JenaRuleCompiler().compile(
+						SourceRulePair.simplePair(
+								tripleContextStream, rules
+						)
+				), op);
 		
 		OPSDisplayUtils.display(ops);
 		

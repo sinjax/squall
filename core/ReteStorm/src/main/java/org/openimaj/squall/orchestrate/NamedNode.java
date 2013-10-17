@@ -6,6 +6,7 @@ import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.function.MultiFunction;
 import org.openimaj.util.function.Operation;
+import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
 /**
@@ -58,7 +59,7 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	/**
 	 * @return {@link Stream} returned if this node is a Source, {@link UnsupportedOperationException} otherwise
 	 */
-	public abstract Stream<Context> getSource();
+	public abstract Source<Stream<Context>> getSource();
 	/**
 	 * @return {@link Function} returned if this node is not a Source, {@link UnsupportedOperationException} otherwise
 	 */

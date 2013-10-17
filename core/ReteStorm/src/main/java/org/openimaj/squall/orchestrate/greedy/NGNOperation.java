@@ -2,13 +2,14 @@ package org.openimaj.squall.orchestrate.greedy;
 
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IOperation;
-import org.openimaj.squall.compile.data.IStream;
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Operation;
+import org.openimaj.util.function.Source;
+import org.openimaj.util.stream.Stream;
 
 class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 
@@ -34,7 +35,7 @@ class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 	}
 
 	@Override
-	public IStream<Context> getSource() {
+	public Source<Stream<Context>> getSource() {
 		throw new UnsupportedOperationException();
 	}
 
