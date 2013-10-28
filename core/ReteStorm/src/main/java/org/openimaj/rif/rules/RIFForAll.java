@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.openimaj.rif.conditions.data.datum.RIFVar;
+import org.openimaj.rif.conditions.data.RIFVar;
 
 /**
  * @author david.monks
@@ -61,8 +61,18 @@ public class RIFForAll implements RIFSentence {
 	 */
 	public boolean containsVar(String varName){
 		for (RIFVar var : universalVars())
-			if (var.getName().equals(varName)) return true;
+			if (var.getNode() != null && var.getNode().getName().equals(varName)) return true;
 		return false;
+	}
+
+	/**
+	 * @param varName
+	 * @return
+	 */
+	public RIFVar getUniversalVar(String varName) {
+		for (RIFVar var : universalVars())
+			if (var.getNode().getName().equals(varName)) return var;
+		return null;
 	}
 
 }

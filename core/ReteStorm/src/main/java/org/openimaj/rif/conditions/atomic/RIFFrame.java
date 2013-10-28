@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openimaj.rif.conditions.data.RIFData;
-import org.openimaj.rif.conditions.data.datum.RIFDatum;
+import org.openimaj.rif.conditions.data.RIFDatum;
 
 /**
  * @author david.monks

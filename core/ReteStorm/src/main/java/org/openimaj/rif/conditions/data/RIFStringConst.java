@@ -1,4 +1,4 @@
-package org.openimaj.rif.conditions.data.datum;
+package org.openimaj.rif.conditions.data;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.graph.Node;

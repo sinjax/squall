@@ -1,4 +1,4 @@
-package org.openimaj.rif.conditions.data.datum;
+package org.openimaj.rif.conditions.data;
 
 import java.net.URI;
 

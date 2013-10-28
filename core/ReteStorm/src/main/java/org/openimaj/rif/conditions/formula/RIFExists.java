@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.openimaj.rif.conditions.data.datum.RIFVar;
+import org.openimaj.rif.conditions.data.RIFVar;
 
 /**
  * @author david.monks
@@ -59,8 +59,18 @@ public class RIFExists implements RIFFormula {
 	 */
 	public boolean containsVar(String varName){
 		for (RIFVar var : existentialVars())
-			if (var.getName().equals(varName)) return true;
+			if (var.getNode().getName().equals(varName)) return true;
 		return false;
+	}
+
+	/**
+	 * @param varName
+	 * @return
+	 */
+	public RIFVar getExistentialVar(String varName) {
+		for (RIFVar var : existentialVars())
+			if (var.getNode().getName().equals(varName)) return var;
+		return null;
 	}
 
 }

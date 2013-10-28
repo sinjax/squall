@@ -1,6 +1,6 @@
 package org.openimaj.rif.conditions.formula;
 
-import org.openimaj.rif.conditions.data.datum.RIFDatum;
+import org.openimaj.rif.conditions.data.RIFDatum;
 
 /**
  * @author david.monks

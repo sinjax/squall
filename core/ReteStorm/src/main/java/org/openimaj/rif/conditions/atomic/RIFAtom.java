@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.openimaj.rif.conditions.data.RIFConst;
 import org.openimaj.rif.conditions.data.RIFData;
-import org.openimaj.rif.conditions.data.datum.RIFConst;
-import org.openimaj.rif.conditions.data.datum.RIFDatum;
+import org.openimaj.rif.conditions.data.RIFDatum;
 
 /**
  * @author david.monks
@@ -51,6 +51,13 @@ public class RIFAtom extends RIFAtomic implements Iterable<RIFDatum> {
 	 */
 	public RIFData getArg(int index){
 		return this.args.get(index);
+	}
+	
+	/**
+	 * @return
+	 */
+	public int getArgsSize(){
+		return this.args.size();
 	}
 	
 	@Override
