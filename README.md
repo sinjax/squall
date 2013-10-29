@@ -26,3 +26,12 @@ The tool requires storm to be installed and working, this can be achieved on mac
 	brew install storm
 
 for other systems please check out the [storm docs](http://storm-project.net/documentation.html)
+
+To include components of this project as part of any mavenised java project please install this project as above and use:
+
+	<dependency>
+            <groupId>org.openimaj.squall</groupId>
+            <artifactId>ReteStorm</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+    </dependency>
