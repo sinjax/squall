@@ -28,9 +28,10 @@ public class RIFExpr implements RIFFunction {
 	public void setCommand(RIFAtom c, Set<String> names){
 		this.command = c;
 		
-		String name = "Expr ( "+c.toString()+" )";
+		String name = "Expr("+c.toString()+")";
 		while (names.contains(name)) name += "*";
 		this.node = new Node_RuleVariable(name,names.size());
+		names.add(name);
 	}
 	
 	/**

@@ -73,6 +73,15 @@ public class RIFRuleSet {
 		}
 	}
 	
+	//  Static Values
+	
+	/**
+	 * A pre-built RIF-Core XML content handler for a XML SAX parser.
+	 */
+	public static final RIFCoreXMLContentHandler RIF_CORE = new RIFCoreXMLContentHandler();
+	
+	// Static Methods
+	
 	/**
 	 * Parses the RIF Rule Set from the XML document at the rulesURI.
 	 * @param rulesURI -
@@ -85,6 +94,29 @@ public class RIFRuleSet {
 	 * @throws IOException 
 	 */
 	public static RIFRuleSet parse(URI rulesURI, RIFXMLContentHandler conH) throws IOException, SAXException {
+		conH.setRuleSet(new RIFRuleSet());
+		return RIFRuleSet.parseInternal(rulesURI, conH);
+	}
+	
+	/**
+	 * Parses the RIF Rule Set from the XML document at the rulesURI into an existing RIFRuleSet.
+	 * @param rulesURI -
+	 * 			The URI of the rule set whose rules are to be converted.
+	 * @param conH -
+	 * 			The {@link RIFXMLContentHandler} with which the XML at the rulesURI should be parsed into a {@link RIFRuleSet}.
+	 * @param ruleSet -
+	 * 			The {@link RIFRuleSet} to add rules, imports, etc. to.
+	 * @return 
+	 * 			True if the rule set was successfully converted, false otherwise.
+	 * @throws SAXException 
+	 * @throws IOException 
+	 */
+	public static RIFRuleSet parse(URI rulesURI, RIFXMLContentHandler conH, RIFRuleSet ruleSet) throws IOException, SAXException {
+		conH.setRuleSet(ruleSet);
+		return RIFRuleSet.parseInternal(rulesURI, conH);
+	}
+		
+	private static RIFRuleSet parseInternal(URI rulesURI, RIFXMLContentHandler conH) throws IOException, SAXException {
 		//Fetch the rules from the rulesURI and load into a SAX parser.
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 	    try {
@@ -94,12 +126,9 @@ public class RIFRuleSet {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
-	    SAXParser saxParser;
-	    RIFRuleSet ruleSet = conH.getRuleSet();
 	    
 		try {
-			saxParser = spf.newSAXParser();
+			SAXParser saxParser = spf.newSAXParser();
 			XMLReader xmlReader = saxParser.getXMLReader();
 		    xmlReader.setContentHandler(conH);
 		    xmlReader.parse(new InputSource(rulesURI.toASCIIString()));
@@ -108,15 +137,8 @@ public class RIFRuleSet {
 			e.printStackTrace();
 		}
 		
-		return ruleSet;
+		return conH.getRuleSet();
 	}
-	
-	//  Static Values
-	
-	/**
-	 * A pre-built RIF-Core XML content handler for a XML SAX parser.
-	 */
-	public static final RIFCoreXMLContentHandler RIF_CORE = new RIFCoreXMLContentHandler();
 	
 	//  VARIABLES
 	
@@ -542,7 +564,14 @@ public class RIFRuleSet {
 		protected RIFRuleSet ruleSet;
 		
 		protected RIFXMLContentHandler (){
-			this.ruleSet = new RIFRuleSet();
+		}
+		
+		/**
+		 * @param rs
+		 */
+		public void setRuleSet (RIFRuleSet rs){
+			if (this.ruleSet == null)
+				this.ruleSet = rs;
 		}
 		
 		/**
@@ -584,6 +613,8 @@ public class RIFRuleSet {
 		
 		@Override
 		public void startPrefixMapping(String prefix, String uri) throws SAXException {
+			if (this.ruleSet == null)
+				this.ruleSet = new RIFRuleSet();
 			if (prefix != null && !prefix.equals(""))
 				ruleSet.addPrefix(prefix, findURI(uri));
 		}
@@ -592,6 +623,9 @@ public class RIFRuleSet {
 		
 		@Override
 		public void startDocument() throws SAXException {
+			if (this.ruleSet == null)
+				this.ruleSet = new RIFRuleSet();
+			
 			descent = new Stack<Element>();
 			lastSibling = new Stack<Element>();
 			
@@ -1248,6 +1282,7 @@ public class RIFRuleSet {
 										if (lastSibling.peek() == Element.ITEMS) throw new SAXException("RIF-Core: 'items' element, if it exists, must be unique in a 'List' element.");
 										descent.push(Element.ITEMS);
 										lastSibling.push(null);
+										break;
 									default:
 										throw new SAXException("RIF-Core: 'id', 'meta' or 'items' expected, '"+localName+"' found.");
 								}
@@ -1441,11 +1476,10 @@ public class RIFRuleSet {
 						d = startGROUNDTERM(localName,atts);
 						if(d instanceof RIFDatum)
 							currentAtom.addArg((RIFDatum) d);
-						else
-							throw new SAXException("RIF-Core: 'arg' elements must contain only 'Const' and 'External' elements, i.e. base terms.");
-						if (d instanceof RIFList){
+						else if (d instanceof RIFList){
 							currentList.push((RIFList) d);
-						}
+						} else
+							throw new SAXException("RIF-Core: 'arg' elements must contain only 'Const', 'List' and 'External' elements, i.e. base terms.");
 						break;
 					case TERM_ARGS:
 						lastSibling.pop();
@@ -1453,11 +1487,10 @@ public class RIFRuleSet {
 						d = startTERM(localName,atts);
 						if(d instanceof RIFDatum)
 							currentAtom.addArg((RIFDatum) d);
-						else
-							throw new SAXException("RIF-Core: 'arg' elements must contain only 'Var', 'Const' and 'External' elements, i.e. base terms.");
-						if (d instanceof RIFList){
+						else if (d instanceof RIFList){
 							currentList.push((RIFList) d);
-						}
+						} else
+							throw new SAXException("RIF-Core: 'arg' elements must contain only 'Var', 'Const', 'List' and 'External' elements, i.e. base terms.");
 						break;
 					case FORMULA_EXTERNAL:
 						switch (localName.charAt(0)){
@@ -1510,13 +1543,17 @@ public class RIFRuleSet {
 										lastSibling.push(null);
 										
 										currentAtom = new RIFAtom();
-										currentRule.addAtomicToHead(currentAtom);
+										currentRule.setHead(currentAtom);
 										
 										break;
 									case 'n':
 										if (lastSibling.peek() != null) throw new SAXException("RIF-Core: 'And' element, if it exists, must be the sole child of a 'then' element.");
 										descent.push(Element.THEN_AND);
 										lastSibling.push(null);
+										
+										currentFormula.push(new RIFAnd());
+										currentRule.setHead(currentFormula.peek());
+										
 										break;
 									default:
 										throw new SAXException("RIF-Core: 'And', 'Frame' or 'Atom' expected, '"+localName+"' found.");
@@ -1528,7 +1565,7 @@ public class RIFRuleSet {
 								lastSibling.push(null);
 								
 								currentFrame = new RIFFrame();
-								currentRule.addAtomicToHead(currentFrame);
+								currentRule.setHead(currentFrame);
 								
 								break;
 							default:
@@ -1553,7 +1590,7 @@ public class RIFRuleSet {
 								lastSibling.push(null);
 								
 								currentAtom = new RIFAtom();
-								currentRule.addAtomicToHead(currentAtom);
+								currentFormula.peek().addFormula(currentAtom);
 								
 								break;
 							case 'F':
@@ -1562,7 +1599,7 @@ public class RIFRuleSet {
 								lastSibling.push(null);
 								
 								currentFrame = new RIFFrame();
-								currentRule.addAtomicToHead(currentFrame);
+								currentFormula.peek().addFormula(currentFrame);
 								
 								break;
 							default:
@@ -1803,6 +1840,12 @@ elementSwitch:		switch (descent.peek()){
 						
 						case VAR:
 						case NAME:
+							// Roll back to outside 'Var' element.
+							Stack<Element> others = new Stack<Element>();
+							others.push(this.descent.pop());
+							if (this.descent.peek() == Element.VAR)
+								others.push(this.descent.pop());
+							
 							// If We are in a 'Forall' statement...
 							if (currentForAll != null){
 								// If the variable has been declared in the 'Forall'...
@@ -1828,14 +1871,19 @@ elementSwitch:		switch (descent.peek()){
 									// If the variable has not been declared in scope, add a * to the end to check for duplicates between scopes. 
 									content += "*";
 								}
-								// If we are in a formula, and that formula isn't an 'Exists' then we aren't in a valid place to declare variables. PANIC.
-								if (!(currentFormula.isEmpty() || currentFormula.peek() instanceof RIFExists))
-									throw new SAXException("RIF-Core: Cannot use 'Var' element contents not declared in an ancestor 'Forall' or 'Exists' element.");
+								// If the 'Var' is not being stated in a 'declare' element, then we are not in an appropriate place to declare variables. PANIC.
+								if (this.descent.peek() != Element.DECLARE)
+									throw new SAXException("RIF-Core: Cannot use 'Var' element contents not 'declare'd in an ancestor 'Forall' or 'Exists' element.");
 							}
 							// If we are outside a 'Forall' or in an 'Declare' element of a 'Forall' or 'Exists', then we can add a new rule index and name,
 							// either to the global set or the current scoped rule, as appropriate.
 							currentVar.setName(content,names.peek().size());
 							names.peek().add(content);
+							
+							// Re-descend to actual depth
+							while (!others.isEmpty())
+								this.descent.push(others.pop());
+							// exit switch
 							break elementSwitch;
 						default:
 					}

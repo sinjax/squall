@@ -1,8 +1,11 @@
 package org.openimaj.squall.compile.rif.data;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.openimaj.rif.conditions.formula.RIFFormula;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 
@@ -31,11 +34,25 @@ public class BindingsUtils {
 	 * @return
 	 * 		A Map<String,Node> of Strings to Jena Nodes representing the values of the ruleVariables bound to their variable names.
 	 */
-	public static Map<String,Node> ArrayToMap(Node[] array, String[] ruleVars){
+	public static Map<String,Node> arrayToMap(Node[] array, String[] ruleVars){
 		Map<String,Node> binding = new HashMap<String,Node>();
 		for (int i = 0; i < ruleVars.length; i++)
 			binding.put(ruleVars[i], array[i]);
 		return binding;
 	}
+
+	/**
+	 * @param formula
+	 * @return
+	 */
+	public static List<Node_RuleVariable> extractRuleVariables(RIFFormula formula) {
+		List<Node_RuleVariable> vars = new ArrayList<Node_RuleVariable>();
+		extractRuleVariables(formula, vars);
+		return vars;
+	} 
+	
+	private static void extractRuleVariables(RIFFormula formula, List<Node_RuleVariable> vars) {
+		//TODO
+	}  
 	
 }

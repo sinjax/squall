@@ -1,10 +1,5 @@
 package org.openimaj.rif.rules;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
-import org.openimaj.rif.conditions.atomic.RIFAtomic;
 import org.openimaj.rif.conditions.formula.RIFFormula;
 
 /**
@@ -13,7 +8,7 @@ import org.openimaj.rif.conditions.formula.RIFFormula;
  */
 public class RIFRule implements RIFStatement {
 	
-	private Set<RIFAtomic> head;
+	private RIFFormula head;
 	private RIFFormula body;
 	
 	/**
@@ -21,26 +16,6 @@ public class RIFRule implements RIFStatement {
 	 */
 	public RIFRule(){
 		super();
-		this.head = new HashSet<RIFAtomic>();
-	}
-	
-	/**
-	 * @param atomic
-	 */
-	public void addAtomicToHead(RIFAtomic atomic){
-		this.head.add(atomic);
-	}
-	
-	/**
-	 * @return
-	 */
-	public Iterable<RIFAtomic> head(){
-		return new Iterable<RIFAtomic>(){
-			@Override
-			public Iterator<RIFAtomic> iterator() {
-				return RIFRule.this.head.iterator();
-			}
-		};
 	}
 	
 	/**
@@ -51,10 +26,24 @@ public class RIFRule implements RIFStatement {
 	}
 	
 	/**
+	 * @param formula
+	 */
+	public void setHead(RIFFormula formula){
+		this.head = formula;
+	}
+	
+	/**
 	 * @return
 	 */
 	public RIFFormula getBody(){
 		return this.body;
+	}
+	
+	/**
+	 * @return
+	 */
+	public RIFFormula getHead(){
+		return this.head;
 	}
 
 }

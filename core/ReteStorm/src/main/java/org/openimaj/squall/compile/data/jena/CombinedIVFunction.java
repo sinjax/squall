@@ -1,6 +1,7 @@
 package org.openimaj.squall.compile.data.jena;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import org.openimaj.squall.compile.data.IVFunction;
  * @param <B> 
  *
  */
+@SuppressWarnings("serial")
 public abstract class CombinedIVFunction<A,B> implements IVFunction<A,B> {
 
 	private List<IVFunction<A, B>> functions;
@@ -31,6 +33,16 @@ public abstract class CombinedIVFunction<A,B> implements IVFunction<A,B> {
 	 */
 	public void addFunction(IVFunction<A,B> func){
 		this.functions.add(func);
+	}
+	
+	protected Iterable<IVFunction<A,B>> functions(){
+		return new Iterable<IVFunction<A,B>>(){
+			@Override
+			public Iterator<IVFunction<A,B>> iterator() {
+				return CombinedIVFunction.this.functions.iterator();
+			}
+			
+		};
 	}
 	
 	@Override

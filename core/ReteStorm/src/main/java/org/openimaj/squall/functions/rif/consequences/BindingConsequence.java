@@ -1,44 +1,48 @@
-package org.openimaj.squall.compile.rif.data;
+package org.openimaj.squall.functions.rif.consequences;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.data.jena.BindingsUtils;
+import org.openimaj.squall.compile.rif.data.BindingsUtils;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
-import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
 /**
- * @author david.monks
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
+@SuppressWarnings("serial")
 public class BindingConsequence implements IVFunction<Context,Context> {
 
-	private Node_RuleVariable[] inVariables;
-	private Node_RuleVariable[] outVariables;
+	private String[] inVariables;
+	private String[] outVariables;
 	
 	/**
-	 * @param rule
+	 * @param vars 
 	 */
-	public BindingConsequence(Rule rule){
-		this.inVariables = BindingsUtils.extractRuleVariables(rule.getBody()).toArray(this.inVariables);
-		this.outVariables = BindingsUtils.extractRuleVariables(rule.getHead()).toArray(this.outVariables);
+	public BindingConsequence(List<Node_RuleVariable> vars){
+		this.inVariables = new String[vars.size()];
+		this.outVariables = new String[this.inVariables.length];
+		for (int i = 0; i < this.inVariables.length; i ++){
+			this.inVariables[i] = vars.get(i).getName();
+			this.outVariables[i] = vars.get(i).getName();
+		}
 	}
 	
 	@Override
 	public List<Context> apply(Context in) {
 		Map<String,Node> bindings = in.getTyped("bindings");
-		Map<String,Node> ret = BindingsUtils.bindingsToMap(
-																		BindingsUtils.mapToBindings(
-																										bindings,
-																										this.inVariables
-																									),
-																		this.outVariables
-																	);
+		Map<String,Node> ret = BindingsUtils.arrayToMap(
+									BindingsUtils.mapToArray(
+										bindings,
+										this.inVariables
+									),
+									this.outVariables
+								);
 		
 		Context out = new Context();
 		out.put("bindings", ret);
@@ -56,8 +60,8 @@ public class BindingConsequence implements IVFunction<Context,Context> {
 	@Override
 	public List<String> variables() {
 		List<String> vars = new ArrayList<String>();
-		for (Node_RuleVariable n : this.outVariables)
-			vars.add(n.getName());
+		for (String v : this.outVariables)
+			vars.add(v);
 		return vars;
 	}
 
@@ -75,8 +79,9 @@ public class BindingConsequence implements IVFunction<Context,Context> {
 
 	@Override
 	public void mapVariables(Map<String, String> varmap) {
-		// TODO Implement Variable Mapping
-		
+		String[] newInVars = new String[this.inVariables.length];
+		for (int i = 0; i < newInVars.length; i++)
+			newInVars[i] = varmap.get(this.inVariables[i]);
 	}
 
 }

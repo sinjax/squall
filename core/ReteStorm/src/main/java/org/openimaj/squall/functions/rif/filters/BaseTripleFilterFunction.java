@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.data.jena;
+package org.openimaj.squall.functions.rif.filters;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -17,25 +18,21 @@ import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
 
 /**
- * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- * Filter a triple, return bindings against variables
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class TripleFilterFunction implements IVFunction<Context, Context> {
+@SuppressWarnings("serial")
+public class BaseTripleFilterFunction implements IVFunction<Context,Context>{
+
 	private final static Logger logger = Logger.getLogger(TripleFilterFunction.class);
 	private TriplePattern clause;
 	private Triple extended;
 	private List<String> variables;
 
 	/**
-	 * 
-	 */
-	public TripleFilterFunction() {
-	}
-	/**
 	 * @param clause construct using a {@link TriplePattern}
 	 */
-	public TripleFilterFunction(TriplePattern clause) {
+	public BaseTripleFilterFunction(Node[] ns, TriplePattern clause) {
 		this.clause = clause;
 		this.extended = asExtendedTripleMatch(clause).asTriple();
 	}
@@ -61,6 +58,7 @@ public class TripleFilterFunction implements IVFunction<Context, Context> {
 				if (fnode.isVariable())
 				{
 					this.variables.add(fnode.getName());
+//					f.getArgs()[i] = Node.ANY;
 				}
 			}
 		}
@@ -181,4 +179,5 @@ public class TripleFilterFunction implements IVFunction<Context, Context> {
 		// TODO Implement Variable Mapping
 		
 	}
+
 }
