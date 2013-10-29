@@ -19,4 +19,10 @@ To build the tool used to construct storm topologies for Jena rules and SPARQL q
 	mvn install
 	tools/ReteStormTool/retestorm
 
-This will compile the tool's requirements and prepare the tool to be ran. Running the tool gives documentation for its use
+This will compile the tool's requirements and prepare the tool to be ran. Running the tool gives documentation for its use.
+
+The tool requires storm to be installed and working, this can be achieved on mac using brew:
+	
+	brew install storm
+
+for other systems please check out the "storm docs":http://storm-project.net/documentation.html

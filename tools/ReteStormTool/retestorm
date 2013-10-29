@@ -1,2 +1,7 @@
-#!/usr/bin/env sh 
-java -Xmx1G -cp src/main/resources:`storm classpath`:target/ReteStormTool.jar org.openimaj.rdf.storm.tool.ReteStorm $*
+#!/usr/bin/env sh
+pushd `dirname $0` > /dev/null
+BASEDIR=`pwd`
+mvn dependency:build-classpath -Dmdep.outputFile=cp.txt -Dsilent=true > /dev/null
+popd > /dev/null
+
+java -Xmx1G -cp $BASEDIR/src/main/resources:`storm classpath`:`cat $BASEDIR/cp.txt`:$BASEDIR/target/ReteStormTool-1.0.0-SNAPSHOT.jar org.openimaj.rdf.storm.tool.ReteStorm $*
