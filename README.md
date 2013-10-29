@@ -25,4 +25,4 @@ The tool requires storm to be installed and working, this can be achieved on mac
 	
 	brew install storm
 
-for other systems please check out the "storm docs":http://storm-project.net/documentation.html
+for other systems please check out the [storm docs](http://storm-project.net/documentation.html)
