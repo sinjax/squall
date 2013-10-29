@@ -26,7 +26,8 @@ public class RIFMemberFilterFunction extends BaseTripleFilterFunction {
 	 * 			The {@link RIFMember} clause to convert to a filter function.
 	 */
 	public RIFMemberFilterFunction(RIFMember rm) {
-		super(extractTriplePattern(rm));
+		// FIXME: REALLY broken
+		super(null, extractTriplePattern(rm));
 	}
 
 }

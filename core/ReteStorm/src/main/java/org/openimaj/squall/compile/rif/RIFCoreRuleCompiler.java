@@ -128,7 +128,8 @@ public class RIFCoreRuleCompiler implements Compiler<SourceRulesetLibsTrio> {
 		if (formula instanceof RIFAtomic){
 			List<TriplePattern> triples = translate((RIFAtomic) formula, ccps);
 			for (TriplePattern tp : triples){
-					ccps.addJoinComponent(new BaseTripleFilterFunction(tp));
+				// FIXME
+//					ccps.addJoinComponent(new BaseTripleFilterFunction(tp));
 			}
 		} else if (formula instanceof RIFAnd){
 			for (RIFFormula f : (RIFAnd) formula){
