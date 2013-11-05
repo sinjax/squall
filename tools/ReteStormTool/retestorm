@@ -4,4 +4,7 @@ BASEDIR=`pwd`
 mvn dependency:build-classpath -Dmdep.outputFile=cp.txt -Dsilent=true > /dev/null
 popd > /dev/null
 
-java -Xmx1G -cp $BASEDIR/src/main/resources:`cat $BASEDIR/cp.txt`:$BASEDIR/target/ReteStormTool-1.0.0-SNAPSHOT.jar org.openimaj.rdf.storm.tool.ReteStorm $*
+java -Xmx1G -cp \
+$BASEDIR/src/main/resources:\
+`cat $BASEDIR/cp.txt`:$BASEDIR/target/ReteStormTool-1.0.0-SNAPSHOT.jar \
+org.openimaj.rdf.storm.tool.ReteStorm $*
