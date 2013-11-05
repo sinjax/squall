@@ -9,6 +9,7 @@ import org.openimaj.util.function.Function;
  * Apply a function to some input, producing an appropriate result.
  * Also provide a method to become anonymised (i.e. present the underlying {@link Function} as a variable independant string)
  * and become annonimised with certained variables set by a {@link Map}
+ * 
  */
 public interface VariableHolder{
 	/**
@@ -47,4 +48,6 @@ public interface VariableHolder{
 	 * 			variable name values.
 	 */
 	public void mapVariables(Map<String, String> varmap);
+	
+	
 }

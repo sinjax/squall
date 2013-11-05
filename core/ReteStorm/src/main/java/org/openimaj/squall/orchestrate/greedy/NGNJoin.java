@@ -2,6 +2,7 @@ package org.openimaj.squall.orchestrate.greedy;
 
 
 import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.orchestrate.NNIVFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
@@ -11,7 +12,7 @@ import org.openimaj.util.data.Context;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class NGNJoin extends NGNIVFunction {
+public class NGNJoin extends NNIVFunction {
 
 	
 	/**

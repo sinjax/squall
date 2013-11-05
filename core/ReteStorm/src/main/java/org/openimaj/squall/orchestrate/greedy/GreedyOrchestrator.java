@@ -1,32 +1,23 @@
 package org.openimaj.squall.orchestrate.greedy;
 
-import java.io.InputStream;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.jena.JenaRuleCompiler;
-import org.openimaj.squall.compile.jena.SourceRulePair;
 import org.openimaj.squall.data.ISource;
+import org.openimaj.squall.orchestrate.NNIVFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedSourceNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
-import org.openimaj.squall.utils.JenaUtils;
-import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
-import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
-
-import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -132,7 +123,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			OrchestratedProductionSystem root,
 			List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS,
 			IVFunction<Context,Context> function) {
-		NGNIVFunction consequenceNode = new NGNIVFunction(
+		NNIVFunction consequenceNode = new NNIVFunction(
 			root,
 			nextConsequenceName(), 
 			function
@@ -153,7 +144,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			List<IVFunction<Context,Context>> list) {
 		
 		for (IVFunction<Context, Context> pred : list) {
-			NGNIVFunction prednode = new NGNIVFunction(
+			NNIVFunction prednode = new NNIVFunction(
 				root,
 				nextPredicateName(),
 				pred
@@ -180,6 +171,8 @@ public class GreedyOrchestrator implements Orchestrator{
 				IVFunction<Context, Context> typedComponent = jc.getTypedComponent();
 				next = createFilterNode(root, typedComponent);
 			} else if (jc.isCPS()){
+				// If the sub compiled production system returns null, i.e. it has no consequence, 
+				// this CPS might not be joined correctly
 				CompiledProductionSystem cps = jc.getTypedComponent();
 				next = orchestrate(root, cps);
 			} else{
@@ -209,10 +202,10 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("JOIN_%d",join ++ );
 	}
 
-	private NGNIVFunction createFilterNode(
+	private NNIVFunction createFilterNode(
 			OrchestratedProductionSystem root,
 			IVFunction<Context,Context> filterFunc) {
-		NGNIVFunction currentNode = new NGNIVFunction(
+		NNIVFunction currentNode = new NNIVFunction(
 				root, 
 				nextFilterName(), 
 				filterFunc
@@ -227,62 +220,62 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("FILTER_%d",filter ++);
 	}
 	
-	/**
-	 * Draws an example {@link GreedyOrchestrator} 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		InputStream ruleStream = GreedyOrchestrator.class.getResourceAsStream("/test.rules");
-		
-		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
-			
-			private InputStream nTripleStream;
-
-			@Override
-			public Stream<Context> apply(Stream<Context> in) {
-				return apply();
-			}
-			
-			@Override
-			public Stream<Context> apply() {
-				new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
-				.map(new ContextWrapper("triple"));
-				return null;
-			}
-			
-			@Override
-			public void setup() { 
-				nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
-			}
-			
-			@Override
-			public void cleanup() { }
-		};
-		
-		List<Rule> rules = JenaUtils.readRules(ruleStream);
-		
-		GreedyOrchestrator go = new GreedyOrchestrator();
-		IOperation<Context> op = new IOperation<Context>() {
-			
-			@Override
-			public void setup() { }
-			
-			@Override
-			public void cleanup() { }
-			
-			@Override
-			public void perform(Context object) { }
-		};
-		OrchestratedProductionSystem ops = go.orchestrate(
-				new JenaRuleCompiler().compile(
-						SourceRulePair.simplePair(
-								tripleContextStream, rules
-						)
-				), op);
-		
-		OPSDisplayUtils.display(ops);
-		
-		
-	}
+//	/**
+//	 * Draws an example {@link GreedyOrchestrator} 
+//	 * @param args
+//	 */
+//	public static void main(String[] args) {
+//		InputStream ruleStream = GreedyOrchestrator.class.getResourceAsStream("/test.rules");
+//		
+//		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
+//			
+//			private InputStream nTripleStream;
+//
+//			@Override
+//			public Stream<Context> apply(Stream<Context> in) {
+//				return apply();
+//			}
+//			
+//			@Override
+//			public Stream<Context> apply() {
+//				new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
+//				.map(new ContextWrapper("triple"));
+//				return null;
+//			}
+//			
+//			@Override
+//			public void setup() { 
+//				nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
+//			}
+//			
+//			@Override
+//			public void cleanup() { }
+//		};
+//		
+//		List<Rule> rules = JenaUtils.readRules(ruleStream);
+//		
+//		GreedyOrchestrator go = new GreedyOrchestrator();
+//		IOperation<Context> op = new IOperation<Context>() {
+//			
+//			@Override
+//			public void setup() { }
+//			
+//			@Override
+//			public void cleanup() { }
+//			
+//			@Override
+//			public void perform(Context object) { }
+//		};
+//		OrchestratedProductionSystem ops = go.orchestrate(
+//				new JenaRuleCompiler().compile(
+//						SourceRulePair.simplePair(
+//								tripleContextStream, rules
+//						)
+//				), op);
+//		
+//		OPSDisplayUtils.display(ops);
+//		
+//		
+//	}
 
 }
