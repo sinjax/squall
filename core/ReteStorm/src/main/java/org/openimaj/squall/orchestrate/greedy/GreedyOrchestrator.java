@@ -15,8 +15,6 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.jena.JenaRuleCompiler;
-import org.openimaj.squall.compile.jena.SourceRulePair;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
 import org.openimaj.squall.compile.rif.SourceRulesetLibsTrio;
 import org.openimaj.squall.data.ISource;
@@ -37,7 +35,6 @@ import org.openimaj.util.stream.Stream;
 import org.xml.sax.SAXException;
 
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
