@@ -100,6 +100,7 @@ public class SPARQLRuleLanguageHandler implements RuleLanguageHandler {
 					options.getRules());
 		} catch (Exception e) {
 			logger.error("Failed to create topology orchestrator", e);
+			throw new RuntimeException(e);
 		}
 		StormTopology topology = null;
 		try {

@@ -1,22 +1,19 @@
-package org.openimaj.squall.orchestrate.greedy;
+package org.openimaj.squall.orchestrate;
 
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.compile.data.VariableHolder;
-import org.openimaj.squall.orchestrate.NamedNode;
-import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
-import org.openimaj.squall.orchestrate.WrappedIVFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Operation;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
-class NGNIVFunction extends NamedNode<IVFunction<Context, Context>>{
+public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
 
 	private IVFunction<Context, Context> varfunc;
 	private IVFunction<Context, Context> wrapped;
 
-	public NGNIVFunction(OrchestratedProductionSystem parent, String name, IVFunction<Context, Context> func) {
+	public NNIVFunction(OrchestratedProductionSystem parent, String name, IVFunction<Context, Context> func) {
 		super(parent, name);
 		this.varfunc = func;
 		this.wrapped = new WrappedIVFunction(func, this);
