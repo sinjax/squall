@@ -15,8 +15,6 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.jena.JenaRuleCompiler;
-import org.openimaj.squall.compile.jena.SourceRulePair;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
 import org.openimaj.squall.compile.rif.SourceRulesetLibsTrio;
 import org.openimaj.squall.data.ISource;
@@ -37,7 +35,6 @@ import org.openimaj.util.stream.Stream;
 import org.xml.sax.SAXException;
 
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -106,9 +103,7 @@ public class GreedyOrchestrator implements Orchestrator{
 		List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS = new ArrayList<NamedNode<? extends IVFunction<Context, Context>>>();
 		for (CompiledProductionSystem cps : sys.getSystems()) {
 			NamedNode<? extends IVFunction<Context, Context>> combined = orchestrate(root,cps);
-			if(combined == null){
-				throw new RuntimeException("No consequence of or'ed "); 
-			}
+			
 			if(combinedFilters != null){ // join the sub systems to any filters
 				combined = createJoinNode(root, combined,combinedFilters);
 			}
@@ -119,7 +114,10 @@ public class GreedyOrchestrator implements Orchestrator{
 			joinedCPS.add(combinedFilters);
 		}
 //		aggregations = orchestrateAggregations(joinedCPS,sys.getAggregations());
-		if(sys.getConsequence() == null){ return null; }
+		if(sys.getConsequence() == null){
+			// Use an implicity consequence that is a simple passthrough function
+			return orchestrateConsequences(root, joinedCPS,new PassThroughConsequence()); 
+		}
 		return orchestrateConsequences(root, joinedCPS,sys.getConsequence());
 	}
 
