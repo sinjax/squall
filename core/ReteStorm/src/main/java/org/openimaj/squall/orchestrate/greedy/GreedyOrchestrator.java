@@ -21,6 +21,7 @@ import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
 import org.openimaj.squall.compile.rif.SourceRulesetLibsTrio;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.functions.rif.RIFExternalFunctionLibrary;
+import org.openimaj.squall.orchestrate.NNIVFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedSourceNode;
 import org.openimaj.squall.orchestrate.NamedStream;
@@ -142,7 +143,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			OrchestratedProductionSystem root,
 			List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS,
 			IVFunction<Context,Context> function) {
-		NGNIVFunction consequenceNode = new NGNIVFunction(
+		NNIVFunction consequenceNode = new NNIVFunction(
 			root,
 			nextConsequenceName(), 
 			function
@@ -163,7 +164,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			List<IVFunction<Context,Context>> list) {
 		
 		for (IVFunction<Context, Context> pred : list) {
-			NGNIVFunction prednode = new NGNIVFunction(
+			NNIVFunction prednode = new NNIVFunction(
 				root,
 				nextPredicateName(),
 				pred
@@ -219,10 +220,10 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("JOIN_%d",join ++ );
 	}
 
-	private NGNIVFunction createFilterNode(
+	private NNIVFunction createFilterNode(
 			OrchestratedProductionSystem root,
 			IVFunction<Context,Context> filterFunc) {
-		NGNIVFunction currentNode = new NGNIVFunction(
+		NNIVFunction currentNode = new NNIVFunction(
 				root, 
 				nextFilterName(), 
 				filterFunc
