@@ -1,6 +1,8 @@
-package org.openimaj.squall.functions.rif.filters;
+package org.openimaj.squall.functions.rif.core;
 
 import org.openimaj.rif.conditions.formula.RIFMember;
+import org.openimaj.squall.compile.ContextCPS;
+import org.openimaj.squall.functions.rif.filters.BaseTripleFilterFunction;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.reasoner.TriplePattern;
@@ -11,14 +13,19 @@ import com.hp.hpl.jena.reasoner.TriplePattern;
  */
 @SuppressWarnings("serial")
 public class RIFMemberFilterFunction extends BaseTripleFilterFunction {
+	
+	/**
+	 * The URI used for the predicate denoting that a Subject is of rdf:type Object.
+	 */
+	public static final String RDF_TYPE_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
 	private static TriplePattern extractTriplePattern(RIFMember rm){
 		TriplePattern tp = new TriplePattern(
 				rm.getInstance().getNode(),
-				Node.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
+				Node.createURI(RDF_TYPE_URI),
 				rm.getInClass().getNode()
 			);
-		return tp; //TODO proper converstion
+		return tp; //TODO proper conversion
 	}
 	
 	/**
@@ -26,8 +33,7 @@ public class RIFMemberFilterFunction extends BaseTripleFilterFunction {
 	 * 			The {@link RIFMember} clause to convert to a filter function.
 	 */
 	public RIFMemberFilterFunction(RIFMember rm) {
-		// FIXME: REALLY broken
-		super(null, extractTriplePattern(rm));
+		super(extractTriplePattern(rm));
 	}
 
 }

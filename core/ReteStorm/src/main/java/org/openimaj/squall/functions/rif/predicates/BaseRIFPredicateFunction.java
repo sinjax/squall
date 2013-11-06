@@ -80,11 +80,9 @@ public abstract class BaseRIFPredicateFunction implements IVFunction<Context, Co
 	 */
 	public BaseRIFPredicateFunction(Node[] ns) throws RIFPredicateException {
 		List<String> variables = new ArrayList<String>();
-		Map<String, Integer> map = new HashMap<String, Integer>();
 		for (Node n : ns){
 			if (n.isVariable()){
 				variables.add(((Node_RuleVariable) n).getName());
-				map.put(((Node_RuleVariable) n).getName(), ((Node_RuleVariable) n).getIndex());
 			}
 		}
 		if (variables.size() < 1){
@@ -92,7 +90,6 @@ public abstract class BaseRIFPredicateFunction implements IVFunction<Context, Co
 		}
 		this.vars = new String[0];
 		this.vars = variables.toArray(this.vars);
-		this.anonimisedName = this.anonimised(map);
 	}
 	
 }

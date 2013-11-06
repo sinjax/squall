@@ -22,7 +22,7 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
  *
  */
 @SuppressWarnings("serial")
-public class TripleConsequence implements IVFunction<Context,Context> {
+public class BaseTripleConsequence implements IVFunction<Context,Context> {
 
 	private TriplePattern clause;
 	private Node_RuleVariable[] ruleVariables;
@@ -30,7 +30,7 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 	/**
 	 * @param clause
 	 */
-	public TripleConsequence(TriplePattern clause) {
+	public BaseTripleConsequence(TriplePattern clause) {
 		this.clause = clause;
 //		this.ruleVariables = BindingsUtils.extractRuleVariables(r);
 	}

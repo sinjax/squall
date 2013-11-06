@@ -10,7 +10,7 @@ import org.openimaj.rif.conditions.data.RIFVar;
  * @author david.monks
  *
  */
-public class RIFForAll implements RIFSentence {
+public class RIFForAll extends RIFSentence {
 	
 	private Set<RIFVar> universalVars;
 	private RIFStatement statement;

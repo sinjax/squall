@@ -32,7 +32,7 @@ public class BaseTripleFilterFunction implements IVFunction<Context,Context>{
 	/**
 	 * @param clause construct using a {@link TriplePattern}
 	 */
-	public BaseTripleFilterFunction(Node[] ns, TriplePattern clause) {
+	public BaseTripleFilterFunction(TriplePattern clause) {
 		this.clause = clause;
 		this.extended = asExtendedTripleMatch(clause).asTriple();
 	}

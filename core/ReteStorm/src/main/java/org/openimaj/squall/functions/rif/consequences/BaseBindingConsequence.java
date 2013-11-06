@@ -16,7 +16,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
  *
  */
 @SuppressWarnings("serial")
-public class BindingConsequence implements IVFunction<Context,Context> {
+public class BaseBindingConsequence implements IVFunction<Context,Context> {
 
 	private String[] inVariables;
 	private String[] outVariables;
@@ -24,7 +24,7 @@ public class BindingConsequence implements IVFunction<Context,Context> {
 	/**
 	 * @param vars 
 	 */
-	public BindingConsequence(List<Node_RuleVariable> vars){
+	public BaseBindingConsequence(List<Node_RuleVariable> vars){
 		this.inVariables = new String[vars.size()];
 		this.outVariables = new String[this.inVariables.length];
 		for (int i = 0; i < this.inVariables.length; i ++){

@@ -11,6 +11,7 @@ import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
+import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.query.Query;
@@ -20,6 +21,10 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
+/**
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
+ *
+ */
 public class OWLRuleCompiler implements Compiler<SourceModelRulesetTrio> {
 
 	@Override

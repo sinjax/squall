@@ -57,7 +57,7 @@ public class RIFExists implements RIFFormula {
 	 * @param varName
 	 * @return
 	 */
-	public boolean containsVar(String varName){
+	public boolean containsExistentialVar(String varName){
 		for (RIFVar var : existentialVars())
 			if (var.getNode().getName().equals(varName)) return true;
 		return false;

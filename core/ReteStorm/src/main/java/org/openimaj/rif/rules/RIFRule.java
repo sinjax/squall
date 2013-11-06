@@ -6,7 +6,7 @@ import org.openimaj.rif.conditions.formula.RIFFormula;
  * @author david.monks
  *
  */
-public class RIFRule implements RIFStatement {
+public class RIFRule extends RIFStatement {
 	
 	private RIFFormula head;
 	private RIFFormula body;
@@ -45,5 +45,6 @@ public class RIFRule implements RIFStatement {
 	public RIFFormula getHead(){
 		return this.head;
 	}
+
 
 }

@@ -1,6 +1,7 @@
 package org.openimaj.squall.functions.rif.core;
 
 import org.openimaj.rif.conditions.formula.RIFEqual;
+import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateEqualityFunction;
 
 import com.hp.hpl.jena.graph.Node;

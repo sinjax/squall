@@ -1,7 +1,6 @@
 package org.openimaj.rif.conditions.data;
 
-import java.util.Set;
-
+import java.util.List;
 import org.openimaj.rif.conditions.atomic.RIFAtom;
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 
@@ -10,7 +9,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class RIFExpr implements RIFFunction {
+public class RIFExpr extends RIFFunction {
 
 	private RIFAtom command;
 	private Node_RuleVariable node;
@@ -23,15 +22,15 @@ public class RIFExpr implements RIFFunction {
 	
 	/**
 	 * @param c
-	 * @param names 
+	 * @param list 
 	 */
-	public void setCommand(RIFAtom c, Set<String> names){
+	public void setCommand(RIFAtom c, List<String> list){
 		this.command = c;
 		
 		String name = "Expr("+c.toString()+")";
-		while (names.contains(name)) name += "*";
-		this.node = new Node_RuleVariable(name,names.size());
-		names.add(name);
+		while (list.contains(name)) name += "*";
+		this.node = new Node_RuleVariable(name,list.size());
+		list.add(name);
 	}
 	
 	/**

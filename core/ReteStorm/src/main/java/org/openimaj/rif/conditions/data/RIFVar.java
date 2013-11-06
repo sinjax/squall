@@ -1,14 +1,12 @@
 package org.openimaj.rif.conditions.data;
 
-import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Node_Variable;
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 
 /**
  * @author david.monks
  *
  */
-public class RIFVar implements RIFDatum {
+public class RIFVar extends RIFDatum {
 	
 	private Node_RuleVariable node;
 	

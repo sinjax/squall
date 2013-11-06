@@ -7,12 +7,12 @@ import com.hp.hpl.jena.graph.Node;
  * @author david.monks
  *
  */
-public interface RIFDatum extends RIFData {
+public abstract class RIFDatum extends RIFData {
 	
 	/**
 	 * @return
 	 * 		The Jena Node representing this Datum 
 	 */
-	public Node getNode();
+	public abstract Node getNode();
 	
 }

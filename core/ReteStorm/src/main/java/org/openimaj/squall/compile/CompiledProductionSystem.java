@@ -159,7 +159,7 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @return the consequences of this compiled system
 	 */
-	public IVFunction<Context, Context> getConequences() {
+	public IVFunction<Context, Context> getConsequence() {
 		return this.consequence;
 	}
 

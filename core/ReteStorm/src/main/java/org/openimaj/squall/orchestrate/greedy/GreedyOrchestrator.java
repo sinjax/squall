@@ -1,17 +1,26 @@
 package org.openimaj.squall.orchestrate.greedy;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.openimaj.rdf.storm.topology.ReteTopologyTest;
+import org.openimaj.rif.RIFRuleSet;
+import org.openimaj.rif.contentHandler.RIFImportProfiles;
+import org.openimaj.rif.contentHandler.RIFOWLImportProfiles;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.jena.JenaRuleCompiler;
 import org.openimaj.squall.compile.jena.SourceRulePair;
+import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
+import org.openimaj.squall.compile.rif.SourceRulesetLibsTrio;
 import org.openimaj.squall.data.ISource;
+import org.openimaj.squall.functions.rif.RIFExternalFunctionLibrary;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedSourceNode;
 import org.openimaj.squall.orchestrate.NamedStream;
@@ -24,6 +33,7 @@ import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
+import org.xml.sax.SAXException;
 
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
@@ -108,8 +118,8 @@ public class GreedyOrchestrator implements Orchestrator{
 			joinedCPS.add(combinedFilters);
 		}
 //		aggregations = orchestrateAggregations(joinedCPS,sys.getAggregations());
-		if(sys.getConequences() == null){ return null; }
-		return orchestrateConsequences(root, joinedCPS,sys.getConequences());
+		if(sys.getConsequence() == null){ return null; }
+		return orchestrateConsequences(root, joinedCPS,sys.getConsequence());
 	}
 
 
@@ -259,7 +269,26 @@ public class GreedyOrchestrator implements Orchestrator{
 			public void cleanup() { }
 		};
 		
-		List<Rule> rules = JenaUtils.readRules(ruleStream);
+		RIFImportProfiles profs = new RIFOWLImportProfiles();
+		RIFRuleSet rules = null;
+		try {
+			rules = profs.parse(
+					new URI("http://www.w3.org/2005/rules/test/repository/tc/IRI_from_RDF_Literal/IRI_from_RDF_Literal-premise.rif"),
+					new URI("http://www.w3.org/ns/entailment/Core")
+				);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		List<ISource<Stream<Context>>> sources = new ArrayList<ISource<Stream<Context>>>();
+		sources.add(tripleContextStream);
 		
 		GreedyOrchestrator go = new GreedyOrchestrator();
 		IOperation<Context> op = new IOperation<Context>() {
@@ -274,9 +303,9 @@ public class GreedyOrchestrator implements Orchestrator{
 			public void perform(Context object) { }
 		};
 		OrchestratedProductionSystem ops = go.orchestrate(
-				new JenaRuleCompiler().compile(
-						SourceRulePair.simplePair(
-								tripleContextStream, rules
+				new RIFCoreRuleCompiler().compile(
+						new SourceRulesetLibsTrio(
+								sources, rules, new ArrayList<RIFExternalFunctionLibrary>()
 						)
 				), op);
 		

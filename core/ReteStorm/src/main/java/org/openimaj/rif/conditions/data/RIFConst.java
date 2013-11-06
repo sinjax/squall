@@ -8,7 +8,7 @@ import com.hp.hpl.jena.graph.Node_Concrete;
  * @param <T> 
  *
  */
-public abstract class RIFConst <T> implements RIFDatum {
+public abstract class RIFConst <T> extends RIFDatum {
 
 	private static final String datatype = "#anySimpleType";
 	

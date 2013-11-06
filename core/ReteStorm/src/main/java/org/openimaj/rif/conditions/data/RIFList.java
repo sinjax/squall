@@ -8,7 +8,7 @@ import java.util.List;
  * @author david.monks
  *
  */
-public class RIFList implements RIFData, Iterable<RIFData> {
+public class RIFList extends RIFData implements Iterable<RIFData> {
 
 	private List<RIFData> list;
 	
@@ -37,6 +37,10 @@ public class RIFList implements RIFData, Iterable<RIFData> {
 	@Override
 	public Iterator<RIFData> iterator(){
 		return this.list.iterator();
+	}
+
+	public int size() {
+		return this.list.size();
 	}
 	
 }

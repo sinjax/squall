@@ -8,7 +8,7 @@ import org.openimaj.rif.rules.RIFSentence;
  * @author david.monks
  *
  */
-public abstract class RIFAtomic implements RIFFormula, RIFStatement {
+public abstract class RIFAtomic extends RIFStatement implements RIFFormula {
 
 	@Override
 	public void addFormula(RIFFormula formula){

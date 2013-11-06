@@ -33,13 +33,16 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 	public BaseRIFPredicateEqualityFunction(Node[] ns) throws RIFPredicateException{
 		super(ns);
 		this.val = null;
+		Map<String, Integer> map = new HashMap<String, Integer>();
 		for (Node n : ns){
-			if (!n.isVariable())
-				if (this.val == null)
-					this.val = (Node_Concrete) n;
-				else if (!this.val.sameValueAs(n))
-					throw new RIFPredicateException("RIF translator: All constants compared must be semantically equal.");
+			if (n.isVariable())
+				map.put(((Node_RuleVariable) n).getName(), ((Node_RuleVariable) n).getIndex());
+			else if (this.val == null)
+				this.val = (Node_Concrete) n;
+			else if (!this.val.sameValueAs(n))
+				throw new RIFPredicateException("RIF translator: All constants compared must be semantically equal.");
 		}
+		this.anonimisedName = this.anonimised(map);
 	}
 	
 	@Override

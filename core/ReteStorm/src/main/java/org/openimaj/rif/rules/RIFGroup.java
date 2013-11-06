@@ -8,7 +8,7 @@ import java.util.Set;
  * @author david.monks
  *
  */
-public class RIFGroup implements RIFSentence, Iterable<RIFSentence> {
+public class RIFGroup extends RIFSentence implements Iterable<RIFSentence> {
 
 	private Set<RIFSentence> sentences;
 	

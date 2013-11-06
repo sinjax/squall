@@ -8,7 +8,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class RIFExternalExpr implements RIFExternal, RIFFunction {
+public class RIFExternalExpr extends RIFFunction implements RIFExternal {
 
 	private RIFExpr expr;
 	

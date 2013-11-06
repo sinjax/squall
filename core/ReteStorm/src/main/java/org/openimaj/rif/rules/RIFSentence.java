@@ -1,9 +1,11 @@
 package org.openimaj.rif.rules;
 
+import org.openimaj.rif.RIFMetaHolder;
+
 /**
  * @author david.monks
  *
  */
-public interface RIFSentence {
+public abstract class RIFSentence extends RIFMetaHolder {
 
 }
