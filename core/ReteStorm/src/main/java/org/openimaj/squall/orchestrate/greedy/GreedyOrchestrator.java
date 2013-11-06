@@ -97,6 +97,25 @@ public class GreedyOrchestrator implements Orchestrator{
 	}
 
 	private NamedNode<? extends IVFunction<Context,Context>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem sys) {
+		
+		
+//		if( nocps && nojoinable && noconsequences) {
+//			throw EmptyCPSError
+//			Deal with empty cps in this function
+//			deal with empty cps in the orchestrate function
+//		}
+		
+//		if(nocps && nojoinable && consequence){
+//			connect consequence to source	
+//		}
+		
+//		if(nocps && joinable && consequence){
+//			handled	
+//		}
+//		if(cps && nojoinable && consequence){
+//			handled 	
+//		}
+		
 		NamedNode<? extends IVFunction<Context, Context>> combinedFilters = orchestrateJoinComponents(root,sys.getJoinComponents());
 		combinedFilters = orchestratePredicates(root,combinedFilters,sys.getPredicates());
 		
