@@ -9,14 +9,14 @@ import java.util.List;
 
 import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.contentHandler.RIFImportProfiles;
+import org.openimaj.rif.contentHandler.RIFEntailmentImportProfiles;
 import org.openimaj.rif.contentHandler.RIFOWLImportProfiles;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
-import org.openimaj.squall.compile.rif.SourceRulesetLibsTrio;
+import org.openimaj.squall.compile.rif.RulesetLibsPair;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.functions.rif.RIFExternalFunctionLibrary;
 import org.openimaj.squall.orchestrate.NNIVFunction;
@@ -25,6 +25,9 @@ import org.openimaj.squall.orchestrate.NamedSourceNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
+import org.openimaj.squall.orchestrate.exception.EmptyCPSPlanningException;
+import org.openimaj.squall.orchestrate.exception.FloatingPredicatesPlanningException;
+import org.openimaj.squall.orchestrate.exception.PlanningException;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
@@ -62,7 +65,12 @@ public class GreedyOrchestrator implements Orchestrator{
 		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();		
 		ret.root = new ArrayList<NamedSourceNode>();
 		orchestrateSources(sys,ret);
-		NamedNode<? extends IVFunction<Context, Context>> finalsys = orchestrate(ret,sys);
+		NamedNode<? extends IVFunction<Context, Context>> finalsys;
+		try {
+			finalsys = orchestrate(ret,sys);
+		} catch (PlanningException e) {
+			throw new Error(e); // TODO
+		}
 		if(finalsys != null){			
 			orchestrateOperation(ret,op, finalsys);
 		} else {
@@ -96,46 +104,76 @@ public class GreedyOrchestrator implements Orchestrator{
 		}
 	}
 
-	private NamedNode<? extends IVFunction<Context,Context>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem sys) {
+	private NamedNode<? extends IVFunction<Context,Context>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem sys) throws PlanningException {
 		
 		
-//		if( nocps && nojoinable && noconsequences) {
+//		if( nocps && nojoinable && nopredicates && noconsequences) {
 //			throw EmptyCPSError
 //			Deal with empty cps in this function
 //			deal with empty cps in the orchestrate function
 //		}
 		
-//		if(nocps && nojoinable && consequence){
-//			connect consequence to source	
+//		if( nocps && nojoinable && predicates && noconsequences) {
+//			throwing FloatingPredicatesError
+//			Deal with floating predicates in this function
+//			deal with floating predicates in the orchestrate function
 //		}
 		
-//		if(nocps && joinable && consequence){
-//			handled	
-//		}
-//		if(cps && nojoinable && consequence){
-//			handled 	
+//		if(nocps && nojoinable && predicates && consequence){
+//			throwing FloatingPredicatesError
+//			Deal with floating predicates in this function
+//			deal with floating predicates in the orchestrate function
 //		}
 		
-		NamedNode<? extends IVFunction<Context, Context>> combinedFilters = orchestrateJoinComponents(root,sys.getJoinComponents());
-		combinedFilters = orchestratePredicates(root,combinedFilters,sys.getPredicates());
+		NamedNode<? extends IVFunction<Context, Context>> combinedFilters;
+		if (sys.getJoinComponents().size() > 0){
+			combinedFilters = orchestrateJoinComponents(root,sys.getJoinComponents());
+		} else {
+			combinedFilters = null;
+		}
 		
 		List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS = new ArrayList<NamedNode<? extends IVFunction<Context, Context>>>();
 		for (CompiledProductionSystem cps : sys.getSystems()) {
-			NamedNode<? extends IVFunction<Context, Context>> combined = orchestrate(root,cps);
-			
-			if(combinedFilters != null){ // join the sub systems to any filters
-				combined = createJoinNode(root, combined,combinedFilters);
+			try{
+				NamedNode<? extends IVFunction<Context, Context>> combined = orchestrate(root,cps);
+				
+				if(combinedFilters != null){ // join the sub systems to any filters
+					combined = createJoinNode(root, combined,combinedFilters);
+				}
+				joinedCPS.add(combined);
+			} catch (FloatingPredicatesPlanningException e) {
+				throw new Error(e); // TODO
+			} catch (EmptyCPSPlanningException e) {
+				e.printStackTrace();
+			} catch (PlanningException e) {
+				throw new Error(e); // TODO
 			}
-			joinedCPS.add(combined);
 		}
-		if(joinedCPS.size() == 0){
-			// There were no sub CPS to join with, just add the combined filters to the list
+		if(joinedCPS.size() == 0 && combinedFilters != null){
+			// There were no sub CPS to join with, just add the combined filters to the list, if one exists
 			joinedCPS.add(combinedFilters);
 		}
+		
+		// If there are predicates, check that the CPS produces some data (has some joinedCPSs and/or a combinedFilters)
+		if (sys.getPredicates().size() > 0)
+			if (joinedCPS.size() > 0){
+				// If it does, orchestrate the predicates in a chain onto each of the joinedCPSs
+				joinedCPS = orchestratePredicates(root, joinedCPS, sys.getPredicates());
+			} else {
+				// If it does NOT, throw a Floating Predicates Exception
+				// (should be pretty lethal, as predicates are inherently incapable of handling raw semantic data)
+				throw new FloatingPredicatesPlanningException("Found in CompiledProductionSystem: "+sys.toString());
+			}
+		
 //		aggregations = orchestrateAggregations(joinedCPS,sys.getAggregations());
 		if(sys.getConsequence() == null){
-			// Use an implicity consequence that is a simple passthrough function
-			return orchestrateConsequences(root, joinedCPS,new PassThroughConsequence()); 
+			// If there are subCPSs that have consequences...
+			if (joinedCPS.size() > 0)
+				// ... use an implicit consequence that is a simple passthrough function
+				return orchestrateConsequences(root, joinedCPS,new PassThroughConsequence());
+			else
+				// ... otherwise, throw an error declaring the CompiledProductionSystem was empty.
+				throw new EmptyCPSPlanningException();
 		}
 		return orchestrateConsequences(root, joinedCPS,sys.getConsequence());
 	}
@@ -175,21 +213,25 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("CONSEQUENCE_%d",consequence++ );
 	}
 
-	private NamedNode<?  extends IVFunction<Context, Context>> orchestratePredicates(
+	private List<NamedNode<?  extends IVFunction<Context, Context>>> orchestratePredicates(
 			OrchestratedProductionSystem root,
-			NamedNode<?  extends IVFunction<Context, Context>> currentNode,
+			List<NamedNode<?  extends IVFunction<Context, Context>>> currentNodes,
 			List<IVFunction<Context,Context>> list) {
 		
-		for (IVFunction<Context, Context> pred : list) {
-			NNIVFunction prednode = new NNIVFunction(
-				root,
-				nextPredicateName(),
-				pred
-			);
-			currentNode.connect(new NamedStream("link"), prednode);
-			currentNode = prednode;
+		List<NamedNode<? extends IVFunction<Context, Context>>> newFinalNodes = new ArrayList<NamedNode<? extends IVFunction<Context,Context>>>();
+		for (NamedNode<? extends IVFunction<Context, Context>> currentNode : currentNodes){
+			for (IVFunction<Context, Context> pred : list) {
+				NNIVFunction prednode = new NNIVFunction(
+						root,
+						nextPredicateName(),
+						pred
+				);
+				currentNode.connect(new NamedStream("link"), prednode);
+				currentNode = prednode;
+			}
+			newFinalNodes.add(currentNode);
 		}
-		return currentNode;
+		return newFinalNodes;
 	}
 
 	private String nextPredicateName() {
@@ -209,10 +251,18 @@ public class GreedyOrchestrator implements Orchestrator{
 				next = createFilterNode(root, typedComponent);
 			} else if (jc.isCPS()){
 				CompiledProductionSystem cps = jc.getTypedComponent();
-				next = orchestrate(root, cps);
+				try {
+					next = orchestrate(root, cps);
+				} catch (FloatingPredicatesPlanningException e) {
+					throw new Error(e); // TODO
+				} catch (EmptyCPSPlanningException e) {
+					next = null;
+				} catch (PlanningException e) {
+					throw new Error(e); // TODO
+				}
 			} else{
 				// ignore unknown join comp
-				throw new RuntimeException();
+				throw new Error(); // TODO
 			}
 			if(ret == null){
 				ret = next;
@@ -256,12 +306,10 @@ public class GreedyOrchestrator implements Orchestrator{
 	}
 	
 	/**
-	 * Draws an example {@link GreedyOrchestrator} 
+	 * Draws an example {@link GreedyOrchestrator} from RIF rules
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		InputStream ruleStream = GreedyOrchestrator.class.getResourceAsStream("/test.rules");
-		
 		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
 			
 			private InputStream nTripleStream;
@@ -273,9 +321,9 @@ public class GreedyOrchestrator implements Orchestrator{
 			
 			@Override
 			public Stream<Context> apply() {
-				new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
+				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
 				.map(new ContextWrapper("triple"));
-				return null;
+//				return null;
 			}
 			
 			@Override
@@ -287,7 +335,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			public void cleanup() { }
 		};
 		
-		RIFImportProfiles profs = new RIFOWLImportProfiles();
+		RIFEntailmentImportProfiles profs = new RIFOWLImportProfiles();
 		RIFRuleSet rules = null;
 		try {
 			rules = profs.parse(
@@ -322,8 +370,8 @@ public class GreedyOrchestrator implements Orchestrator{
 		};
 		OrchestratedProductionSystem ops = go.orchestrate(
 				new RIFCoreRuleCompiler().compile(
-						new SourceRulesetLibsTrio(
-								sources, rules, new ArrayList<RIFExternalFunctionLibrary>()
+						new RulesetLibsPair(
+								rules, new ArrayList<RIFExternalFunctionLibrary>()
 						)
 				), op);
 		
