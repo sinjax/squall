@@ -1,5 +1,6 @@
 package org.openimaj.squall.compile.rif;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import org.openimaj.rif.*;
@@ -35,6 +36,7 @@ import org.openimaj.squall.functions.rif.core.RIFForAllBindingConsequence;
 import org.openimaj.squall.functions.rif.core.RIFMemberFilterFunction;
 import org.openimaj.squall.functions.rif.filters.BaseTripleFilterFunction;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
+import org.openimaj.squall.functions.rif.sources.RIFStreamImportProfiles;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
@@ -46,26 +48,36 @@ import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class RIFCoreRuleCompiler implements Compiler<SourceRulesetLibsTrio> {
+public class RIFCoreRuleCompiler implements Compiler<RulesetLibsPair> {
 	
 	// Set the default RIF Expr library:
 	private static final RIFExprLibrary RIF_LIB = new RIFCoreExprLibrary();
 	
+	private static final RIFStreamImportProfiles streamProfiles = new RIFStreamImportProfiles();
+	
 	private List<RIFExternalFunctionLibrary> externalLibs;
 	
 	@Override
-	public CompiledProductionSystem compile(SourceRulesetLibsTrio sourceRules) {
-		// Extract Sources, Rule Sets and External Libraries from the input.
-		RIFRuleSet ruleSet = sourceRules.secondObject();
-		List<ISource<Stream<Context>>> sources = sourceRules.firstObject();
-		this.externalLibs = sourceRules.thirdObject();
-		
+	public CompiledProductionSystem compile(RulesetLibsPair sourceRules) {
 		// Create a Context-based compiled production system
 		ContextCPS ret = new ContextCPS();
-		// Add all sources to the compiled production system
-		for (ISource<Stream<Context>> stream : sources) {
-			ret.addSource(stream);
+		
+		// Extract Rule Sets and External Libraries from the input.
+		RIFRuleSet ruleSet = sourceRules.firstObject();
+		this.externalLibs = sourceRules.secondObject();
+		// Add sources to compiled production system from Rule Set
+		for (URI uri : ruleSet.getImportKeySet()){
+			if (RIFCoreRuleCompiler.streamProfiles.containsKey(
+					ruleSet.getImport(uri)
+				)){
+				ret.addSource(
+						RIFCoreRuleCompiler.streamProfiles.get(
+								ruleSet.getImport(uri)
+						).createSource(uri)
+				);
+			}
 		}
+		
 		// Create a list to contain all the vars stated in the production system.
 		List<Node_RuleVariable> vars = new ArrayList<Node_RuleVariable>();
 		

@@ -28,7 +28,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class SimpleNTriplesImportHandler implements RIFImportHandler {
+public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
 
 	@Override
 	public RIFRuleSet importToRuleSet(URI loc, RIFRuleSet ruleSet)

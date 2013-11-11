@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.openimaj.rif.contentHandler.RIFEntailmentImportProfiles;
 import org.openimaj.rif.contentHandler.RIFImportProfiles;
 import org.openimaj.rif.contentHandler.RIFOWLImportProfiles;
 import org.openimaj.rif.rules.RIFGroup;
@@ -53,7 +54,7 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	private Map<String,URI> prefixes;
 	private Map<URI,URI> imports;
 	private List<RIFGroup> rootGroup;
-	private RIFImportProfiles parserMap;
+	private RIFEntailmentImportProfiles parserMap;
 	private Stack<URI> profile;
 	
 	//  CONSTRUCTORS
@@ -64,7 +65,7 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	 * 
 	 */
 	public RIFRuleSet(URI profile,
-					  RIFImportProfiles pm){
+					  RIFEntailmentImportProfiles pm){
 		super();
 		
 		this.profile = new Stack<URI>();
@@ -83,7 +84,7 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	 * @param prefixes
 	 */
 	public RIFRuleSet(URI profile,
-			  		  RIFImportProfiles pm,
+			  		  RIFEntailmentImportProfiles pm,
 			  		  URI base,
 					  Map<String,URI> prefixes){
 		this(profile, pm);
@@ -98,7 +99,7 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	 * @param imports
 	 */
 	public RIFRuleSet(URI profile,
-			  		  RIFImportProfiles pm,
+			  		  RIFEntailmentImportProfiles pm,
 			  		  Map<URI,URI> imports){
 		this(profile, pm);
 		
@@ -113,7 +114,7 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	 * @param imports
 	 */
 	public RIFRuleSet(URI profile,
-			  		  RIFImportProfiles pm,
+			  		  RIFEntailmentImportProfiles pm,
 			  		  URI base,
 					  Map<String,URI> prefixes,
 					  Map<URI,URI> imports){
@@ -131,7 +132,7 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	 * @param root
 	 */
 	public RIFRuleSet(URI profile,
-			  		  RIFImportProfiles pm,
+			  		  RIFEntailmentImportProfiles pm,
 			  		  URI base,
 					  Map<String,URI> prefixes,
 					  Map<URI,URI> imports,

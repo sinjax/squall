@@ -10,7 +10,7 @@ import org.xml.sax.SAXException;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public interface RIFImportHandler {
+public interface RIFEntailmentImportHandler {
 	
 	/**
 	 * @param loc

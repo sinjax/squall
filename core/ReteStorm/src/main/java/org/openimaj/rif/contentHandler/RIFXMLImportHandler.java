@@ -18,7 +18,7 @@ import org.xml.sax.XMLReader;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class RIFXMLImportHandler implements RIFImportHandler {
+public class RIFXMLImportHandler implements RIFEntailmentImportHandler {
 
 	private RIFXMLContentHandler conH;
 	
