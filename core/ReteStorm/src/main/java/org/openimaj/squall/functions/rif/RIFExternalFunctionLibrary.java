@@ -1,5 +1,6 @@
 package org.openimaj.squall.functions.rif;
 
+import org.openimaj.rif.conditions.data.RIFExpr;
 import org.openimaj.rif.conditions.data.RIFExternalExpr;
 import org.openimaj.rif.conditions.formula.RIFExternalValue;
 import org.openimaj.squall.compile.data.IVFunction;
@@ -19,7 +20,7 @@ public interface RIFExternalFunctionLibrary {
 	 * @return
 	 * 		The {@link IVFunction} that emulates the behaviour of the called function.
 	 */
-	public IVFunction<Context, Context> compile(RIFExternalExpr expr);
+	public IVFunction<Context, Context> compile(RIFExpr expr);
 	
 	/**
 	 * Constructs and returns a streaming implementation of the function called in the provided {@link RIFExternalValue}.

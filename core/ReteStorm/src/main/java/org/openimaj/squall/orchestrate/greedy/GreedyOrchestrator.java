@@ -27,12 +27,14 @@ import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
 import org.openimaj.squall.orchestrate.exception.EmptyCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.FloatingPredicatesPlanningException;
+import org.openimaj.squall.orchestrate.exception.MultiConsequenceSubCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.PlanningException;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
+import org.openimaj.util.pair.IndependentPair;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
 import org.xml.sax.SAXException;
@@ -65,16 +67,22 @@ public class GreedyOrchestrator implements Orchestrator{
 		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();		
 		ret.root = new ArrayList<NamedSourceNode>();
 		orchestrateSources(sys,ret);
-		NamedNode<? extends IVFunction<Context, Context>> finalsys;
+		List<NamedNode<? extends IVFunction<Context, Context>>> finalsys = new ArrayList<NamedNode<? extends IVFunction<Context,Context>>>();
 		try {
-			finalsys = orchestrate(ret,sys);
+			for (IndependentPair<NamedNode<? extends IVFunction<Context, Context>>, List<IVFunction<Context, Context>>> fs : orchestrate(ret,sys)){
+				if (fs.getSecondObject().isEmpty()){
+					finalsys.add(fs.getFirstObject());
+				} else {
+					throw new FloatingPredicatesPlanningException();
+				}
+			}
 		} catch (PlanningException e) {
-			throw new Error(e); // TODO
+			throw new Error("Any PlanningException received at root is unexpected.",e);
 		}
-		if(finalsys != null){			
-			orchestrateOperation(ret,op, finalsys);
+		if(finalsys.isEmpty()){
+			orchestrateOperation(ret, op);
 		} else {
-			orchestrateOperation(ret,op);
+			orchestrateOperation(ret, op, finalsys);
 		}
 		return ret;
 	}
@@ -86,9 +94,11 @@ public class GreedyOrchestrator implements Orchestrator{
 		}
 	}
 
-	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op, NamedNode<? extends IVFunction<Context, Context>> finalsys) {
+	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op, List<NamedNode<? extends IVFunction<Context, Context>>> finalsys) {
 		NamedNode<?> opNode = new NGNOperation(ret, "OPERATION", op);
-		finalsys.connect(new NamedStream("link"), opNode);
+		for (NamedNode<? extends IVFunction<Context, Context>> sys : finalsys){
+			sys.connect(new NamedStream("link"), opNode);
+		}
 	}
 
 	private void orchestrateSources(
@@ -104,27 +114,7 @@ public class GreedyOrchestrator implements Orchestrator{
 		}
 	}
 
-	private NamedNode<? extends IVFunction<Context,Context>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem sys) throws PlanningException {
-		
-		
-//		if( nocps && nojoinable && nopredicates && noconsequences) {
-//			throw EmptyCPSError
-//			Deal with empty cps in this function
-//			deal with empty cps in the orchestrate function
-//		}
-		
-//		if( nocps && nojoinable && predicates && noconsequences) {
-//			throwing FloatingPredicatesError
-//			Deal with floating predicates in this function
-//			deal with floating predicates in the orchestrate function
-//		}
-		
-//		if(nocps && nojoinable && predicates && consequence){
-//			throwing FloatingPredicatesError
-//			Deal with floating predicates in this function
-//			deal with floating predicates in the orchestrate function
-//		}
-		
+	private List<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context, Context>>>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem sys) throws PlanningException {
 		NamedNode<? extends IVFunction<Context, Context>> combinedFilters;
 		if (sys.getJoinComponents().size() > 0){
 			combinedFilters = orchestrateJoinComponents(root,sys.getJoinComponents());
@@ -132,50 +122,65 @@ public class GreedyOrchestrator implements Orchestrator{
 			combinedFilters = null;
 		}
 		
-		List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS = new ArrayList<NamedNode<? extends IVFunction<Context, Context>>>();
+		List<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context, Context>>>>
+			joinedCPSs = new ArrayList<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>,List<IVFunction<Context,Context>>>>();
 		for (CompiledProductionSystem cps : sys.getSystems()) {
 			try{
-				NamedNode<? extends IVFunction<Context, Context>> combined = orchestrate(root,cps);
-				
-				if(combinedFilters != null){ // join the sub systems to any filters
-					combined = createJoinNode(root, combined,combinedFilters);
+				List<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context, Context>>>> orchestratedCPSs = orchestrate(root,cps);
+				for (IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context, Context>>>
+						combinedCPS : orchestratedCPSs){
+					NamedNode<? extends IVFunction<Context,Context>> newNN;
+					if(combinedFilters != null){ // join the sub systems to any filters
+						newNN = createJoinNode(root, combinedCPS.getFirstObject(),combinedFilters);
+					}else{
+						newNN = combinedCPS.getFirstObject();
+					}
+					
+					List<IVFunction<Context,Context>> newPreds = combinedCPS.getSecondObject();
+					if (sys.getPredicates().size() > 0)
+						newPreds.addAll(sys.getPredicates());
+					
+					joinedCPSs.add(new IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context,Context>>>(newNN, newPreds));
 				}
-				joinedCPS.add(combined);
 			} catch (FloatingPredicatesPlanningException e) {
-				throw new Error(e); // TODO
+				throw new Error("Floating Predicates should not be a problem here.",e);
 			} catch (EmptyCPSPlanningException e) {
+				System.err.println("Empty CPSs are allowed at this point.");
 				e.printStackTrace();
+			} catch (MultiConsequenceSubCPSPlanningException e) {
+				throw new Error("Multiple consequences should not be a problem here.",e);
 			} catch (PlanningException e) {
-				throw new Error(e); // TODO
+				throw new Error("Generic or unknown PlanningException received.",e);
 			}
-		}
-		if(joinedCPS.size() == 0 && combinedFilters != null){
-			// There were no sub CPS to join with, just add the combined filters to the list, if one exists
-			joinedCPS.add(combinedFilters);
 		}
 		
-		// If there are predicates, check that the CPS produces some data (has some joinedCPSs and/or a combinedFilters)
-		if (sys.getPredicates().size() > 0)
-			if (joinedCPS.size() > 0){
-				// If it does, orchestrate the predicates in a chain onto each of the joinedCPSs
-				joinedCPS = orchestratePredicates(root, joinedCPS, sys.getPredicates());
-			} else {
-				// If it does NOT, throw a Floating Predicates Exception
-				// (should be pretty lethal, as predicates are inherently incapable of handling raw semantic data)
-				throw new FloatingPredicatesPlanningException("Found in CompiledProductionSystem: "+sys.toString());
-			}
+		if(joinedCPSs.size() == 0 && (combinedFilters != null || sys.getPredicates().size() > 0)){
+			// There were no sub CPS to join with, just add the combined filters to the list, if one exists
+			joinedCPSs.add(new IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context,Context>>>(combinedFilters, sys.getPredicates()));
+		}
 		
 //		aggregations = orchestrateAggregations(joinedCPS,sys.getAggregations());
-		if(sys.getConsequence() == null){
-			// If there are subCPSs that have consequences...
-			if (joinedCPS.size() > 0)
-				// ... use an implicit consequence that is a simple passthrough function
-				return orchestrateConsequences(root, joinedCPS,new PassThroughConsequence());
-			else
-				// ... otherwise, throw an error declaring the CompiledProductionSystem was empty.
-				throw new EmptyCPSPlanningException();
+		
+		
+		if(sys.getConsequences().isEmpty()){
+			// If the CPS has no individual consequences, then return all tree roots so far produced with associated predicate groups.
+			return joinedCPSs;
+		}else{
+			List<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>,List<IVFunction<Context,Context>>>>
+				completedCPSs = new ArrayList<IndependentPair<NamedNode<? extends IVFunction<Context, Context>>, List<IVFunction<Context, Context>>>>();
+			
+			// Loop through all the completed orchestrated systems (consequences capped onto the result of orchestrating predicates onto combinedFilters)
+			// and create new Pairs of systems and predicates.
+			for (NamedNode<? extends IVFunction<Context,Context>> consequencedRule : orchestrateConsequences(root,orchestratePredicates(root,joinedCPSs),sys.getConsequences())){
+				List<IVFunction<Context,Context>> emptyPredicates = new ArrayList<IVFunction<Context,Context>>();
+				completedCPSs.add(new IndependentPair<NamedNode<? extends IVFunction<Context,Context>>,List<IVFunction<Context,Context>>>(
+									consequencedRule,
+									emptyPredicates
+								));
+			}
+			
+			return completedCPSs;
 		}
-		return orchestrateConsequences(root, joinedCPS,sys.getConsequence());
 	}
 
 
@@ -194,19 +199,23 @@ public class GreedyOrchestrator implements Orchestrator{
 		return "source_" + ret.root.size();
 	}
 
-	private NamedNode<? extends IVFunction<Context,Context>> orchestrateConsequences(
+	private List<NamedNode<? extends IVFunction<Context,Context>>> orchestrateConsequences(
 			OrchestratedProductionSystem root,
-			List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS,
-			IVFunction<Context,Context> function) {
-		NNIVFunction consequenceNode = new NNIVFunction(
-			root,
-			nextConsequenceName(), 
-			function
-		);
-		for (NamedNode<?> namedNode : joinedCPS) {
-			namedNode.connect(new NamedStream("link"), consequenceNode);
+			List<NamedNode<? extends IVFunction<Context, Context>>> predicatedCombinedFilters,
+			List<IVFunction<Context,Context>> functions) {
+		List<NamedNode<? extends IVFunction<Context,Context>>> consequencesList = new ArrayList<NamedNode<? extends IVFunction<Context,Context>>>();
+		for (IVFunction<Context, Context> function : functions){
+			NNIVFunction consequenceNode = new NNIVFunction(
+				root,
+				nextConsequenceName(), 
+				function
+			);
+			for (NamedNode<? extends IVFunction<Context, Context>> namedNode : predicatedCombinedFilters) {
+				namedNode.connect(new NamedStream("link"), consequenceNode);
+			}
+			consequencesList.add(consequenceNode);
 		}
-		return consequenceNode;
+		return consequencesList;
 	}
 
 	private String nextConsequenceName() {
@@ -215,23 +224,29 @@ public class GreedyOrchestrator implements Orchestrator{
 
 	private List<NamedNode<?  extends IVFunction<Context, Context>>> orchestratePredicates(
 			OrchestratedProductionSystem root,
-			List<NamedNode<?  extends IVFunction<Context, Context>>> currentNodes,
-			List<IVFunction<Context,Context>> list) {
+			List<IndependentPair<NamedNode<?  extends IVFunction<Context, Context>>, List<IVFunction<Context,Context>>>> cpss) {
 		
 		List<NamedNode<? extends IVFunction<Context, Context>>> newFinalNodes = new ArrayList<NamedNode<? extends IVFunction<Context,Context>>>();
-		for (NamedNode<? extends IVFunction<Context, Context>> currentNode : currentNodes){
-			for (IVFunction<Context, Context> pred : list) {
-				NNIVFunction prednode = new NNIVFunction(
-						root,
-						nextPredicateName(),
-						pred
-				);
-				currentNode.connect(new NamedStream("link"), prednode);
-				currentNode = prednode;
-			}
-			newFinalNodes.add(currentNode);
+		for (IndependentPair<NamedNode<? extends IVFunction<Context, Context>>, List<IVFunction<Context, Context>>> currentCPS : cpss){
+			newFinalNodes.add(orchestratePredicates(root, currentCPS.getFirstObject(), currentCPS.getSecondObject()));
 		}
 		return newFinalNodes;
+	}
+	
+	private NamedNode<?  extends IVFunction<Context, Context>> orchestratePredicates(
+			OrchestratedProductionSystem root,
+			NamedNode<?  extends IVFunction<Context, Context>> currentNode,
+			List<IVFunction<Context,Context>> list) {
+		for (IVFunction<Context, Context> pred : list) {
+			NNIVFunction prednode = new NNIVFunction(
+					root,
+					nextPredicateName(),
+					pred
+			);
+			currentNode.connect(new NamedStream("link"), prednode);
+			currentNode = prednode;
+		}
+		return currentNode;
 	}
 
 	private String nextPredicateName() {
@@ -252,17 +267,26 @@ public class GreedyOrchestrator implements Orchestrator{
 			} else if (jc.isCPS()){
 				CompiledProductionSystem cps = jc.getTypedComponent();
 				try {
-					next = orchestrate(root, cps);
-				} catch (FloatingPredicatesPlanningException e) {
-					throw new Error(e); // TODO
+					List<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>,List<IVFunction<Context,Context>>>> subCons = orchestrate(root, cps);
+					if (subCons.size() == 1){
+						IndependentPair<NamedNode<? extends IVFunction<Context,Context>>,List<IVFunction<Context,Context>>>
+							temp = subCons.get(0);
+						if (temp.getSecondObject().isEmpty()){
+							next = temp.getFirstObject();
+						} else {
+							throw new FloatingPredicatesPlanningException();
+						}
+					}else{
+						throw new MultiConsequenceSubCPSPlanningException();
+					}
 				} catch (EmptyCPSPlanningException e) {
 					next = null;
 				} catch (PlanningException e) {
-					throw new Error(e); // TODO
+					throw new Error("Any inconsistency other than Empty CPSs is fatal.",e);
 				}
 			} else{
 				// ignore unknown join comp
-				throw new Error(); // TODO
+				throw new Error("Unknown JoinComponent encounterred.");
 			}
 			if(ret == null){
 				ret = next;
@@ -339,17 +363,17 @@ public class GreedyOrchestrator implements Orchestrator{
 		RIFRuleSet rules = null;
 		try {
 			rules = profs.parse(
-					new URI("http://www.w3.org/2005/rules/test/repository/tc/IRI_from_RDF_Literal/IRI_from_RDF_Literal-premise.rif"),
+					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RL.rif"),
+//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLSimpleRules.rif"),
+//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLDatatypeRules.rif"),
+//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLListRules.rif"),
 					new URI("http://www.w3.org/ns/entailment/Core")
 				);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SAXException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

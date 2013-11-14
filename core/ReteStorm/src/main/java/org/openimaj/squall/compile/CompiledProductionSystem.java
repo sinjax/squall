@@ -54,7 +54,7 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * Consequences consume bindings and perform some operation
 	 */
-	IVFunction<Context, Context> consequence;
+	List<IVFunction<Context, Context>> consequences;
 	
 	/**
 	 * Initialise all system parts as empty, a fairly boring production system
@@ -65,7 +65,7 @@ public abstract class CompiledProductionSystem {
 		joinlist = new ArrayList<JoinComponent<?>>();
 		predicates = new ArrayList<IVFunction<Context, Context>>();
 		aggregations = new ArrayList<IVFunction<List<Context>, Context>>();
-		consequence = null;
+		consequences = new ArrayList<IVFunction<Context,Context>>();
 	}
 	
 	/**
@@ -130,8 +130,8 @@ public abstract class CompiledProductionSystem {
 	 * @param item
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem setConsequence(IVFunction<Context, Context> item){
-		this.consequence = item;
+	public CompiledProductionSystem addConsequence(IVFunction<Context, Context> item){
+		this.consequences.add(item);
 		return this;
 	}
 
@@ -159,8 +159,8 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @return the consequences of this compiled system
 	 */
-	public IVFunction<Context, Context> getConsequence() {
-		return this.consequence;
+	public List<IVFunction<Context, Context>> getConsequences() {
+		return this.consequences;
 	}
 
 	/**

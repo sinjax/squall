@@ -6,7 +6,7 @@ package org.openimaj.squall.orchestrate.exception;
  */
 @SuppressWarnings("serial")
 public class FloatingPredicatesPlanningException extends PlanningException {
-
+	
 	/**
 	 * 
 	 */

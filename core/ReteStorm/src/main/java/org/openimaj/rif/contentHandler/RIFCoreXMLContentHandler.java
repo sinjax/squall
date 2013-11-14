@@ -1,21 +1,23 @@
 package org.openimaj.rif.contentHandler;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Stack;
 
 import org.openimaj.rif.conditions.atomic.RIFAtom;
 import org.openimaj.rif.conditions.atomic.RIFFrame;
+import org.openimaj.rif.conditions.data.RIFConst;
 import org.openimaj.rif.conditions.data.RIFData;
 import org.openimaj.rif.conditions.data.RIFDatum;
 import org.openimaj.rif.conditions.data.RIFExpr;
 import org.openimaj.rif.conditions.data.RIFExternalExpr;
 import org.openimaj.rif.conditions.data.RIFIRIConst;
 import org.openimaj.rif.conditions.data.RIFList;
+import org.openimaj.rif.conditions.data.RIFLocalConst;
 import org.openimaj.rif.conditions.data.RIFStringConst;
 import org.openimaj.rif.conditions.data.RIFTypedConst;
+import org.openimaj.rif.conditions.data.RIFURIConst;
 import org.openimaj.rif.conditions.data.RIFVar;
 import org.openimaj.rif.conditions.formula.RIFAnd;
 import org.openimaj.rif.conditions.formula.RIFEqual;
@@ -54,7 +56,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 		if (localName == null || localName.equals(""))
 			localName = qName;
 		
-//System.out.println(localName);
+System.out.println(localName);
 		
 		RIFData d = null;
 		
@@ -66,6 +68,8 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 				if (atts.getValue("xmlns") != null){
 					ruleSet.setBase(findURI(atts.getValue("xmlns")));
 				}
+				
+				return;
 			}
 		}else{
 			switch (descent.peek()){
@@ -77,7 +81,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							lastSibling.push(null);
 							
 							if (atts.getValue("type") != null){
-								//System.out.println(atts.getValue("type"));
+//System.out.println(atts.getValue("type"));
 								URI uri = findURI(atts.getValue("type"));
 								if (uri.toString().equals(RIFIRIConst.datatype)){
 									currentConst = new RIFIRIConst();
@@ -474,6 +478,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 						default:
 							throw new SAXException("RIF-Core: 'declare' or 'formula' expected, '"+localName+"' found.");
 					}
+					break;
 				case AND:
 				case OR:
 					switch (localName.charAt(0)){
@@ -835,11 +840,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							descent.push(Element.CONST);
 							lastSibling.push(null);
 							
-							if (atts.getValue("type").equals("&rif;iri")){
-								currentConst = new RIFIRIConst();
-							}else{
-								currentConst = new RIFStringConst();
-							}
+							currentAtom.setOp(startConst(atts));
 							break;
 						default:
 							throw new SAXException("RIF-Core: 'Const' expected, '"+localName+"' found.");
@@ -1097,6 +1098,23 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 		}
 	}
 	
+	private RIFConst<?> startConst(Attributes atts) throws SAXException {
+		if (atts.getValue("type") != null){
+//System.out.println(atts.getValue("type"));
+			URI uri = findURI(atts.getValue("type"));
+			if (uri.toString().equals(RIFIRIConst.datatype)){
+				currentConst = new RIFIRIConst();
+			}else if (uri.toString().equals(RIFLocalConst.datatype)){
+				currentConst = new RIFLocalConst();
+			} else {
+				currentConst = new RIFTypedConst(uri);
+			}
+		}else{
+			currentConst = new RIFStringConst();
+		}
+		return currentConst;
+	}
+	
 	private RIFData startTERM(String localName, Attributes atts) throws SAXException{
 		switch (localName.charAt(0)){
 			case 'C':
@@ -1104,18 +1122,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 				descent.push(Element.CONST);
 				lastSibling.push(null);
 				
-				if (atts.getValue("type") != null){
-//System.out.println(atts.getValue("type"));
-					URI uri = findURI(atts.getValue("type"));
-					if (uri.toString().equals(RIFIRIConst.datatype)){
-						currentConst = new RIFIRIConst();
-					}else{
-						currentConst = new RIFTypedConst(uri);
-					}
-				}else{
-					currentConst = new RIFStringConst();
-				}
-				return currentConst;
+				return startConst(atts);
 			case 'V':
 				if (lastSibling.peek() != null) throw new SAXException("RIF-Core: 'Var' element, if it exists, must be the sole child of an element.");
 				descent.push(Element.VAR);
@@ -1148,14 +1155,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 				descent.push(Element.CONST);
 				lastSibling.push(null);
 				
-				if (atts.getValue("type") != null
-						&& atts.getValue("type").equals(RIFIRIConst.datatype)){
-//System.out.println(atts.getValue("type"));
-						currentConst = new RIFIRIConst();
-					}else{
-						currentConst = new RIFStringConst();
-					}
-				return currentConst;
+				return startConst(atts);
 			case 'L':
 				if (lastSibling.peek() != null) throw new SAXException("RIF-Core: 'List' element, if it exists, must be the sole child of an element.");
 				descent.push(Element.LIST);
@@ -1190,6 +1190,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 			}
 	}
 	
+	@SuppressWarnings("unused")
 	private void handleContent() throws SAXException {
 		if (partialContent != null){
 			String content = partialContent.toString();
@@ -1198,10 +1199,10 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 			if (!descent.isEmpty())
 elementSwitch:	switch (descent.peek()){
 					case CONST:
-						if (currentConst instanceof RIFIRIConst)
-							((RIFIRIConst) currentConst).setData(findURI(content));
+						if (currentConst instanceof RIFURIConst)
+							((RIFURIConst) currentConst).setData(findURI(content));
 						else
-							((RIFStringConst) currentConst).setData(content);
+							((RIFTypedConst) currentConst).setData(content);
 						break elementSwitch;
 					case IRICONST:
 						break elementSwitch;
@@ -1230,8 +1231,9 @@ nameSeek:					do {
 								scopedName = scopedName.substring(0, scopedName.length() - 1);
 								// ... look in all parent formuli, ascending back up through the nesting order (confusingly viewed as 'descending' from tail to head of a queue in a linked list)...
 								if (!currentFormula.isEmpty()){
-									Iterator<RIFFormula> formIter = currentFormula.descendingIterator();
-existsSeek:							for (RIFFormula f = formIter.next(); formIter.hasNext(); )
+									Iterator<RIFFormula> formIter = currentFormula.iterator();
+existsSeek:							while (formIter.hasNext()){
+										RIFFormula f = formIter.next();
 										// ... If the formuli is in an 'exists'...
 										if (f instanceof RIFExists){
 											RIFExists e = (RIFExists) f;
@@ -1253,6 +1255,7 @@ existsSeek:							for (RIFFormula f = formIter.next(); formIter.hasNext(); )
 												break nameSeek;
 											}
 										}
+									}
 								} else if (this.descent.peek() == Element.DECLARE){
 									// If the Var is being declared, break from the name seeking loop.
 									break nameSeek;
@@ -1269,11 +1272,12 @@ existsSeek:							for (RIFFormula f = formIter.next(); formIter.hasNext(); )
 							} while (!scopedName.equals(content));
 							// If the 'Var' is new and not being stated in a 'declare' element, then we are not in an appropriate place to declare variables. PANIC.
 							if (this.descent.peek() != Element.DECLARE)
-								throw new SAXException("RIF-Core: Cannot use 'Var' element contents not 'declare'd in an ancestor 'Forall' or 'Exists' element.");
+								throw new SAXException("RIF-Core: Cannot use 'Var' element with contents '"+content+"' not 'declare'd in an ancestor 'Forall' or 'Exists' element.");
 						}
 						// If we are outside a 'Forall' or in an 'Declare' element of a 'Forall' or 'Exists', then we can add a new rule index and name,
 						// either to the global set or the current scoped rule, as appropriate.
 						currentVar.setName(scopedName,names.peek().contains(scopedName) ? names.peek().indexOf(scopedName) : names.peek().size());
+//System.out.println("\t"+scopedName);
 						if (!names.peek().contains(scopedName))
 							names.peek().add(scopedName);
 						
@@ -1298,7 +1302,7 @@ existsSeek:							for (RIFFormula f = formIter.next(); formIter.hasNext(); )
 		if (localName == null || localName.equals(""))
 			localName = qName;
 		
-//System.out.println("/"+localName);
+System.out.println("/"+localName);
 		
 		if (!descent.isEmpty()){
 			if (!localName.equals(descent.peek().toString()))
@@ -1335,10 +1339,11 @@ existsSeek:							for (RIFFormula f = formIter.next(); formIter.hasNext(); )
 				default:
 			}
 			
+			Element newLastSibling = descent.pop();
 			lastSibling.pop();
 			if (!lastSibling.isEmpty()){
 				lastSibling.pop();
-				lastSibling.push(descent.pop());
+				lastSibling.push(newLastSibling);
 			}
 		}
 	}

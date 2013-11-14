@@ -20,7 +20,7 @@ public class RIFEntailmentImportProfiles extends RIFImportProfiles <RIFEntailmen
 	public RIFEntailmentImportProfiles(){
 		super();
 		try {
-			this.put(new URI("http://www.w3.org/ns/entailment/Core"), new RIFXMLImportHandler(new RIFCoreXMLContentHandler()));
+			this.put(new URI("http://www.w3.org/ns/entailment/Core"), new RIFXMLImportHandler(new RIFCoreXMLContentHandlerFactory()));
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

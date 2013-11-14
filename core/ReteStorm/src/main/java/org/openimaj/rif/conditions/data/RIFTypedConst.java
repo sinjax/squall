@@ -9,7 +9,7 @@ import com.hp.hpl.jena.graph.Node_Concrete;
  * @author david.monks
  *
  */
-public class RIFTypedConst extends RIFStringConst {
+public class RIFTypedConst extends RIFConst<String> {
 	
 	private final URI dtype; 
 	
@@ -27,7 +27,7 @@ public class RIFTypedConst extends RIFStringConst {
 
 	@Override
 	public void setData(String data) {
-		this.node = (Node_Concrete) Node.createLiteral(data, Node.createLiteral(data+"^^"+dtype.toString()).getLiteralDatatype());
+		this.node = (Node_Concrete) Node.createLiteral(data+"^^"+this.dtype.toString(), null);
 	}
 
 }

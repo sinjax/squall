@@ -20,18 +20,19 @@ import org.xml.sax.XMLReader;
  */
 public class RIFXMLImportHandler implements RIFEntailmentImportHandler {
 
-	private RIFXMLContentHandler conH;
+	private RIFXMLContentHandlerFactory factory;
 	
 	/**
-	 * @param conH
+	 * @param factory 
 	 */
-	public RIFXMLImportHandler(RIFXMLContentHandler conH){
-		this.conH = conH;
+	public RIFXMLImportHandler(RIFXMLContentHandlerFactory factory){
+		this.factory = factory;
 	}
 
 	@Override
 	public RIFRuleSet importToRuleSet(URI loc, RIFRuleSet ruleSet) throws SAXException, IOException {
-		this.conH.setRuleSet(ruleSet);
+		RIFXMLContentHandler conH = this.factory.newHandler();
+		conH.setRuleSet(ruleSet);
 		SAXParserFactory spf = SAXParserFactory.newInstance();
 	    try {
 			spf.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
@@ -50,14 +51,14 @@ public class RIFXMLImportHandler implements RIFEntailmentImportHandler {
 		try {
 			SAXParser saxParser = spf.newSAXParser();
 			XMLReader xmlReader = saxParser.getXMLReader();
-		    xmlReader.setContentHandler(this.conH);
+		    xmlReader.setContentHandler(conH);
 		    xmlReader.parse(new InputSource(loc.toASCIIString()));
 		} catch (ParserConfigurationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		return this.conH.getRuleSet();
+		return conH.getRuleSet();
 	}
 
 }

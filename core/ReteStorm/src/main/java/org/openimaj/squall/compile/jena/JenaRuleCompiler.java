@@ -80,7 +80,7 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 						comb.addFunction(new FunctorConsequence(rule, (Functor)clause));
 					}	
 				}
-				ruleret.setConsequence(comb);
+				ruleret.addConsequence(comb);
 			}
 		}
 		return ret;
