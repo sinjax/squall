@@ -27,6 +27,9 @@ public class OPSDisplayUtils {
 	 * @param ops
 	 */
 	public static void display(OrchestratedProductionSystem ops){
+		// Fix "Comparison method violates its general contract!"
+		System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+		
 		JFrame frame = new JFrame();
 		mxGraph mxgraph = new mxGraph();
 		
