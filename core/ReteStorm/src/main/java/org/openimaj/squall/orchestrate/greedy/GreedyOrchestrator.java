@@ -114,7 +114,8 @@ public class GreedyOrchestrator implements Orchestrator{
 		}
 	}
 
-	private List<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context, Context>>>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem sys) throws PlanningException {
+	private List<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context, Context>>>>
+						orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem sys) throws PlanningException {
 		NamedNode<? extends IVFunction<Context, Context>> combinedFilters;
 		if (sys.getJoinComponents().size() > 0){
 			combinedFilters = orchestrateJoinComponents(root,sys.getJoinComponents());
@@ -125,10 +126,9 @@ public class GreedyOrchestrator implements Orchestrator{
 		List<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context, Context>>>>
 			joinedCPSs = new ArrayList<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>,List<IVFunction<Context,Context>>>>();
 		for (CompiledProductionSystem cps : sys.getSystems()) {
-			try{
-				List<IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context, Context>>>> orchestratedCPSs = orchestrate(root,cps);
+			try {
 				for (IndependentPair<NamedNode<? extends IVFunction<Context,Context>>, List<IVFunction<Context, Context>>>
-						combinedCPS : orchestratedCPSs){
+						combinedCPS : orchestrate(root,cps)){
 					NamedNode<? extends IVFunction<Context,Context>> newNN;
 					if(combinedFilters != null){ // join the sub systems to any filters
 						newNN = createJoinNode(root, combinedCPS.getFirstObject(),combinedFilters);
