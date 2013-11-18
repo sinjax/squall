@@ -56,7 +56,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 		if (localName == null || localName.equals(""))
 			localName = qName;
 		
-System.out.println(localName);
+//System.out.println(localName);
 		
 		RIFData d = null;
 		
@@ -1302,7 +1302,7 @@ existsSeek:							while (formIter.hasNext()){
 		if (localName == null || localName.equals(""))
 			localName = qName;
 		
-System.out.println("/"+localName);
+//System.out.println("/"+localName);
 		
 		if (!descent.isEmpty()){
 			if (!localName.equals(descent.peek().toString()))
