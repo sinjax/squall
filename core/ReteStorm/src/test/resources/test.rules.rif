@@ -10,6 +10,16 @@
 ]>
 
 <Document xmlns="&rif;">
+	<directive>
+		<Import>
+			<location>
+				[data source url here]
+			</location>
+			<profile>
+				[profile url here]
+			</profile>
+		</Import>
+	</directive>
 	<payload>
 		<Group>
 			<sentence>
