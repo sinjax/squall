@@ -1,6 +1,7 @@
 package org.openimaj.rif.contentHandler;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -36,6 +37,17 @@ public class RIFEntailmentImportProfiles extends RIFImportProfiles <RIFEntailmen
 	 */
 	public RIFRuleSet parse(URI loc, URI prof) throws IOException, SAXException{
 		return this.get(prof).importToRuleSet(loc, new RIFRuleSet(prof,this));
+	}
+	
+	/**
+	 * @param is
+	 * @param prof
+	 * @return 
+	 * @throws IOException 
+	 * @throws SAXException 
+	 */
+	public RIFRuleSet parse(InputStream is, URI prof) throws IOException, SAXException{
+		return this.get(prof).importToRuleSet(is, new RIFRuleSet(prof,this));
 	}
 	
 	/**

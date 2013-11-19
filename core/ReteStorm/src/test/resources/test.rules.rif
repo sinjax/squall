@@ -12,12 +12,8 @@
 <Document xmlns="&rif;">
 	<directive>
 		<Import>
-			<location>
-				[data source url here]
-			</location>
-			<profile>
-				[profile url here]
-			</profile>
+			<location>java:///test.rdfs</location>
+			<profile>http://www.w3.org/ns/stream/NTriples</profile>
 		</Import>
 	</directive>
 	<payload>

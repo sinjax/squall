@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 
-import org.openimaj.io.FileUtils;
 import org.openimaj.rif.RIFRuleSet;
 import org.openimaj.rif.conditions.atomic.RIFFrame;
 import org.openimaj.rif.conditions.data.RIFConst;
@@ -14,9 +12,9 @@ import org.openimaj.rif.conditions.data.RIFIRIConst;
 import org.openimaj.rif.conditions.data.RIFStringConst;
 import org.openimaj.rif.conditions.data.RIFTypedConst;
 import org.openimaj.rif.rules.RIFGroup;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -31,7 +29,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
 
 	@Override
-	public RIFRuleSet importToRuleSet(URI loc, RIFRuleSet ruleSet)
+	public RIFRuleSet importToRuleSet(InputSource loc, RIFRuleSet ruleSet)
 			throws SAXException, IOException {
 		String fileNameOrUri = loc.toString();
 	    Model model = ModelFactory.createDefaultModel();
@@ -121,6 +119,16 @@ public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
 	        System.err.println("cannot read " + fileNameOrUri);;
 	    }
 		return ruleSet;
+	}
+
+	@Override
+	public RIFRuleSet importToRuleSet(InputStream loc, RIFRuleSet ruleSet) throws SAXException, IOException {
+		return importToRuleSet(new InputSource(loc), ruleSet);
+	}
+
+	@Override
+	public RIFRuleSet importToRuleSet(URI loc, RIFRuleSet ruleSet) throws SAXException, IOException {
+		return importToRuleSet(new InputSource(loc.toASCIIString()), ruleSet);
 	}
 
 }

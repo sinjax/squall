@@ -358,7 +358,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			public void cleanup() { }
 		};
 		
-		RIFEntailmentImportProfiles profs = new RIFOWLImportProfiles();
+		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
 		RIFRuleSet rules = null;
 		try {
 			rules = profs.parse(

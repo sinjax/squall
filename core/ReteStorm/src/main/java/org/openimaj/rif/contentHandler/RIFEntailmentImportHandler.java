@@ -1,9 +1,11 @@
 package org.openimaj.rif.contentHandler;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 
 import org.openimaj.rif.RIFRuleSet;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
@@ -20,5 +22,24 @@ public interface RIFEntailmentImportHandler {
 	 * @throws SAXException 
 	 */
 	public RIFRuleSet importToRuleSet(URI loc, RIFRuleSet ruleSet) throws SAXException, IOException;
+	
+	/**
+	 * 
+	 * @param loc
+	 * @param ruleSet
+	 * @return
+	 * @throws IOException 
+	 * @throws SAXException 
+	 */
+	public RIFRuleSet importToRuleSet(InputStream loc, RIFRuleSet ruleSet) throws SAXException, IOException;
+	
+	/**
+	 * @param loc
+	 * @param ruleSet
+	 * @return
+	 * @throws IOException 
+	 * @throws SAXException 
+	 */
+	public RIFRuleSet importToRuleSet(InputSource loc, RIFRuleSet ruleSet) throws SAXException, IOException;
 	
 }

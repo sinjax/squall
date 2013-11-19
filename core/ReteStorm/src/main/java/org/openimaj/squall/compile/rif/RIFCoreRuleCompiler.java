@@ -3,8 +3,11 @@ package org.openimaj.squall.compile.rif;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import org.openimaj.rif.*;
-import org.openimaj.rif.conditions.atomic.*;
+
+import org.openimaj.rif.RIFRuleSet;
+import org.openimaj.rif.conditions.atomic.RIFAtom;
+import org.openimaj.rif.conditions.atomic.RIFAtomic;
+import org.openimaj.rif.conditions.atomic.RIFFrame;
 import org.openimaj.rif.conditions.data.RIFData;
 import org.openimaj.rif.conditions.data.RIFDatum;
 import org.openimaj.rif.conditions.data.RIFExpr;
@@ -13,7 +16,6 @@ import org.openimaj.rif.conditions.data.RIFFunction;
 import org.openimaj.rif.conditions.data.RIFIRIConst;
 import org.openimaj.rif.conditions.data.RIFList;
 import org.openimaj.rif.conditions.data.RIFLocalConst;
-import org.openimaj.rif.conditions.data.RIFVar;
 import org.openimaj.rif.conditions.formula.RIFAnd;
 import org.openimaj.rif.conditions.formula.RIFEqual;
 import org.openimaj.rif.conditions.formula.RIFExists;
@@ -21,16 +23,17 @@ import org.openimaj.rif.conditions.formula.RIFExternalValue;
 import org.openimaj.rif.conditions.formula.RIFFormula;
 import org.openimaj.rif.conditions.formula.RIFMember;
 import org.openimaj.rif.conditions.formula.RIFOr;
-import org.openimaj.rif.rules.*;
+import org.openimaj.rif.rules.RIFForAll;
+import org.openimaj.rif.rules.RIFGroup;
+import org.openimaj.rif.rules.RIFRule;
+import org.openimaj.rif.rules.RIFSentence;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.source.URIProfileISourceFactory;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.functions.rif.RIFExprLibrary;
 import org.openimaj.squall.functions.rif.RIFExternalFunctionLibrary;
-import org.openimaj.squall.functions.rif.consequences.BaseBindingConsequence;
-import org.openimaj.squall.functions.rif.consequences.MultiConsequence;
 import org.openimaj.squall.functions.rif.consequences.BaseTripleConsequence;
 import org.openimaj.squall.functions.rif.core.RIFCoreExprLibrary;
 import org.openimaj.squall.functions.rif.core.RIFCorePredicateEqualityFunction;
@@ -38,13 +41,11 @@ import org.openimaj.squall.functions.rif.core.RIFForAllBindingConsequence;
 import org.openimaj.squall.functions.rif.core.RIFMemberFilterFunction;
 import org.openimaj.squall.functions.rif.filters.BaseTripleFilterFunction;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
-import org.openimaj.squall.functions.rif.sources.RIFStreamImportProfiles;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.reasoner.TriplePattern;
-import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -55,7 +56,6 @@ public class RIFCoreRuleCompiler implements Compiler<RulesetLibsPair> {
 	// Set the default RIF Expr library:
 	private static final RIFExprLibrary RIF_LIB = new RIFCoreExprLibrary();
 	
-	private static final RIFStreamImportProfiles streamProfiles = new RIFStreamImportProfiles();
 	
 	private List<RIFExternalFunctionLibrary> externalLibs;
 	
@@ -69,15 +69,8 @@ public class RIFCoreRuleCompiler implements Compiler<RulesetLibsPair> {
 		this.externalLibs = sourceRules.secondObject();
 		// Add sources to compiled production system from Rule Set
 		for (URI uri : ruleSet.getImportKeySet()){
-			if (RIFCoreRuleCompiler.streamProfiles.containsKey(
-					ruleSet.getImport(uri)
-				)){
-				ret.addSource(
-						RIFCoreRuleCompiler.streamProfiles.get(
-								ruleSet.getImport(uri)
-						).createSource(uri)
-				);
-			}
+			ISource<Stream<Context>> source = URIProfileISourceFactory.instance().createSource(uri, ruleSet.getImport(uri));
+			ret.addSource(source);
 		}
 		
 		for (RIFGroup g : ruleSet)

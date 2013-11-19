@@ -9,8 +9,12 @@ import org.openimaj.rif.contentHandler.RIFImportProfiles;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-@SuppressWarnings("serial")
 public class RIFStreamImportProfiles extends RIFImportProfiles <ISourceFactory> {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3398968270761603709L;
 
 	/**
 	 * 

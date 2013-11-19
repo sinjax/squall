@@ -1,6 +1,7 @@
 package org.openimaj.rif.contentHandler;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -31,6 +32,17 @@ public class RIFXMLImportHandler implements RIFEntailmentImportHandler {
 
 	@Override
 	public RIFRuleSet importToRuleSet(URI loc, RIFRuleSet ruleSet) throws SAXException, IOException {
+		return importToRuleSet(new InputSource(loc.toASCIIString()), ruleSet);
+	}
+
+	@Override
+	public RIFRuleSet importToRuleSet(InputStream loc, RIFRuleSet ruleSet) throws SAXException, IOException {
+		return importToRuleSet(new InputSource(loc), ruleSet);
+	}
+
+	@Override
+	public RIFRuleSet importToRuleSet(InputSource loc, RIFRuleSet ruleSet)
+			throws SAXException, IOException {
 		RIFXMLContentHandler conH = this.factory.newHandler();
 		conH.setRuleSet(ruleSet);
 		SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -52,7 +64,7 @@ public class RIFXMLImportHandler implements RIFEntailmentImportHandler {
 			SAXParser saxParser = spf.newSAXParser();
 			XMLReader xmlReader = saxParser.getXMLReader();
 		    xmlReader.setContentHandler(conH);
-		    xmlReader.parse(new InputSource(loc.toASCIIString()));
+		    xmlReader.parse(loc);
 		} catch (ParserConfigurationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
