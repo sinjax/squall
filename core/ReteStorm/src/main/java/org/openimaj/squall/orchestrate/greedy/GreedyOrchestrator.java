@@ -7,7 +7,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.rif.RIFRuleSet;
 import org.openimaj.rif.contentHandler.RIFEntailmentImportProfiles;
 import org.openimaj.rif.contentHandler.RIFOWLImportProfiles;
@@ -352,7 +351,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			
 			@Override
 			public void setup() { 
-				nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
+				nTripleStream = GreedyOrchestrator.class.getResourceAsStream("/test.rdfs");
 			}
 			
 			@Override
