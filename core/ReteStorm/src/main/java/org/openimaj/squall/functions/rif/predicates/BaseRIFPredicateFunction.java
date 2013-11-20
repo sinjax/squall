@@ -92,4 +92,15 @@ public abstract class BaseRIFPredicateFunction implements IVFunction<Context, Co
 		this.vars = variables.toArray(this.vars);
 	}
 	
+	@Override
+	public String anonimised(Map<String, Integer> varmap) {
+		return null;
+	}
+
+	@Override
+	public void setup() {}
+
+	@Override
+	public void cleanup() {}
+	
 }

@@ -16,7 +16,7 @@ import org.openimaj.rif.conditions.data.RIFIRIConst;
 import org.openimaj.rif.conditions.data.RIFList;
 import org.openimaj.rif.conditions.data.RIFLocalConst;
 import org.openimaj.rif.conditions.data.RIFStringConst;
-import org.openimaj.rif.conditions.data.RIFTypedConst;
+import org.openimaj.rif.conditions.data.RIFXSDTypedConst;
 import org.openimaj.rif.conditions.data.RIFURIConst;
 import org.openimaj.rif.conditions.data.RIFVar;
 import org.openimaj.rif.conditions.formula.RIFAnd;
@@ -222,10 +222,12 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							
 							if (currentGroup == null){
 								currentGroup = new Stack<RIFGroup>();
-								this.ruleSet.addRootGroup(new RIFGroup());
+								this.currentMetaHolder = new RIFGroup();
+								this.ruleSet.addRootGroup((RIFGroup) this.currentMetaHolder);
 								currentGroup.push(this.ruleSet.getRootGroup());
-							}else
+							}else{
 								throw new SAXException("RIF-Core: Should not have constructed the Group stack before first Group in payload.");
+							}
 							
 							break;
 						default:
@@ -277,6 +279,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 									names.push(new ArrayList<String>());
 									
 									currentForAll = new RIFForAll();
+									currentMetaHolder = currentForAll;
 									if (currentGroup.isEmpty())
 										throw new SAXException("RIF-Core: 'Forall' element cannot be the child of a 'payload' element.");
 									else
@@ -289,6 +292,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 									lastSibling.push(null);
 									
 									currentFrame = new RIFFrame();
+									currentMetaHolder = currentFrame;
 									if (currentGroup.isEmpty())
 										throw new SAXException("RIF-Core: 'Frame' element cannot be the child of a 'payload' element.");
 									else
@@ -318,6 +322,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							lastSibling.push(null);
 							
 							currentAtom = new RIFAtom();
+							currentMetaHolder = currentAtom;
 							if (currentGroup.isEmpty())
 								throw new SAXException("RIF-Core: 'Atom' element cannot be the child of a 'payload' element.");
 							else
@@ -409,6 +414,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							lastSibling.push(null);
 							
 							currentAtom = new RIFAtom();
+							currentMetaHolder = currentAtom;
 							currentForAll.setStatement(currentAtom);
 							
 							break;
@@ -418,6 +424,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							lastSibling.push(null);
 							
 							currentFrame = new RIFFrame();
+							currentMetaHolder = currentFrame;
 							currentForAll.setStatement(currentFrame);
 							
 							break;
@@ -897,6 +904,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							lastSibling.push(null);
 							
 							currentAtom = new RIFAtom();
+							currentMetaHolder = currentAtom;
 							try {
 								((RIFExternalValue)currentExternal.peek()).setVal(currentAtom);
 							} catch (ClassCastException e){
@@ -919,6 +927,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 									lastSibling.push(null);
 									
 									currentAtom = new RIFAtom();
+									currentMetaHolder = currentAtom;
 									currentRule.setHead(currentAtom);
 									
 									break;
@@ -941,6 +950,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							lastSibling.push(null);
 							
 							currentFrame = new RIFFrame();
+							currentMetaHolder = currentFrame;
 							currentRule.setHead(currentFrame);
 							
 							break;
@@ -966,6 +976,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							lastSibling.push(null);
 							
 							currentAtom = new RIFAtom();
+							currentMetaHolder = currentAtom;
 							currentFormula.peek().addFormula(currentAtom);
 							
 							break;
@@ -975,6 +986,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							lastSibling.push(null);
 							
 							currentFrame = new RIFFrame();
+							currentMetaHolder = currentFrame;
 							currentFormula.peek().addFormula(currentFrame);
 							
 							break;
@@ -1017,6 +1029,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 						lastSibling.push(null);
 						
 						currentAtom = new RIFAtom();
+						currentMetaHolder = currentAtom;
 						pushToFormula(currentAtom);
 						
 						break;
@@ -1090,6 +1103,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 				lastSibling.push(null);
 				
 				currentFrame = new RIFFrame();
+				currentMetaHolder = currentFrame;
 				pushToFormula(currentFrame);
 				
 				break;
@@ -1107,7 +1121,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 			}else if (uri.toString().equals(RIFLocalConst.datatype)){
 				currentConst = new RIFLocalConst();
 			} else {
-				currentConst = new RIFTypedConst(uri);
+				currentConst = new RIFXSDTypedConst(uri);
 			}
 		}else{
 			currentConst = new RIFStringConst();
@@ -1202,7 +1216,7 @@ elementSwitch:	switch (descent.peek()){
 						if (currentConst instanceof RIFURIConst)
 							((RIFURIConst) currentConst).setData(findURI(content));
 						else
-							((RIFTypedConst) currentConst).setData(content);
+							((RIFXSDTypedConst) currentConst).setData(content);
 						break elementSwitch;
 					case IRICONST:
 						break elementSwitch;

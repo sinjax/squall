@@ -11,7 +11,7 @@ import com.hp.hpl.jena.graph.Node_Concrete;
  * @author david.monks
  *
  */
-public class RIFStringConst extends RIFTypedConst {
+public class RIFStringConst extends RIFXSDTypedConst {
 	
 	/**
 	 * 

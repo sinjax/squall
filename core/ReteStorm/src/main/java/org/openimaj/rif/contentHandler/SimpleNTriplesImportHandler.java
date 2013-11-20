@@ -10,7 +10,7 @@ import org.openimaj.rif.conditions.atomic.RIFFrame;
 import org.openimaj.rif.conditions.data.RIFConst;
 import org.openimaj.rif.conditions.data.RIFIRIConst;
 import org.openimaj.rif.conditions.data.RIFStringConst;
-import org.openimaj.rif.conditions.data.RIFTypedConst;
+import org.openimaj.rif.conditions.data.RIFXSDTypedConst;
 import org.openimaj.rif.rules.RIFGroup;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -57,7 +57,7 @@ public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
 					}
 	        	} else if (sub.isLiteral()) {
 	        		try {
-						subject = new RIFTypedConst(new URI(sub.getLiteralDatatypeURI()));
+						subject = new RIFXSDTypedConst(new URI(sub.getLiteralDatatypeURI()));
 						((RIFStringConst) subject).setData(sub.getLiteralValue().toString());
 					} catch (URISyntaxException | NullPointerException e) {
 						subject = new RIFStringConst();
@@ -79,7 +79,7 @@ public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
 					}
 	        	} else if (pred.isLiteral()) {
 	        		try {
-						predicate = new RIFTypedConst(new URI(pred.getLiteralDatatypeURI()));
+						predicate = new RIFXSDTypedConst(new URI(pred.getLiteralDatatypeURI()));
 						((RIFStringConst) predicate).setData(pred.getLiteralValue().toString());
 					} catch (URISyntaxException | NullPointerException e) {
 						predicate = new RIFStringConst();
@@ -101,7 +101,7 @@ public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
 					}
 	        	} else if (ob.isLiteral()) {
 	        		try {
-						object = new RIFTypedConst(new URI(ob.getLiteralDatatypeURI()));
+						object = new RIFXSDTypedConst(new URI(ob.getLiteralDatatypeURI()));
 						((RIFStringConst) object).setData(ob.getLiteralValue().toString());
 					} catch (URISyntaxException | NullPointerException e) {
 						object = new RIFStringConst();

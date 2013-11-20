@@ -392,11 +392,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			public void perform(Context object) { }
 		};
 		OrchestratedProductionSystem ops = go.orchestrate(
-				new RIFCoreRuleCompiler().compile(
-						new RulesetLibsPair(
-								rules, new ArrayList<RIFExternalFunctionLibrary>()
-						)
-				), op);
+				new RIFCoreRuleCompiler().compile(rules), op);
 		
 		OPSDisplayUtils.display(ops);
 		

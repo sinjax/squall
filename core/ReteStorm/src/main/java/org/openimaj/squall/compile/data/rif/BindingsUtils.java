@@ -1,13 +1,11 @@
-package org.openimaj.squall.compile.rif.data;
+package org.openimaj.squall.compile.data.rif;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.openimaj.rif.conditions.formula.RIFFormula;
 import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
+import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.reasoner.TriplePattern;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -42,17 +40,31 @@ public class BindingsUtils {
 	}
 
 	/**
-	 * @param formula
-	 * @return
+	 * @param clause
+	 * @param bindings
+	 * @return A triple instansiation of the {@link TriplePattern} with its variables filled in from the bindings map
 	 */
-	public static List<Node_RuleVariable> extractRuleVariables(RIFFormula formula) {
-		List<Node_RuleVariable> vars = new ArrayList<Node_RuleVariable>();
-		extractRuleVariables(formula, vars);
-		return vars;
-	} 
-	
-	private static void extractRuleVariables(RIFFormula formula, List<Node_RuleVariable> vars) {
-		//TODO
+	public static Triple instantiate(TriplePattern clause,Map<String, Node> bindings) {
+		
+		Node s = extractVariable(bindings, clause.getSubject());
+		Node p = extractVariable(bindings, clause.getPredicate());
+		Node o = extractVariable(bindings, clause.getObject());
+		
+		return new Triple(s, p, o);
+	}
+
+	private static Node extractVariable(Map<String, Node> bindings, Node subject) {
+		Node s;
+		if(subject.isVariable()){
+			s = bindings.get(subject.getName());
+			if(s == null){
+				s = Node.createAnon();
+			}
+		}
+		else{
+			s = subject;
+		}
+		return s;
 	}  
 	
 }

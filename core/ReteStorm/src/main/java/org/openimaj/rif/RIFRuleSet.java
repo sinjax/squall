@@ -12,12 +12,10 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.openimaj.rif.contentHandler.RIFEntailmentImportProfiles;
-import org.openimaj.rif.contentHandler.RIFImportProfiles;
 import org.openimaj.rif.contentHandler.RIFOWLImportProfiles;
 import org.openimaj.rif.rules.RIFGroup;
 import org.openimaj.rif.rules.RIFSentence;
-
-import org.xml.sax.*;
+import org.xml.sax.SAXException;
 
 /**
  * Converts a set of rules expressed in RIF/XML to a set of rules in a different format.
@@ -202,7 +200,7 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 		try {
 			this.parserMap.parse(loc, prof, this);
 		} catch (Exception e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 			this.imports.put(loc, prof);
 		}
 		this.profile.pop();

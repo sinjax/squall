@@ -29,6 +29,8 @@
  */
 package org.openimaj.rdf.storm.utils;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -393,13 +395,35 @@ public class JenaStormUtils {
 		}
 
 	}
+	
+	/**
+	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+	 * 
+	 */
+	public static class URISerializer extends Serializer<URI> {
+
+		@Override
+		public void write(Kryo kryo, Output output, URI object) {
+			output.writeString(object.toString());
+		}
+
+		@Override
+		public URI read(Kryo kryo, Input input, Class<URI> type) {
+			try {
+				return new URI(input.readString());
+			} catch (URISyntaxException e) {
+				throw new UnsupportedOperationException();
+			}
+		}
+
+	}
 
 	/**
 	 * @param conf
 	 *            register some Jena serialisers to this configuration
 	 */
 	public static void registerSerializers(Config conf) {
-		
+		conf.registerSerialization(URI.class, URISerializer.class);
 		conf.registerSerialization(Node_URI.class, NodeSerialiser_URI.class);
 		conf.registerSerialization(Node_Literal.class, NodeSerialiser_Literal.class);
 		conf.registerSerialization(Node_Blank.class, NodeSerialiser_Blank.class);
@@ -422,6 +446,7 @@ public class JenaStormUtils {
 	}
 
 	public static void registerSerializers(Kryo conf) {
+		conf.addDefaultSerializer(URI.class, URISerializer.class);
 		conf.addDefaultSerializer(Node_URI.class, NodeSerialiser_URI.class);
 		conf.addDefaultSerializer(Node_Literal.class, NodeSerialiser_Literal.class);
 		conf.addDefaultSerializer(Node_Blank.class, NodeSerialiser_Blank.class);

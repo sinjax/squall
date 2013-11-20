@@ -41,7 +41,7 @@ public class StormStreamBuilder implements Builder{
 	 * @param localClusterOperationTOF
 	 * @param conf 
 	 */
-	public StormStreamBuilder(LocalClusterOperationTOF localClusterOperationTOF, Config conf) {
+	public StormStreamBuilder(TopologyOperationFactory localClusterOperationTOF, Config conf) {
 		
 		this.topopf = localClusterOperationTOF;
 		this.conf = conf;

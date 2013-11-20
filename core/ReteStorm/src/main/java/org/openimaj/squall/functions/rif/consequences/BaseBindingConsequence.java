@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.rif.data.BindingsUtils;
+import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;

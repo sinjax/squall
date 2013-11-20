@@ -59,7 +59,8 @@ public class RIFEntailmentImportProfiles extends RIFImportProfiles <RIFEntailmen
 	 * @throws SAXException 
 	 */
 	public RIFRuleSet parse(URI loc, URI prof, RIFRuleSet ruleSet) throws IOException, SAXException{
-		return this.get(prof).importToRuleSet(loc, ruleSet);
+		RIFEntailmentImportHandler rifEntailmentImportHandler = this.get(prof);
+		return rifEntailmentImportHandler.importToRuleSet(loc, ruleSet);
 	}
 	
 }

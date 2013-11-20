@@ -6,42 +6,34 @@ import java.util.Map;
 
 import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.data.jena.BindingsUtils;
+import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
-import com.hp.hpl.jena.reasoner.rulesys.Functor;
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
-import com.hp.hpl.jena.reasoner.rulesys.Rule;
-import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
 @SuppressWarnings("serial")
-public class BaseTripleConsequence implements IVFunction<Context,Context> {
+public class RIFTripleConsequence implements IVFunction<Context,Context> {
 
 	private TriplePattern clause;
 	private Node_RuleVariable[] ruleVariables;
 
-	/**
-	 * @param clause
-	 */
-	public BaseTripleConsequence(TriplePattern clause) {
+	public RIFTripleConsequence(TriplePattern clause) {
 		this.clause = clause;
-//		this.ruleVariables = BindingsUtils.extractRuleVariables(r);
 	}
 
 	@Override
 	public List<Context> apply(Context in) {
 		Map<String,Node> bindings = in.getTyped("bindings");
-		BindingVector env = BindingsUtils.mapToBindings(bindings, ruleVariables);
 		
 		List<Triple> ret = new ArrayList<Triple>();
-		ret.add(env.instantiate(this.clause));
+		ret.add(BindingsUtils.instantiate(this.clause,bindings));
 		
 		Context out = new Context();
 		out.put("triple", ret);

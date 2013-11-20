@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openimaj.rif.RIFRuleSet;
+import org.openimaj.rif.conditions.RIFExternal;
 import org.openimaj.rif.conditions.atomic.RIFAtom;
 import org.openimaj.rif.conditions.atomic.RIFAtomic;
 import org.openimaj.rif.conditions.atomic.RIFFrame;
@@ -33,8 +34,7 @@ import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.source.URIProfileISourceFactory;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.functions.rif.RIFExprLibrary;
-import org.openimaj.squall.functions.rif.RIFExternalFunctionLibrary;
-import org.openimaj.squall.functions.rif.consequences.BaseTripleConsequence;
+import org.openimaj.squall.functions.rif.consequences.RIFTripleConsequence;
 import org.openimaj.squall.functions.rif.core.RIFCoreExprLibrary;
 import org.openimaj.squall.functions.rif.core.RIFCorePredicateEqualityFunction;
 import org.openimaj.squall.functions.rif.core.RIFForAllBindingConsequence;
@@ -51,22 +51,16 @@ import com.hp.hpl.jena.reasoner.TriplePattern;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class RIFCoreRuleCompiler implements Compiler<RulesetLibsPair> {
+public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 	
 	// Set the default RIF Expr library:
 	private static final RIFExprLibrary RIF_LIB = new RIFCoreExprLibrary();
 	
-	
-	private List<RIFExternalFunctionLibrary> externalLibs;
-	
 	@Override
-	public CompiledProductionSystem compile(RulesetLibsPair sourceRules) {
+	public CompiledProductionSystem compile(RIFRuleSet ruleSet) {
 		// Create a Context-based compiled production system
 		ContextCPS ret = new ContextCPS();
 		
-		// Extract Rule Sets and External Libraries from the input.
-		RIFRuleSet ruleSet = sourceRules.firstObject();
-		this.externalLibs = sourceRules.secondObject();
 		// Add sources to compiled production system from Rule Set
 		for (URI uri : ruleSet.getImportKeySet()){
 			ISource<Stream<Context>> source = URIProfileISourceFactory.instance().createSource(uri, ruleSet.getImport(uri));
@@ -158,23 +152,9 @@ public class RIFCoreRuleCompiler implements Compiler<RulesetLibsPair> {
 			);
 		} else if (formula instanceof RIFExists){
 			translateBody(((RIFExists) formula).getFormula(), ccps);
-		} else if (formula instanceof RIFExternalValue) {
-			UnsupportedOperationException error = null; 
+		} else if (formula instanceof RIFExternalValue) { 
 			RIFExternalValue val = (RIFExternalValue) formula;
-			for (RIFExternalFunctionLibrary lib : this.externalLibs) try {
-				ccps.addPredicate(lib.compile(val));
-				return;
-			} catch (UnsupportedOperationException e) {
-				if (error == null) error = e;
-				else error.addSuppressed(e);
-			}
-// Temporary Try/Catch loop until RIFCoreExternalFunctionLibrary is implemented
-try {
-			if (error == null) throw new UnsupportedOperationException("RIF translation: No external function libraries provided.");
-			else throw error;
-} catch (UnsupportedOperationException e){
-	ccps.addPredicate(new PlaceHolderExternalValueFunction(val));
-}
+			ccps.addPredicate(ExternalFunctionRegistry.compile(val));
 		} else {
 			throw new UnsupportedOperationException("RIF translation: Unrecognised formula expression type.");
 		}
@@ -184,11 +164,12 @@ try {
 		if (formula instanceof RIFAtomic){
 			List<TriplePattern> triples = translate((RIFAtomic) formula, ccps);
 			for (TriplePattern tp : triples){
-					ccps.addConsequence(new BaseTripleConsequence(tp));
+				ccps.addConsequence(new RIFTripleConsequence(tp));
 			}
 		} else if (formula instanceof RIFAnd){
-			for (RIFFormula f : (RIFAnd) formula)
+			for (RIFFormula f : (RIFAnd) formula) {
 				translateHead(f, ccps);
+			}
 		} else if (formula instanceof RIFOr){
 			throw new UnsupportedOperationException("RIF-Core translation: Disjunctive statements in rule heads are not supported in RIF Core.");
 		} else if (formula instanceof RIFMember){
@@ -266,21 +247,7 @@ try {
 					ccps.addPredicate(RIF_LIB.compile(expr));
 					return ret;
 				} else if (datum instanceof RIFExternalExpr){
-					expr = ((RIFExternalExpr) datum).getExpr();
-					UnsupportedOperationException error = null; 
-					for (RIFExternalFunctionLibrary lib : this.externalLibs) try {
-						ccps.addPredicate(lib.compile(expr));
-						return ret;
-					} catch (UnsupportedOperationException e) {
-						if (error == null) error = e;
-						else error.addSuppressed(e);
-					}
-try {
-					if (error == null) throw new UnsupportedOperationException("RIF translation: No external function libraries provided.");
-					throw error;
-} catch (UnsupportedOperationException e){
-	ccps.addPredicate(new PlaceHolderExprFunction(expr));
-}
+					ccps.addPredicate(ExternalFunctionRegistry.compile((RIFExternal) datum));
 				} else {
 					throw new UnsupportedOperationException("RIF translation: Currently no support for functions other than Expr and External Expr.");
 				}

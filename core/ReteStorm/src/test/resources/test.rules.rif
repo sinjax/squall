@@ -114,7 +114,7 @@
 															</op>
 															<args ordered="yes">
 																<Var>n</Var>
-																<Const type="&xs;integer">10<Const>
+																<Const type="&xs;integer">10</Const>
 															</args>
 														</Atom>
 													</content>
