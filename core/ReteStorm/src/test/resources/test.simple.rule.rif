@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE Document [
+  <!ENTITY rif  "http://www.w3.org/2007/rif#">
+  <!ENTITY pred "http://www.w3.org/2007/rif-builtin-predicate#">
+  <!ENTITY xs   "http://www.w3.org/2001/XMLSchema#">
+  <!ENTITY rdf  "http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#">
+  <!ENTITY ex   "http://example.com/">
+]>
+
+<Document xmlns="&rif;">
+	<directive>
+		<Import>
+			<location>java:///test.rdfs</location>
+			<profile>http://www.w3.org/ns/stream/NTriples</profile>
+		</Import>
+	</directive>
+	<payload>
+		<Group>
+			<sentence>
+				<Frame>
+					<object>
+						<Const type="&rif;iri">http://example.com/HumanBeing</Const>
+					</object>
+					<slot>
+						<Const type="&rif;iri">http://www.w3.org/2000/01/rdf-schema#subClassOf</Const>
+						<Const type="&rif;iri">http://example.com/Things</Const>
+					</slot>
+				</Frame>
+			</sentence>
+			<sentence>
+				<Forall>
+					<id>
+						<Const type="&rif;iri">http://example.com/humanBeing</Const>
+					</id>
+					<declare>
+						<Var>d</Var>
+					</declare>
+					<formula>
+						<Implies>
+							<if>
+								<Frame>
+									<object>
+										<Var>d</Var>
+									</object>
+									<slot ordered="yes">
+										<Const type="&rif;iri">http://www.w3.org/1999/02/22-rdf-syntax-ns#type</Const>
+										<Const type="&rif;iri">http://example.com/Driver</Const>
+									</slot>
+								</Frame>
+							</if>
+							<then>
+								<Frame>
+									<object>
+										<Var>d</Var>
+									</object>
+									<slot ordered="yes">
+										<Const type="&rif;iri">http://www.w3.org/1999/02/22-rdf-syntax-ns#type</Const>
+										<Const type="&rif;iri">http://example.com/HumanBeing</Const>
+									</slot>
+								</Frame>
+							</then>
+						</Implies>
+					</formula>
+				</Forall>
+			</sentence>
+		</Group>
+	</payload>
+</Document>
