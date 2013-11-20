@@ -32,6 +32,7 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.source.URIProfileISourceFactory;
+import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.functions.rif.RIFExprLibrary;
 import org.openimaj.squall.functions.rif.consequences.RIFTripleConsequence;
@@ -90,15 +91,17 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 	}
 	
 	protected void translate(RIFGroup g, ContextCPS ccps) throws UnsupportedOperationException {
+		OptionalProductionSystems options = new OptionalProductionSystems();
 		for (RIFSentence sentence : g){
 			try {
 				ContextCPS ruleret = new ContextCPS();
 				selectCompilation(sentence,ruleret);
-				ccps.addSystem(ruleret);
+				options.add(ruleret);
 			} catch (RIFPredicateException e) {
 				System.err.println("Incorrect function specification in the following rule with the following message:\n\t"+e.getMessage()+"\n"+sentence.toString());
 			}
 		}
+		ccps.addOption(options);
 	}
 	
 	protected void translate(RIFForAll fa, ContextCPS ccps) throws RIFPredicateException, UnsupportedOperationException {
@@ -129,13 +132,15 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 				translateBody(f, ccps);
 			}
 		} else if (formula instanceof RIFOr){
+			OptionalProductionSystems options = new OptionalProductionSystems();
 			for (RIFFormula f : (RIFOr) formula){
 				ContextCPS ruleret = new ContextCPS();
 				
 				translateBody(f,ruleret);
 				
-				ccps.addSystem(ruleret);
+				options.add(ruleret);
 			}
+			ccps.addOption(options);
 		} else if (formula instanceof RIFMember){
 			RIFMember member = (RIFMember) formula;
 			translate(member.getInstance(),ccps);

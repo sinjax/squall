@@ -63,7 +63,12 @@ public class WrappedIVFunction implements IVFunction<Context,Context>{
 	public void cleanup() {
 		func.cleanup();
 	}
-
+	
+	@Override
+	public String toString() {
+		return func.toString();
+	}
+	
 	@Override
 	public void mapVariables(Map<String, String> varmap) {
 		// TODO Implement Variable Mapping

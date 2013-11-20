@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.JTextArea;
@@ -32,10 +33,14 @@ public class OPSDisplayUtils {
 		
 		JFrame frame = new JFrame();
 		mxGraph mxgraph = new mxGraph();
+		final Map<String,String> details = new HashMap<String,String>();
 		
 		HashMap<String, Object> cells = new HashMap<String,Object>();
 		for (NamedNode<?> vert : ops.vertexSet()) {
 			cells.put(vert.getName(),mxgraph.insertVertex(mxgraph.getDefaultParent(), null, vert.getName(), 0, 0, 50, 50));
+			if(vert.isFunction()){
+				details.put(vert.getName(),vert.getFunction().toString());
+			}
 
 		}
 		for (NamedStream e : ops.edgeSet()) {
@@ -65,7 +70,7 @@ public class OPSDisplayUtils {
 					mxCell mxc = ((mxCell) cell);
 					if (mxc.isVertex()) {
 
-						String n = mxc.getValue().toString();
+						String n = mxc.getValue().toString() + "\n" + details.get(mxc.getValue().toString());
 						outputArea.setText(n);
 					}
 				}

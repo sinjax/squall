@@ -6,6 +6,7 @@ import java.util.List;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
+import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.compile.data.jena.CombinedIVFunction;
 import org.openimaj.squall.compile.data.jena.FunctorConsequence;
 import org.openimaj.squall.compile.data.jena.FunctorFunction;
@@ -45,6 +46,8 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 		List<Rule> rules = sourceRules.secondObject();
 		List<ISource<Stream<Context>>> sources = sourceRules.firstObject();
 		ContextCPS ret = new ContextCPS();
+		OptionalProductionSystems options = new OptionalProductionSystems();
+		ret.addOption(options);
 		for (ISource<Stream<Context>> stream : sources) {
 			ret.addSource(stream);
 		}
@@ -55,7 +58,7 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 			else
 			{
 				ContextCPS ruleret = new ContextCPS();
-				ret.addSystem(ruleret);
+				options.add(ruleret);
 
 				// Extract all the parts of the body
 				for (int i = 0; i < rule.bodyLength(); i++) {

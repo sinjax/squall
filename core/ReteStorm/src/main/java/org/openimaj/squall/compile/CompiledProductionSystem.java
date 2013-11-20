@@ -34,7 +34,7 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * List of production systems that this compilation is made from
 	 */
-	List<CompiledProductionSystem> systems;	
+	List<OptionalProductionSystems> systems;	
 	/**
 	 * Filters match triples and assign variables to values within the triple.
 	 */
@@ -61,7 +61,7 @@ public abstract class CompiledProductionSystem {
 	 */
 	public CompiledProductionSystem() {
 		sources = new ArrayList<ISource<Stream<Context>>>();
-		systems = new ArrayList<CompiledProductionSystem>();
+		systems = new ArrayList<OptionalProductionSystems>();
 		joinlist = new ArrayList<JoinComponent<?>>();
 		predicates = new ArrayList<IVFunction<Context, Context>>();
 		aggregations = new ArrayList<IVFunction<List<Context>, Context>>();
@@ -83,7 +83,7 @@ public abstract class CompiledProductionSystem {
 	 * @param sys
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem addSystem(CompiledProductionSystem sys){
+	public CompiledProductionSystem addOption(OptionalProductionSystems sys){
 		systems.add(sys);
 		return this;
 	}
@@ -152,7 +152,7 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @return the sub systems of this {@link CompiledProductionSystem}
 	 */
-	public List<CompiledProductionSystem> getSystems() {
+	public List<OptionalProductionSystems> getSystems() {
 		return this.systems;
 	}
 

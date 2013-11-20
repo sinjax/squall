@@ -34,11 +34,13 @@ public class MapRETEQueue{
 			boolean matchOK = true;
 			for (String sharedKey : this.sharedVariables) {
 				boolean nomatch = false;
+				Node fromSibling = sibitem.get(sharedKey);
+				Node fromThis = typed.get(sharedKey);
 				try{
-					nomatch = !sibitem.get(sharedKey).matches(typed.get(sharedKey));
+					nomatch = !fromSibling.matches(fromThis);
 				}
 				catch(Throwable t){
-					System.out.println("WAT");
+					t.printStackTrace();
 				}
 				if(nomatch){
 					matchOK = false;

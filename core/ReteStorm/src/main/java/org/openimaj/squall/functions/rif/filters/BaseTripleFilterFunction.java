@@ -179,5 +179,10 @@ public class BaseTripleFilterFunction implements IVFunction<Context,Context>{
 		// TODO Implement Variable Mapping
 		
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("FILTER: %s, variables: %s",this.clause,this.variables.toString());
+	}
 
 }

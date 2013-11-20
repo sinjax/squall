@@ -38,7 +38,7 @@ public class MapRETEQueue{
 					nomatch = !sibitem.get(sharedKey).matches(typed.get(sharedKey));
 				}
 				catch(Throwable t){
-					System.out.println("WAT");
+					t.printStackTrace();
 				}
 				if(nomatch){
 					matchOK = false;

@@ -14,6 +14,7 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
+import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
 import org.xml.sax.SAXException;
 
@@ -45,6 +46,7 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 	private RIFRuleSet simpleRules;
 	private RIFRuleSet simplejoinRules;
 	private RIFRuleSet complexjoinRules;
+	private RIFRuleSet multiunionRules;
 
 	private RIFRuleSet readRules(String ruleSource) {
 		RIFRuleSet rules = null;
@@ -77,6 +79,7 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 		this.simpleRules = readRules("/test.simple.rule.rif");
 		this.simplejoinRules = readRules("/test.simplejoin.rule.rif");
 		this.complexjoinRules = readRules("/test.complexjoin.rule.rif");
+		this.multiunionRules = readRules("/test.multiunion.rule.rif");
 		
 	}
 
@@ -118,6 +121,14 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 		testRuleSet(complexjoinRules);
 	}
 	
+	/**
+	 * 
+	 */
+	@Test
+	public void testMultiUnionRules(){
+		testRuleSet(multiunionRules);
+	}
+	
 	
 	private void testRuleSet(RIFRuleSet ruleSet) {
 		IOperation<Context> op = new PrintAllOperation();
@@ -127,6 +138,8 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 		
 		GreedyOrchestrator go = new GreedyOrchestrator();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
+		
+		OPSDisplayUtils.display(orchestrated);
 		
 		OIStreamBuilder builder = new OIStreamBuilder();
 		builder.build(orchestrated);

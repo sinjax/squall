@@ -54,7 +54,7 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 		// The shared variables must match
 		shared = new ArrayList<String>();
 		for (String lv : allleftvar) {
-			shared.add(lv);
+			if(allrightvar.contains(lv)) shared.add(lv);
 		}
 	}
 
@@ -115,6 +115,11 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 	public void mapVariables(Map<String, String> varmap) {
 		// TODO Implement Variable Mapping
 		
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("JOIN: sharedVariables: %s, outputVariables: %s",this.shared.toString(),this.vars.toString());
 	}
 	
 }
