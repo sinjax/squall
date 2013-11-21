@@ -211,12 +211,15 @@ public class GreedyOrchestrator implements Orchestrator{
 			if (unionedRules.isEmpty()){
 				// If the CPS has no individual consequences, then return all tree roots so far produced with associated predicate groups.
 				return joinedCPSs;
-			} else if (joinedCPSs.getProcessingOptions().size() == 1
-							&& joinedCPSs.getProcessingOptions().get(0).firstObject().isEmpty()
-							&& joinedCPSs.getProcessingOptions().get(0).secondObject().isEmpty()) {
+			} else if (joinedCPSs.getProcessingOptions().isEmpty()) {
 				return unionedRules;
 			} else {
-				throw new RuntimeException("throw something");// TODO throw something
+				for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>> jCPS : joinedCPSs.getProcessingOptions()) {
+					if (!(jCPS.firstObject().isEmpty() && jCPS.secondObject().isEmpty())){
+						throw new RuntimeException("throw something");// TODO throw something
+					}
+				}
+				return unionedRules;
 			}
 		}else{
 			unionedRules.addAll(orchestrateConsequences(root,joinedCPSs, sys.getConsequences()));
