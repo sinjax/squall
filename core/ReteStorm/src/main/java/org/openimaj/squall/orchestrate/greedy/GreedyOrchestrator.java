@@ -217,7 +217,7 @@ public class GreedyOrchestrator implements Orchestrator{
 				for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>> jCPS : joinedCPSs.getProcessingOptions()) {
 					if (!(jCPS.firstObject().isEmpty() && jCPS.secondObject().isEmpty())){
 						throw new UnsupportedOperationException("Cannot interpret a subCPS with a consequence being optionally directly joined with JoinComponents."
-																+ "Translate elements such as sub-queries into and optional CPS containing the sub-query CPS as a join component.");
+																+ "Translate elements such as sub-queries into an optional CPS containing the sub-query CPS as a join component.");
 					}
 				}
 				return unionedRules;

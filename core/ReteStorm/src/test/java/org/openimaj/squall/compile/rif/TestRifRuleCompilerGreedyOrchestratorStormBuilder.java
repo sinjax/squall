@@ -48,6 +48,7 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 	private RIFRuleSet simpleRules;
 	private RIFRuleSet simplejoinRules;
 	private RIFRuleSet complexjoinRules;
+	private RIFRuleSet multiunionRules;
 
 	private RIFRuleSet readRules(String ruleSource) {
 		RIFRuleSet rules = null;
@@ -80,7 +81,7 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 		this.simpleRules = readRules("/test.simple.rule.rif");
 		this.simplejoinRules = readRules("/test.simplejoin.rule.rif");
 		this.complexjoinRules = readRules("/test.complexjoin.rule.rif");
-		
+		this.multiunionRules = readRules("/test.multiunion.rule.rif");
 	}
 
 
@@ -119,6 +120,14 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 	@Test
 	public void testComplexRules(){
 		testRuleSet(complexjoinRules);
+	}
+	
+	/**
+	 * 
+	 */
+	@Test
+	public void testMultiUnionRules(){
+		testRuleSet(multiunionRules);
 	}
 	
 	
