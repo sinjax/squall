@@ -19,6 +19,10 @@ import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.Stream;
 
+/**
+ * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ *
+ */
 public class ReteOrchestrator implements Orchestrator{
 
 	private HashMap<String, NamedNode<IVFunction<Context,Context>>> funcMap;
@@ -54,42 +58,18 @@ public class ReteOrchestrator implements Orchestrator{
 		finalsys.connect(new NamedStream("link"), opNode);
 	}
 
-	private void orchestrateSources(
-			CompiledProductionSystem sys,
-			OrchestratedProductionSystem root) {
+	private void orchestrateSources(CompiledProductionSystem sys,OrchestratedProductionSystem root) {
 		if(sys.getSources().size()>0){
 			for (ISource<Stream<Context>> sourceS: sys.getSources()) {				
 				root.root.add(new NamedSourceNode(root,nextSourceName(root), sourceS));
 			}
 		}
-		for (CompiledProductionSystem cps: sys.getSystems()) {
-			orchestrateSources(cps, root);
-		}
+		
 	}
 
 	private NamedNode<? extends IVFunction<Context,Context>> orchestrate(OrchestratedProductionSystem root,CompiledProductionSystem sys) {
-		NamedNode<? extends IVFunction<Context, Context>> combinedFilters = orchestrateJoinComponents(root,sys.getJoinComponents());
-		combinedFilters = orchestratePredicates(root,combinedFilters,sys.getPredicates());
-		
-		List<NamedNode<? extends IVFunction<Context, Context>>> joinedCPS = new ArrayList<NamedNode<? extends IVFunction<Context, Context>>>();
-		for (CompiledProductionSystem cps : sys.getSystems()) {
-			NamedNode<? extends IVFunction<Context, Context>> combined = orchestrate(root,cps);
-			if(combined == null){
-				throw new RuntimeException("No consequence of or'ed "); 
-			}
-			if(combinedFilters != null){ // join the sub systems to any filters
-				combined = createJoinNode(root, combined,combinedFilters);
-			}
-			joinedCPS.add(combined);
-		}
-		if(joinedCPS.size() == 0){
-			// There were no sub CPS to join with, just add the combined filters to the list
-			joinedCPS.add(combinedFilters);
-		}
-//		aggregations = orchestrateAggregations(joinedCPS,sys.getAggregations());
-		if(sys.getConsequences().isEmpty()){ return null; }
-//		return orchestrateConsequences(root, joinedCPS,sys.getConsequences());
 		return null;
+		
 	}
 
 

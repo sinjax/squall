@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
@@ -55,6 +54,11 @@ public abstract class CompiledProductionSystem {
 	 * Consequences consume bindings and perform some operation
 	 */
 	List<IVFunction<Context, Context>> consequences;
+	
+	/**
+	 * Reentrant {@link CompiledProductionSystem} instance expect their Consequences to be re-consumed 
+	 */
+	boolean isReentrant = false;
 	
 	/**
 	 * Initialise all system parts as empty, a fairly boring production system
@@ -113,6 +117,15 @@ public abstract class CompiledProductionSystem {
 		this.addJoinComponent(new JoinComponent.CPSJoinComponent(filter));
 	}
 	
+	/**
+	 * 
+	 * @param reentrant whether the current {@link CompiledProductionSystem} should have its output re-entered into the system
+	 * @return the current {@link CompiledProductionSystem}
+	 */
+	public CompiledProductionSystem setReentrat(boolean reentrant){
+		this.isReentrant = reentrant;
+		return this;
+	}
 	
 
 	/**
@@ -140,6 +153,10 @@ public abstract class CompiledProductionSystem {
 	 */
 	public List<JoinComponent<?>> getJoinComponents() {
 		return this.joinlist;
+	}
+	
+	public boolean isReentrant(){
+		return this.isReentrant;
 	}
 
 	/**

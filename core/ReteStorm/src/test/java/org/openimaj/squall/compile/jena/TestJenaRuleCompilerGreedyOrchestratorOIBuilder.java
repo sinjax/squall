@@ -69,6 +69,8 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 
 	private SourceRulePair multiConsequenceRules;
 	
+	private SourceRulePair reentrantRules;
+	
 	/**
 	 * @throws IOException 
 	 * 
@@ -105,6 +107,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 		singlefunctorRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.singlefunctor.rules"));
 		singlejoinComplexRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.singlejoin.complex.rules"));
 		multiConsequenceRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.multiconsequences.rules"));
+		reentrantRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.reentrant.rules"));
 		allRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.rules"));
 		
 	}
@@ -185,6 +188,20 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 	public void testBuilderMultiConsequencesJoin(){
 		JenaRuleCompiler jrc = new JenaRuleCompiler();
 		ContextCPS comp = jrc.compile(multiConsequenceRules);
+		GreedyOrchestrator go = new GreedyOrchestrator();
+		IOperation<Context> op = new PrintAllOperation();
+		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
+		OIStreamBuilder builder = new OIStreamBuilder();
+		builder.build(orchestrated);
+	}
+	
+	/**
+	 * 
+	 */
+	@Test
+	public void testBuilderReentrant(){
+		JenaRuleCompiler jrc = new JenaRuleCompiler();
+		ContextCPS comp = jrc.compile(reentrantRules);
 		GreedyOrchestrator go = new GreedyOrchestrator();
 		IOperation<Context> op = new PrintAllOperation();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
