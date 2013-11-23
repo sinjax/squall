@@ -59,8 +59,18 @@ public class RIFEntailmentImportProfiles extends RIFImportProfiles <RIFEntailmen
 	 * @throws SAXException 
 	 */
 	public RIFRuleSet parse(URI loc, URI prof, RIFRuleSet ruleSet) throws IOException, SAXException{
-		RIFEntailmentImportHandler rifEntailmentImportHandler = this.get(prof);
-		return rifEntailmentImportHandler.importToRuleSet(loc, ruleSet);
+		return this.get(prof).importToRuleSet(loc, ruleSet);
+	}
+	
+	/**
+	 * @param is
+	 * @param prof
+	 * @return 
+	 * @throws IOException 
+	 * @throws SAXException 
+	 */
+	public RIFRuleSet parse(InputStream is, URI prof, RIFRuleSet ruleSet) throws IOException, SAXException{
+		return this.get(prof).importToRuleSet(is, ruleSet);
 	}
 	
 }

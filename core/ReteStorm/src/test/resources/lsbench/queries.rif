@@ -13,13 +13,12 @@
 ]>
 
 <Document>
-  <!--
   <directive>
     <Import>
-    	<location>file://lsbench/rules.rif</location>
+    	<location>/lsbench/rules.rif</location>
     </Import>
   </directive>
-  -->
+<!--
   <directive>
     <Import>
     	<location>http://deri.org/poststream</location>
@@ -38,6 +37,7 @@
     	<profile>http://www.w3.org/ns/stream/NTriples</profile>
     </Import>
   </directive>
+-->
   <payload>
   	<Group>
   	  <sentence>
@@ -594,6 +594,7 @@
   	      </formula>
   	    </Forall>
   	  </sentence>
+<!--
   	  <sentence>
   	    <Forall>
   	      <id>
@@ -694,6 +695,7 @@
   	      </formula>
   	    </Forall>
   	  </sentence>
+-->
   	</Group>
   </payload>
 </Document>
