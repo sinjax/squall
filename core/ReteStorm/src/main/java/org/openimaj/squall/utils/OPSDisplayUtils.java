@@ -13,7 +13,14 @@ import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 
+import com.mxgraph.layout.mxCompactTreeLayout;
+import com.mxgraph.layout.mxFastOrganicLayout;
+import com.mxgraph.layout.mxGraphLayout;
+import com.mxgraph.layout.mxOrganicLayout;
+import com.mxgraph.layout.mxPartitionLayout;
+import com.mxgraph.layout.mxStackLayout;
 import com.mxgraph.layout.hierarchical.mxHierarchicalLayout;
+import com.mxgraph.layout.orthogonal.mxOrthogonalLayout;
 import com.mxgraph.model.mxCell;
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.view.mxGraph;
@@ -49,12 +56,13 @@ public class OPSDisplayUtils {
 		
 		
 //		mxFastOrganicLayout layout = new mxFastOrganicLayout(mxgraph);
-		mxHierarchicalLayout layout = new mxHierarchicalLayout(mxgraph);
-
-        //set all properties
-        layout.setInterHierarchySpacing(100);
-        layout.setIntraCellSpacing(100);
-        layout.setDisableEdgeStyle(true);
+		mxGraphLayout layout = null;
+		if(!ops.containsLoop()) {
+			layout = hierarchicalLayout(mxgraph);
+		} else {
+			layout = organicLayout(mxgraph);
+		}
+        
 
         //layout graph
         layout.execute(mxgraph.getDefaultParent());
@@ -81,6 +89,26 @@ public class OPSDisplayUtils {
 		frame.getContentPane().add(outputArea, BorderLayout.SOUTH);
 		frame.pack();
 		frame.setVisible(true);
+	}
+
+	private static mxGraphLayout organicLayout(mxGraph mxgraph) {
+//		mxPartitionLayout layout = new mxPartitionLayout(mxgraph, true, 100);
+//		mxOrganicLayout layout = new mxOrganicLayout(mxgraph);
+//		layout.setMinDistanceLimit(100);
+		mxFastOrganicLayout layout = new mxFastOrganicLayout(mxgraph);
+		layout.setMinDistanceLimit(100);
+		
+		return layout;
+	}
+
+	private static mxGraphLayout hierarchicalLayout(mxGraph mxgraph) {
+		mxHierarchicalLayout hlay = new mxHierarchicalLayout(mxgraph);   //set all properties
+        hlay.setInterHierarchySpacing(100);
+		hlay.setIntraCellSpacing(100);
+		hlay.setDisableEdgeStyle(true);
+		
+		mxGraphLayout layout = hlay;
+		return layout;
 	}
 
 }

@@ -60,9 +60,11 @@ public class GreedyOrchestrator implements Orchestrator{
 	private int predicate = 0;
 	private int filter = 0;
 	private int join = 0;
+	private ArrayList<NamedNode<? extends IVFunction<Context, Context>>> reentrateConsequences;
 
 	@Override
 	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem sys, IOperation<Context> op) {
+		reentrateConsequences = new ArrayList<NamedNode<? extends IVFunction<Context, Context>>>();
 		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();		
 		ret.root = new ArrayList<NamedSourceNode>();
 		orchestrateSources(sys,ret);
@@ -78,7 +80,30 @@ public class GreedyOrchestrator implements Orchestrator{
 		} else {
 			orchestrateOperation(ret, op, finalsys);
 		}
+		
+		// Also connect all reentrant consequences to all the filters
+		orchestrateReentrateConsequences(ret);
+		
 		return ret;
+	}
+
+	private void orchestrateReentrateConsequences(OrchestratedProductionSystem ret) {
+		// The nodes which must be connected to reentrant consequences are those which are connected to any sources
+		ArrayList<NamedNode<?>> filters = new ArrayList<NamedNode<?>>();
+		for (NamedSourceNode source : ret.root) {
+			for (NamedNode<?> namedNode : source.children()) {
+				filters.add(namedNode);
+			}
+		}
+		
+		for (NamedNode<?> cons : this.reentrateConsequences) {
+			int reent = 0;
+			for (NamedNode<?> filt : filters) {
+				
+				cons.connect(new NamedStream("reentrant_" + reent), filt);
+			}
+			reent ++;
+		}
 	}
 
 	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op) {
@@ -218,7 +243,12 @@ public class GreedyOrchestrator implements Orchestrator{
 				return unionedRules;
 			}
 		}else{
-			unionedRules.addAll(orchestrateConsequences(root,joinedCPSs, sys.getConsequences()));
+			CompleteCPSResult consequences = orchestrateConsequences(root,joinedCPSs, sys.getConsequences());
+			unionedRules.addAll(consequences);
+			if(sys.isReentrant()){
+				this.reentrateConsequences.addAll(consequences);
+			}
+			
 			return unionedRules;
 		}
 	}
