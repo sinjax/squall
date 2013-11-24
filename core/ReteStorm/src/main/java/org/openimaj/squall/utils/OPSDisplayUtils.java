@@ -51,17 +51,24 @@ public class OPSDisplayUtils {
 
 		}
 		for (NamedStream e : ops.edgeSet()) {
-			mxgraph.insertEdge(mxgraph.getDefaultParent(), null, e.getName(), cells.get(ops.getEdgeSource(e).getName()), cells.get(ops.getEdgeTarget(e).getName()));
+			NamedNode<?> edgeSource = ops.getEdgeSource(e);
+			NamedNode<?> edgeTarget = ops.getEdgeTarget(e);
+			Object edgeSourceCell = cells.get(edgeSource.getName());
+			Object edgeTargetCell = cells.get(edgeTarget.getName());
+			if(edgeSource.isReentrantSource()) {
+				edgeTargetCell = null;
+			}
+			mxgraph.insertEdge(
+				mxgraph.getDefaultParent(), null, e.getName(), 
+				edgeSourceCell, 
+				edgeTargetCell
+			);
 		}
 		
 		
 //		mxFastOrganicLayout layout = new mxFastOrganicLayout(mxgraph);
 		mxGraphLayout layout = null;
-		if(!ops.containsLoop()) {
-			layout = hierarchicalLayout(mxgraph);
-		} else {
-			layout = organicLayout(mxgraph);
-		}
+		layout = hierarchicalLayout(mxgraph);
         
 
         //layout graph

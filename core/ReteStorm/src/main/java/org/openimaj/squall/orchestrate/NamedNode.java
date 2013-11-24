@@ -50,6 +50,20 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	 * @return true if {@link #getVariableHolder()} will return
 	 */
 	public abstract boolean isVariableHolder();
+	/**
+	 * @return whether this node is {@link Initialisable}
+	 */
+	public abstract boolean isInitialisable() ;
+
+	/**
+	 * @return is this node an operation
+	 */
+	public abstract boolean isOperation();
+	
+	/**
+	 * @return is the source of reentrant items
+	 */
+	public abstract boolean isReentrantSource();
 	
 	/**
 	 * @return return the {@link VariableHolder} held otherwise fail horibbly
@@ -82,15 +96,7 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	 */ 
 	public abstract Initialisable getInit();
 
-	/**
-	 * @return whether this node is {@link Initialisable}
-	 */
-	public abstract boolean isInitialisable() ;
-
-	/**
-	 * @return is this node an operation
-	 */
-	public abstract boolean isOperation();
+	
 	
 	/**
 	 * @return is this node an operation

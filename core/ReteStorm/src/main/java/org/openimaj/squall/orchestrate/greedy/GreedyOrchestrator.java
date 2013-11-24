@@ -28,6 +28,7 @@ import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
 import org.openimaj.squall.orchestrate.PartialCPSResult;
+import org.openimaj.squall.orchestrate.ReentrantNNIVFunction;
 import org.openimaj.squall.orchestrate.exception.CompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.IncompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.FloatingPredicatesPlanningException;
@@ -65,13 +66,11 @@ public class GreedyOrchestrator implements Orchestrator{
 	private int predicate = 0;
 	private int filter = 0;
 	private int join = 0;
-	private ArrayList<NamedNode<? extends IVFunction<Context, Context>>> reentrateConsequences;
 
 	@Override
 	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem sys, IOperation<Context> op) {
-		reentrateConsequences = new ArrayList<NamedNode<? extends IVFunction<Context, Context>>>();
 		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();		
-		ret.root = new ArrayList<NamedSourceNode>();
+		
 		orchestrateSources(sys,ret);
 		List<NamedNode<? extends IVFunction<Context, Context>>> finalsys = new ArrayList<NamedNode<? extends IVFunction<Context,Context>>>();
 		try {
@@ -101,14 +100,11 @@ public class GreedyOrchestrator implements Orchestrator{
 			}
 		}
 		
-		for (NamedNode<?> cons : this.reentrateConsequences) {
-			int reent = 0;
-			for (NamedNode<?> filt : filters) {
-				
-				cons.connect(new NamedStream("reentrant_" + reent), filt);
-			}
-			reent ++;
+		for (NamedNode<?> filt : filters) {
+			
+			ret.reentrant.connect(new NamedStream("reentrant_stream"), filt);
 		}
+		
 	}
 
 	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op) {
@@ -251,13 +247,26 @@ public class GreedyOrchestrator implements Orchestrator{
 			CompleteCPSResult consequences = orchestrateConsequences(root,joinedCPSs, sys.getConsequences());
 			unionedRules.addAll(consequences);
 			if(sys.isReentrant()){
-				this.reentrateConsequences.addAll(consequences);
+				orchestrateReentrantConsequences(root,consequences);
 			}
 			
 			return unionedRules;
 		}
 	}
 
+
+	private void orchestrateReentrantConsequences(OrchestratedProductionSystem root, CompleteCPSResult consequences) {
+		for (NamedNode<? extends IVFunction<Context, Context>> namedNode : consequences) {
+			if(root.reentrant == null){				
+				ReentrantNNIVFunction reentrantNode = new ReentrantNNIVFunction(root, "reentrant");
+				root.reentrant = reentrantNode;
+			}
+			namedNode.connect(
+				new NamedStream("link"), 
+				root.reentrant
+			);
+		}
+	}
 
 	@SuppressWarnings("unused")
 	/**

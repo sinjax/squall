@@ -50,8 +50,10 @@ public class JoinStream<O> extends AbstractStream<O>{
 		int firstcurrent = current;
 		for (int i = 0; i < streams.size(); i++) {
 			int check = (firstcurrent + i) % streams.size();
-			if(!this.streams.get(check).hasNext()) continue;
-			O ret = this.streams.get(check).next();
+			Stream<O> checkStream = this.streams.get(check);
+			boolean streamHasNext = checkStream.hasNext();
+			if(!streamHasNext) continue;
+			O ret = checkStream.next();
 			if(ret != null)
 			{
 				current = (check + 1) % streams.size();
@@ -59,6 +61,19 @@ public class JoinStream<O> extends AbstractStream<O>{
 			}
 		}
 		return null;
+	}
+
+
+	/**
+	 * @param split
+	 */
+	public void addStream(Stream<O> split) {
+		this.streams.add(split);
+	}
+	
+	@Override
+	public String toString() {
+		return this.streams.toString();
 	}
 
 }

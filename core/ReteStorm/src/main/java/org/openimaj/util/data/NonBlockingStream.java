@@ -21,29 +21,33 @@ import org.openimaj.util.stream.Stream;
  */
 public class NonBlockingStream<O> extends AbstractStream<O>{
 
+	private final class StreamConsumer implements Runnable {
+		
+		@Override
+		public void run() {	
+			while(towrap.hasNext()){
+				O next = towrap.next();
+				synchronized(queue){
+					queue.add(next);
+				}
+			}
+		}
+	}
 	private Stream<O> towrap;
 	private Deque<O> queue;
 	private Runnable consume;
 
+	
+	/**
+	 * no background queue probided, so no queue is consumed
+	 */
+	public NonBlockingStream() {
+	}
 	/**
 	 * @param tw
 	 */
 	public NonBlockingStream(Stream<O> tw) {
-		this.towrap = tw;
-		this.queue = new ArrayDeque<O>();
-		this.consume = new Runnable(){
-			@Override
-			public void run() {	
-				while(towrap.hasNext()){
-					O next = towrap.next();
-					synchronized(queue){
-						queue.add(next);
-					}
-				}
-			}
-		};
-		ExecutorService gep = GlobalExecutorPool.getPool();
-		gep.execute(consume);
+		setWrapped(tw);
 	}
 	
 	
@@ -65,6 +69,16 @@ public class NonBlockingStream<O> extends AbstractStream<O>{
 			}
 		}
 		return next;
+	}
+	/**
+	 * @param reentrantJoin
+	 */
+	public void setWrapped(Stream<O> tw) {
+		this.towrap = tw;
+		this.queue = new ArrayDeque<O>();
+		this.consume = new StreamConsumer();
+		ExecutorService gep = GlobalExecutorPool.getPool();
+		gep.execute(consume);
 	}
 
 }

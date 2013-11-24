@@ -73,5 +73,10 @@ class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 	public Operation<Context> getOperation() {
 		return this.op;
 	}
+
+	@Override
+	public boolean isReentrantSource() {
+		return false;
+	}
 	
 }

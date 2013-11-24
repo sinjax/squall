@@ -181,4 +181,8 @@ public class TripleFilterFunction implements IVFunction<Context, Context> {
 		// TODO Implement Variable Mapping
 		
 	}
+	@Override
+	public String toString() {
+		return this.clause.toString();
+	}
 }

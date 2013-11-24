@@ -1,5 +1,6 @@
 package org.openimaj.squall.build;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,11 +29,11 @@ import org.openimaj.util.stream.StreamLoopGuard;
  * instantiation of the production system
  *
  */
-public class OIStreamBuilder implements Builder{
+public class OIStreamBuilderReentrantNonBlock implements Builder{
 	/**
 	 * 
 	 */
-	public OIStreamBuilder() {
+	public OIStreamBuilderReentrantNonBlock() {
 	}
 
 	@Override
@@ -93,9 +94,13 @@ public class OIStreamBuilder implements Builder{
 					Initialisable init = namedNode.getInit();
 					init.setup();
 				}
-				Stream<Context> reentrantStream = new SplitStream<Context>(new JoinStream<Context>());
+				Stream<Context> reentrantJoin = new JoinStream<Context>();
 //				reentrantStream.map(namedNode.getFunction());
-				state.put(name, reentrantStream);
+				NonBlockingStream<Context> reentrantNonblock = new NonBlockingStream<Context>();
+				Stream<Context> source = reentrantNonblock.map(new NullCatch<Context>());
+				state.put(name, new SplitStream<Context>(source));
+				state.put(name+"_nonblock", reentrantNonblock);
+				state.put(name+"_join", reentrantJoin);
 				remove = true;
 			}
 			/**
@@ -155,14 +160,16 @@ public class OIStreamBuilder implements Builder{
 				for (NamedNode<?> child : namedNode.children()) {
 					if(child.isReentrantSource()){
 						// If the child is the reentrant source, it must already be added, you must add the parent to the child
-						Stream<Context> reentrantSource = state.get(child.getName());
-						// The reentrant source is a SplitStream which contains a join, this node must be added to that join!
-						JoinStream<Context> strm = (JoinStream<Context>) ((SplitStream<Context>)reentrantSource).getInnerStream();
+						String reentrantName = child.getName();
+						JoinStream<Context> reentrantJoin = (JoinStream<Context>) state.get(reentrantName + "_join");
 						Stream<Context> currentStream = state.get(name);
 						MultiFunction<Context, Context> reentrantFun = child.getFunction();
 						Stream<Context> mapped = currentStream.map(reentrantFun);
-						Stream<Context> loopGuarded = new StreamLoopGuard<Context>(mapped);
-						strm.addStream(loopGuarded);
+						reentrantJoin.addStream(mapped);
+						if(containsAllParents(state,child)){
+							NonBlockingStream<Context> reentrantNonblock = (NonBlockingStream<Context>) state.get(reentrantName+"_nonblock");
+							reentrantNonblock.setWrapped(new StreamLoopGuard<Context>(reentrantJoin));
+						}
 					}
 					else{						
 						newdisconnected.add(child);

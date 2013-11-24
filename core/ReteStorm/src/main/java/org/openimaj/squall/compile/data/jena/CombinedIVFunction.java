@@ -101,5 +101,10 @@ public abstract class CombinedIVFunction<A,B> implements IVFunction<A,B> {
 		// TODO Implement Variable Mapping
 		
 	}
+	
+	@Override
+	public String toString() {
+		return this.functions.toString();
+	}
 
 }

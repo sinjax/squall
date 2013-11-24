@@ -8,11 +8,21 @@ import org.openimaj.util.function.Operation;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
+/**
+ * A {@link NamedNode} that holds an {@link IVFunction}
+ * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ *
+ */
 public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
 
 	private IVFunction<Context, Context> varfunc;
 	private IVFunction<Context, Context> wrapped;
 
+	/**
+	 * @param parent
+	 * @param name
+	 * @param func
+	 */
 	public NNIVFunction(OrchestratedProductionSystem parent, String name, IVFunction<Context, Context> func) {
 		super(parent, name);
 		this.varfunc = func;
@@ -71,6 +81,11 @@ public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
 	@Override
 	public Operation<Context> getOperation() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isReentrantSource() {
+		return false;
 	}
 	
 }

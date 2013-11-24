@@ -88,6 +88,10 @@ public class NamedStream implements VariableHolder{
 	@Override
 	public void mapVariables(Map<String, String> varmap) {
 		// TODO Implement Variable Mapping
-		
+	}
+	
+	@Override
+	public String toString() {
+		return this.name;
 	}
 }

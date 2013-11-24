@@ -43,10 +43,13 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 		if (!Functor.isFunctor(t.getSubject())) {
 			ret.add(t);
 		}
-		Context out = new Context();
-		out.put("triple", ret);
+		
 		List<Context> ctxs = new ArrayList<Context>();
-		ctxs.add(out);
+		for (Triple context : ret) {
+			Context out = new Context();
+			out.put("triple", context);			
+			ctxs.add(out);
+		}
 		return ctxs;
 	}
 
@@ -77,6 +80,11 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 	public void mapVariables(Map<String, String> varmap) {
 		// TODO Implement Variable Mapping
 		
+	}
+	
+	@Override
+	public String toString() {
+		return this.clause.toString();
 	}
 
 

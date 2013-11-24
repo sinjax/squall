@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.openimaj.util.data.Context;
 import org.openimaj.util.data.JoinStream;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.function.MultiFunction;
@@ -43,12 +44,22 @@ public class SplitStream<T> implements Stream<T>{
 
 		@Override
 		public boolean hasNext() {
-			return !queue.isEmpty() || inner.hasNext();
+			if(queue.isEmpty()){
+				if(inner.hasNext()){
+					return true;
+				} else{
+					// Check the queue one more time, checking inner might have effected the queue!
+					return !queue.isEmpty();
+				}
+			}
+			else {
+				return true;
+			}
 		}
 
 		@Override
 		public T next() {
-			while(queue.isEmpty()){
+			if(queue.isEmpty()){
 				innerNext();
 			}
 			return queue.poll();
@@ -89,6 +100,12 @@ public class SplitStream<T> implements Stream<T>{
 		return next;
 	}
 	
+	/**
+	 * @return the inner stream
+	 */
+	public Stream<T> getInnerStream() {
+		return this.inner;
+	}
 
 	@Override
 	public void remove() {
@@ -195,4 +212,6 @@ public class SplitStream<T> implements Stream<T>{
 		});
 		System.out.println(count[0]);
 	}
+
+	
 }

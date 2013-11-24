@@ -45,13 +45,18 @@ public class OrchestratedProductionSystem extends DirectedGraph<NamedNode<?>,Nam
 	 */
 	public List<NamedSourceNode> root;
 	
+	/**
+	 * The source nodes which are connected to the children
+	 */
+	public ReentrantNNIVFunction reentrant;
+	
 	
 	/**
 	 * 
 	 */
 	public OrchestratedProductionSystem() {
 		
-		
+		root = new ArrayList<NamedSourceNode>();
 	}
 	
 	@Override
@@ -62,19 +67,6 @@ public class OrchestratedProductionSystem extends DirectedGraph<NamedNode<?>,Nam
 			buf.append("\n");
 		}
 		return buf.toString();
-	}
-
-	public boolean containsLoop() {
-		List<NamedNode<?>> seen = new ArrayList<NamedNode<?>>();
-		seen.addAll(this.root);
-		for (int i = 0; i < seen.size(); i++) {
-			NamedNode<?> nn = seen.get(i);
-			for (NamedNode<?> child : nn.children()) {
-				if(seen.contains(child)) return true;
-				seen.add(child);
-			}
-		}
-		return false;
 	}
 
 	

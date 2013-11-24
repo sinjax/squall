@@ -94,6 +94,11 @@ public class NamedSourceNode extends NamedNode<ISource<Stream<Context>>> {
 	public boolean isOperation() {
 		return false;
 	}
+	
+	@Override
+	public boolean isReentrantSource() {
+		return false;
+	}
 
 
 

@@ -9,13 +9,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.openimaj.rdf.storm.topology.ReteTopologyTest;
+import org.openimaj.squall.build.Builder;
 import org.openimaj.squall.build.OIStreamBuilder;
+import org.openimaj.squall.build.OIStreamBuilderReentrantNonBlock;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.squall.utils.JenaUtils;
+import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.stream.CollectionStream;
@@ -70,6 +73,9 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 	private SourceRulePair multiConsequenceRules;
 	
 	private SourceRulePair reentrantRules;
+
+
+	private SourceRulePair twoRules;
 	
 	/**
 	 * @throws IOException 
@@ -109,6 +115,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 		multiConsequenceRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.multiconsequences.rules"));
 		reentrantRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.reentrant.rules"));
 		allRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.rules"));
+		twoRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.two.rules"));
 		
 	}
 
@@ -213,12 +220,42 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 	 * 
 	 */
 	@Test
+	public void testBuilderTwoRules(){
+		JenaRuleCompiler jrc = new JenaRuleCompiler();
+		ContextCPS comp = jrc.compile(twoRules);
+		GreedyOrchestrator go = new GreedyOrchestrator();
+		IOperation<Context> op = new PrintAllOperation();
+		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
+		OIStreamBuilder builder = new OIStreamBuilder();
+		builder.build(orchestrated);
+	}
+	
+	/**
+	 * 
+	 */
+	@Test
+	public void testBuilderTwoRulesReentrantNonBlock(){
+		JenaRuleCompiler jrc = new JenaRuleCompiler();
+		ContextCPS comp = jrc.compile(twoRules);
+		GreedyOrchestrator go = new GreedyOrchestrator();
+		IOperation<Context> op = new PrintAllOperation();
+		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
+		Builder builder = new OIStreamBuilderReentrantNonBlock();
+		builder.build(orchestrated);
+	}
+	
+	
+	/**
+	 * 
+	 */
+	@Test
 	public void testBuilderAll(){
 		JenaRuleCompiler jrc = new JenaRuleCompiler();
 		ContextCPS comp = jrc.compile(allRules);
 		GreedyOrchestrator go = new GreedyOrchestrator();
 		IOperation<Context> op = new PrintAllOperation();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
+		
 		OIStreamBuilder builder = new OIStreamBuilder();
 		builder.build(orchestrated);
 	}
