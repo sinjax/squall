@@ -171,6 +171,7 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 			List<TriplePattern> triples = translate((RIFAtomic) formula, ccps);
 			for (TriplePattern tp : triples){
 				ccps.addConsequence(new RIFTripleConsequence(tp));
+				ccps.setReentrat(true);
 			}
 		} else if (formula instanceof RIFAnd){
 			for (RIFFormula f : (RIFAnd) formula) {
