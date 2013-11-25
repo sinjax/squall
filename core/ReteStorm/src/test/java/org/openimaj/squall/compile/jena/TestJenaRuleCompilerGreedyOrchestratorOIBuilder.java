@@ -230,19 +230,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 		builder.build(orchestrated);
 	}
 	
-	/**
-	 * 
-	 */
-	@Test
-	public void testBuilderTwoRulesReentrantNonBlock(){
-		JenaRuleCompiler jrc = new JenaRuleCompiler();
-		ContextCPS comp = jrc.compile(twoRules);
-		GreedyOrchestrator go = new GreedyOrchestrator();
-		IOperation<Context> op = new PrintAllOperation();
-		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
-		Builder builder = new OIStreamBuilderReentrantNonBlock();
-		builder.build(orchestrated);
-	}
+	
 	
 	
 	/**

@@ -118,8 +118,8 @@ public abstract class NamedNodeComponent implements IComponent{
 	 * @param ctx 
 	 */
 	public void fire(Tuple t, Context ctx) {
-		Values em = new Values(ctx);
 		for ( String  strm : this.streams) {
+			Values em = new Values(ctx.clone());
 			fire(strm, t, em);
 		}
 	}

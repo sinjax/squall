@@ -162,7 +162,7 @@ public class OIStreamBuilder implements Builder{
 						MultiFunction<Context, Context> reentrantFun = child.getFunction();
 						Stream<Context> mapped = currentStream.map(reentrantFun);
 						Stream<Context> loopGuarded = new StreamLoopGuard<Context>(mapped);
-						strm.addStream(loopGuarded);
+//						strm.addStream(loopGuarded);
 					}
 					else{						
 						newdisconnected.add(child);
