@@ -1,12 +1,19 @@
 package org.openimaj.squall.compile.rif.provider;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.openimaj.rif.conditions.RIFExternal;
+import org.openimaj.rif.conditions.atomic.RIFAtom;
+import org.openimaj.rif.conditions.data.RIFDatum;
 import org.openimaj.rif.conditions.data.RIFExternalExpr;
 import org.openimaj.rif.conditions.formula.RIFExternalValue;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
+
+import com.hp.hpl.jena.graph.Node;
 
 /**
  * A function which given a {@link RIFExternal} can provide a working implementation
@@ -33,4 +40,13 @@ public abstract class ExternalFunctionProvider implements Function<RIFExternal, 
 	 * @return
 	 */
 	public abstract IVFunction<Context, Context> apply(RIFExternalValue in) ;
+	
+	protected Node[] extractNodes(RIFAtom atom) {
+		List<Node> nodes = new ArrayList<Node>();
+		for (RIFDatum node : atom) {
+			nodes.add(node.getNode());
+		}
+		return nodes.toArray(new Node[nodes.size()]);
+	}
+	
 }

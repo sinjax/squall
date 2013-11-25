@@ -10,6 +10,7 @@ import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Node_Literal;
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 
 /**
@@ -70,6 +71,17 @@ public abstract class BaseRIFPredicateFunction implements IVFunction<Context, Co
 	public String anonimised() {
 		return this.anonimisedName;
 	}
+
+	@Override
+	public String anonimised(Map<String, Integer> varmap) {
+		return null;
+	}
+
+	@Override
+	public void setup() {}
+
+	@Override
+	public void cleanup() {}
 	
 	/**
 	 * Constructs a new predicate function that filters bindings predicated on some function of the
@@ -92,15 +104,19 @@ public abstract class BaseRIFPredicateFunction implements IVFunction<Context, Co
 		this.vars = variables.toArray(this.vars);
 	}
 	
-	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		return null;
+	protected Object extractBinding(Map<String, Node> binds, Node node) {
+		if(node.isVariable()){
+			node = binds.get(node.getName());
+			if(node == null){
+				throw new UnsupportedOperationException("Unbound variable");
+			}
+		}
+		if(node.isLiteral()){
+			Node_Literal lit = (Node_Literal) node;
+			
+			return lit.getLiteralValue();
+		}
+		throw new UnsupportedOperationException("Incorrect node type for comparison");
 	}
-
-	@Override
-	public void setup() {}
-
-	@Override
-	public void cleanup() {}
 	
 }

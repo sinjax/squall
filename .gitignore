@@ -4,3 +4,4 @@ target
 .project
 .metadata
 *.log
+*.class
