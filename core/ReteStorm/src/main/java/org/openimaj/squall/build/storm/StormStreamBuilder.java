@@ -14,7 +14,13 @@ import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.util.data.Context;
+import org.openimaj.util.data.JoinStream;
+import org.openimaj.util.function.MultiFunction;
 import org.openimaj.util.pair.IndependentPair;
+import org.openimaj.util.stream.SplitStream;
+import org.openimaj.util.stream.Stream;
+import org.openimaj.util.stream.StreamLoopGuard;
 
 import backtype.storm.Config;
 import backtype.storm.LocalCluster;
@@ -53,6 +59,9 @@ public class StormStreamBuilder implements Builder{
 		topop.setup();
 		Set<NamedNode<?>> rootset = new HashSet<>();
 		rootset.addAll(ops.root);
+		if(ops.reentrant!=null){			
+			rootset.add(ops.reentrant);
+		}
 		TopologyBuilder tb = new TopologyBuilder();
 		try {
 			buildTopology(tb,ops,new HashMap<String,NamedNode<?>>(),rootset);
@@ -88,7 +97,25 @@ public class StormStreamBuilder implements Builder{
 			 * If it is a source, initialise the stream, grab it, 
 			 * build a spout
 			 */
-			if(namedNode.isSource()){
+			if(namedNode.isReentrantSource()){
+				// build a spout
+				MultiFunctionBolt funcBolt = new MultiFunctionBolt(namedNode);
+				BoltDeclarer dec = tb.setBolt(name, funcBolt);
+				List<IndependentPair<NamedStream, NamedNode<?>>> parents = extractParentStreams(ops, namedNode);
+				for (IndependentPair<NamedStream, NamedNode<?>> p : parents) {
+					NamedStream strm = p.firstObject();
+					NamedNode<?> parent = p.secondObject();
+					String streamName = NamedNodeComponent.constructStreamName(parent,strm,namedNode);
+					dec.shuffleGrouping(parent.getName(), streamName);
+				}
+				state.put(name, namedNode);
+				remove = true;
+			}
+			/**
+			 * If it is a source, initialise the stream, grab it, 
+			 * build a spout
+			 */
+			else if(namedNode.isSource()){
 				// build a spout
 				IRichSpout s = new OIStreamSpout(namedNode);
 				tb.setSpout(name, s);
@@ -100,9 +127,9 @@ public class StormStreamBuilder implements Builder{
 			 * If it is a function and all its parents are ready, build a bolt
 			 * 
 			 */
-			if(namedNode.isFunction() || namedNode.isOperation()){
+			else if(namedNode.isFunction() || namedNode.isOperation()){
 				if(containsAllParents(state,namedNode)){
-					List<IndependentPair<NamedStream, NamedNode<?>>> parentStreams = extractParentStreams(ops,state,namedNode);
+					List<IndependentPair<NamedStream, NamedNode<?>>> parentStreams = extractParentStreams(ops,namedNode);
 					IRichBolt funcBolt = null;
 					
 					if(namedNode.isFunction())
@@ -135,8 +162,10 @@ public class StormStreamBuilder implements Builder{
 			else{
 				// add the children!
 				for (NamedNode<?> child : namedNode.children()) {
-					if(!disconnected.contains(child))
+					if(!disconnected.contains(child) && !state.containsKey(child.getName()))
+					{
 						newdisconnected.add(child);
+					}
 				}
 			}
 		}
@@ -146,11 +175,10 @@ public class StormStreamBuilder implements Builder{
 	/**
 	 * Grab all the parent streams, attaching them to a {@link NamedStream} function on the way
 	 * @param ops
-	 * @param state
 	 * @param namedNode
 	 * @return
 	 */
-	private List<IndependentPair<NamedStream, NamedNode<?>>> extractParentStreams(OrchestratedProductionSystem ops, Map<String, NamedNode<?>> state, NamedNode<?> namedNode) {
+	private List<IndependentPair<NamedStream, NamedNode<?>>> extractParentStreams(OrchestratedProductionSystem ops, NamedNode<?> namedNode) {
 		List<IndependentPair<NamedStream, NamedNode<?>>> ret = new ArrayList<IndependentPair<NamedStream, NamedNode<?>>>();
 		for (NamedStream edge : namedNode.parentEdges()) {
 			IndependentPair<NamedStream, NamedNode<?>> pair = new IndependentPair<NamedStream, NamedNode<?>>(edge, ops.getEdgeSource(edge));
