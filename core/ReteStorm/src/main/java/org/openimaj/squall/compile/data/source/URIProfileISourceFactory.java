@@ -6,6 +6,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 
+import org.openimaj.rif.imports.schemes.HTTPSchemeFunction;
+import org.openimaj.rif.imports.schemes.JavaSchemeFunction;
+import org.openimaj.rif.imports.schemes.URLSchemeFunction;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.functions.rif.sources.NTriplesISourceFactory;
 import org.openimaj.util.data.Context;
@@ -105,7 +108,7 @@ public class URIProfileISourceFactory {
 		} catch (URISyntaxException e) { throw new RuntimeException(e);}
 		// Register the default scheme functions
 		schemeFunctions.put("http", new HTTPSchemeFunction());
-		schemeFunctions.put("file", new HTTPSchemeFunction());
+		schemeFunctions.put("file", new URLSchemeFunction());
 		schemeFunctions.put("java", new JavaSchemeFunction());
 		
 		// Register the default pure scheme functions

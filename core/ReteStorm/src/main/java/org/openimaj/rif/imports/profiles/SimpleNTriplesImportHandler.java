@@ -1,4 +1,4 @@
-package org.openimaj.rif.contentHandler;
+package org.openimaj.rif.imports.profiles;
 
 import java.io.IOException;
 import java.io.InputStream;

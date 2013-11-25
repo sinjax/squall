@@ -12,8 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import org.openimaj.rif.contentHandler.RIFEntailmentImportProfiles;
-import org.openimaj.rif.contentHandler.RIFOWLImportProfiles;
+import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
+import org.openimaj.rif.imports.profiles.RIFOWLImportProfiles;
+import org.openimaj.rif.imports.schemes.RIFImportSchemes;
 import org.openimaj.rif.rules.RIFGroup;
 import org.openimaj.rif.rules.RIFSentence;
 import org.xml.sax.SAXException;
@@ -30,8 +31,11 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	private Map<String,URI> prefixes;
 	private Map<URI,URI> imports;
 	private List<RIFGroup> rootGroup;
-	private RIFEntailmentImportProfiles parserMap;
+	
 	private Stack<URI> profile;
+	
+	private RIFEntailmentImportProfiles parserMap;
+	private RIFImportSchemes schemeMap;
 	
 	//  CONSTRUCTORS
 	
@@ -51,6 +55,20 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 		
 		this.profile.push(profile);
 		this.parserMap = pm;
+		this.schemeMap = new RIFImportSchemes();
+	}
+	
+	/**
+	 * @param profile 
+	 * @param pm 
+	 * @param sm 
+	 * 
+	 */
+	public RIFRuleSet(URI profile,
+					  RIFEntailmentImportProfiles pm,
+					  RIFImportSchemes sm){
+		this(profile, pm);
+		this.schemeMap = sm;
 	}
 	
 	/**
@@ -72,12 +90,45 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	/**
 	 * @param profile 
 	 * @param pm 
+	 * @param sm 
+	 * @param base
+	 * @param prefixes
+	 */
+	public RIFRuleSet(URI profile,
+			  		  RIFEntailmentImportProfiles pm,
+					  RIFImportSchemes sm,
+			  		  URI base,
+					  Map<String,URI> prefixes){
+		this(profile, pm, sm);
+		
+		this.base = base;
+		this.prefixes = prefixes;
+	}
+	
+	/**
+	 * @param profile 
+	 * @param pm 
 	 * @param imports
 	 */
 	public RIFRuleSet(URI profile,
 			  		  RIFEntailmentImportProfiles pm,
 			  		  Map<URI,URI> imports){
 		this(profile, pm);
+		
+		this.imports = imports;
+	}
+	
+	/**
+	 * @param profile 
+	 * @param pm 
+	 * @param sm 
+	 * @param imports
+	 */
+	public RIFRuleSet(URI profile,
+			  		  RIFEntailmentImportProfiles pm,
+					  RIFImportSchemes sm,
+			  		  Map<URI,URI> imports){
+		this(profile, pm, sm);
 		
 		this.imports = imports;
 	}
@@ -102,6 +153,25 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	/**
 	 * @param profile 
 	 * @param pm 
+	 * @param sm 
+	 * @param base
+	 * @param prefixes
+	 * @param imports
+	 */
+	public RIFRuleSet(URI profile,
+			  		  RIFEntailmentImportProfiles pm,
+					  RIFImportSchemes sm,
+			  		  URI base,
+					  Map<String,URI> prefixes,
+					  Map<URI,URI> imports){
+		this(profile, pm, sm, base, prefixes);
+				
+		this.imports = imports;
+	}
+	
+	/**
+	 * @param profile 
+	 * @param pm 
 	 * @param base
 	 * @param prefixes
 	 * @param imports
@@ -114,6 +184,27 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 					  Map<URI,URI> imports,
 					  RIFGroup root){
 		this(profile, pm, base, prefixes, imports);
+		
+		this.rootGroup.add(root);
+	}
+	
+	/**
+	 * @param profile 
+	 * @param pm 
+	 * @param sm 
+	 * @param base
+	 * @param prefixes
+	 * @param imports
+	 * @param root
+	 */
+	public RIFRuleSet(URI profile,
+			  		  RIFEntailmentImportProfiles pm,
+					  RIFImportSchemes sm,
+			  		  URI base,
+					  Map<String,URI> prefixes,
+					  Map<URI,URI> imports,
+					  RIFGroup root){
+		this(profile, pm, sm, base, prefixes, imports);
 		
 		this.rootGroup.add(root);
 	}
@@ -162,28 +253,36 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	 * @param prof
 	 */
 	public void addImport(URI loc, URI prof) {
-		InputStream resourceAsStream = Object.class.getResourceAsStream(loc.toString());
-		if (this.parserMap == null){
-			this.imports.put(loc, prof);
-			return;
-		}
-		if (prof == null){
-			try {
-				this.parserMap.parse(resourceAsStream, this.profile.peek(), this);
-			} catch (Exception e) {
-				e.printStackTrace();
-				this.imports.put(loc, prof);
-			}
-			return;
-		}
-		this.profile.push(prof);
 		try {
+			if (this.parserMap == null){
+				this.imports.put(loc, prof);
+				return;
+			}
+			
+			InputStream resourceAsStream = this.schemeMap.get(loc.getScheme()).apply(loc);
+			if (prof == null){
+				this.parserMap.parse(resourceAsStream, this.profile.peek(), this);
+				return;
+			}
+			this.profile.push(prof);
 			this.parserMap.parse(resourceAsStream, prof, this);
-		} catch (Exception e) {
+			this.profile.pop();
+		} catch (NullPointerException e) {
 //			e.printStackTrace();
 			this.imports.put(loc, prof);
+		} catch (IOException e) {
+//			e.printStackTrace();
+			this.imports.put(loc, prof);
+		} catch (SAXException e) {
+//			e.printStackTrace();
+			this.imports.put(loc, prof);
+		} catch (UnsupportedOperationException e) {
+//			e.printStackTrace();
+			this.imports.put(loc, prof);
+		} catch (Exception e) {
+			e.printStackTrace();
+			this.imports.put(loc, prof);
 		}
-		this.profile.pop();
 	}
 	
 	/**

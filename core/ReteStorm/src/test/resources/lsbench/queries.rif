@@ -15,29 +15,27 @@
 <Document>
   <directive>
     <Import>
-    	<location>/lsbench/rules.rif</location>
+    	<location>java:///lsbench/rules.rif</location>
     </Import>
   </directive>
-<!--
   <directive>
     <Import>
-    	<location>http://deri.org/poststream</location>
+    	<location>file:///Users/david.monks/Downloads/lsbench/rdfPostStream1000.nt</location>
     	<profile>http://www.w3.org/ns/stream/NTriples</profile>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>http://deri.org/photostream</location>
+    	<location>file:///Users/david.monks/Downloads/lsbench/rdfPhotoStream1000.nt</location>
     	<profile>http://www.w3.org/ns/stream/NTriples</profile>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>http://deri.org/likedphotostream</location>
+    	<location>file:///Users/david.monks/Downloads/lsbench/rdfPhotoLikeStream1000.nt</location>
     	<profile>http://www.w3.org/ns/stream/NTriples</profile>
     </Import>
   </directive>
--->
   <payload>
   	<Group>
   	  <sentence>

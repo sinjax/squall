@@ -1,4 +1,4 @@
-package org.openimaj.rif.contentHandler;
+package org.openimaj.rif.imports.profiles;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +9,8 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.openimaj.rif.RIFRuleSet;
+import org.openimaj.rif.contentHandler.RIFXMLContentHandler;
+import org.openimaj.rif.contentHandler.RIFXMLContentHandlerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;

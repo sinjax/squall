@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.data.source;
+package org.openimaj.rif.imports.schemes;
 
 import java.io.IOException;
 import java.io.InputStream;

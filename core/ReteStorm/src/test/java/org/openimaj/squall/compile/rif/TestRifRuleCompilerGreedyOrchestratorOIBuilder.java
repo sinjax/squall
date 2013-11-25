@@ -14,7 +14,7 @@ import org.openimaj.rif.RIFRuleSet;
 import org.openimaj.rif.conditions.atomic.RIFAtom;
 import org.openimaj.rif.conditions.data.RIFExternalExpr;
 import org.openimaj.rif.conditions.formula.RIFExternalValue;
-import org.openimaj.rif.contentHandler.RIFEntailmentImportProfiles;
+import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.squall.build.OIStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.IOperation;

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.contentHandler.RIFEntailmentImportProfiles;
+import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.OptionalProductionSystems;

@@ -3,7 +3,7 @@ package org.openimaj.squall.functions.rif.sources;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.openimaj.rif.contentHandler.RIFImportProfiles;
+import org.openimaj.rif.imports.profiles.RIFImportProfiles;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>

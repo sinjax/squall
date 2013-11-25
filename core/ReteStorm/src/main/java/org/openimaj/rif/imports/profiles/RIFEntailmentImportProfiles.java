@@ -1,4 +1,4 @@
-package org.openimaj.rif.contentHandler;
+package org.openimaj.rif.imports.profiles;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.openimaj.rif.RIFRuleSet;
+import org.openimaj.rif.contentHandler.RIFCoreXMLContentHandlerFactory;
 import org.xml.sax.SAXException;
 
 /**
