@@ -241,7 +241,7 @@ public class StormStreamBuilder implements Builder{
 				}
 			} finally {
 				cluster.killTopology(name);
-				cluster.shutdown();
+//				cluster.shutdown();
 			}
 			
 		}

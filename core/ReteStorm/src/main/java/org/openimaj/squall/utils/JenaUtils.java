@@ -55,4 +55,30 @@ public class JenaUtils {
 		}).parse();
 		return tripleCol;
 	}
+	
+	/**
+	 * @param inputStream
+	 * @return read all the triples from an inputstream
+	 */
+	public static Collection<Triple> readTurtle(InputStream inputStream) {
+		final Collection<Triple> tripleCol = new ArrayList<Triple>();
+		RiotReader.createParserTurtle(inputStream, null,new Sink<Triple>() {
+			
+			@Override
+			public void close() {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void send(Triple item) {
+				tripleCol.add(item);
+			}
+			
+			@Override
+			public void flush() {
+			}
+		}).parse();
+		return tripleCol;
+	}
 }

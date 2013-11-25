@@ -21,23 +21,24 @@
   <directive>
     <Import>
     	<location>file:///Users/david.monks/Downloads/lsbench/rdfPostStream1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/NTriples</profile>
+    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
   <directive>
     <Import>
     	<location>file:///Users/david.monks/Downloads/lsbench/rdfPhotoStream1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/NTriples</profile>
+    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
   <directive>
     <Import>
     	<location>file:///Users/david.monks/Downloads/lsbench/rdfPhotoLikeStream1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/NTriples</profile>
+    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
   <payload>
   	<Group>
+  	<!--
   	  <sentence>
   	    <Forall>
   	      <id>
@@ -429,6 +430,7 @@
   	      </formula>
   	    </Forall>
   	  </sentence>
+  	  -->
   	  <sentence>
   	    <Forall>
   	      <id>
@@ -551,6 +553,7 @@
 			  	              </formula>
 			  	            </Exists>
 			  	          </formula>
+<!--
 			  	          <formula>
 			  	            <External>
 			  	              <content>
@@ -569,6 +572,7 @@
 			  	              </content>
 			  	            </External>
 			  	          </formula>
+-->
 			  	        </And>
 			  	      </formula>
   	      	        </Exists>

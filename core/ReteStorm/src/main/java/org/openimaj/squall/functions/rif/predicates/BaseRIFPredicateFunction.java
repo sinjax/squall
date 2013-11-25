@@ -10,6 +10,7 @@ import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Node_Concrete;
 import com.hp.hpl.jena.graph.Node_Literal;
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 
@@ -111,12 +112,16 @@ public abstract class BaseRIFPredicateFunction implements IVFunction<Context, Co
 				throw new UnsupportedOperationException("Unbound variable");
 			}
 		}
-		if(node.isLiteral()){
-			Node_Literal lit = (Node_Literal) node;
-			
-			return lit.getLiteralValue();
+		if(node.isConcrete()){
+			Node_Concrete lit = (Node_Concrete) node;
+			if (lit.isLiteral())
+				return lit.getLiteralValue();
+			else if (lit.isURI())
+				return lit.getURI();
+			else if (lit.isBlank())
+				return lit.getBlankNodeLabel();
 		}
-		throw new UnsupportedOperationException("Incorrect node type for comparison");
+		throw new UnsupportedOperationException("Incorrect node type for comparison: " + node);
 	}
 	
 }

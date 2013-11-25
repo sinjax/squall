@@ -1,5 +1,6 @@
 package org.openimaj.squall.orchestrate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.openimaj.squall.compile.data.IVFunction;
@@ -17,6 +18,9 @@ public class ReentrantNNIVFunction extends NNIVFunction{
 		
 		@Override
 		public List<Context> apply(Context in) {
+			if(in.containsKey("bindings")){
+				return new ArrayList<Context>();
+			}
 			return super.apply(in);
 		}
 	}

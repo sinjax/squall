@@ -103,8 +103,10 @@ public class URIProfileISourceFactory {
 	
 	static{
 		URI NTRIPLES_URI;
+		URI TURTLE_URI;
 		try {
 			NTRIPLES_URI = new URI("http://www.w3.org/ns/stream/NTriples");
+			TURTLE_URI = new URI("http://www.w3.org/ns/stream/Turtle");
 		} catch (URISyntaxException e) { throw new RuntimeException(e);}
 		// Register the default scheme functions
 		schemeFunctions.put("http", new HTTPSchemeFunction());
@@ -116,6 +118,7 @@ public class URIProfileISourceFactory {
 		
 		// Register the default profile functions
 		profileFunctions.put(NTRIPLES_URI, new NTriplesProfileFunction());
+		profileFunctions.put(TURTLE_URI, new TurtleProfileFunction());
 	}
 	
 	

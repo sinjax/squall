@@ -50,7 +50,7 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 
 		@Override
 		public void perform(Context object) {
-			System.out.println(object);
+			if(object.containsKey("inphoto"))System.out.println(object);
 		}
 	}
 
@@ -211,7 +211,7 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 		GreedyOrchestrator go = new GreedyOrchestrator();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		
-		Builder builder = StormStreamBuilder.localClusterBuilder(5000);
+		Builder builder = StormStreamBuilder.localClusterBuilder(20000);
 		builder.build(orchestrated);
 	}
 	

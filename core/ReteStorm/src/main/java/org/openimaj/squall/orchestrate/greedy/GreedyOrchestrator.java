@@ -5,7 +5,9 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openimaj.rif.RIFRuleSet;
 import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
@@ -81,14 +83,14 @@ public class GreedyOrchestrator implements Orchestrator{
 		}
 		
 		// Also connect all reentrant consequences to all the filters
-		orchestrateReentrateConsequences(ret);
+		if(ret.reentrant != null) orchestrateReentrateConsequences(ret);
 		
 		return ret;
 	}
 
 	private void orchestrateReentrateConsequences(OrchestratedProductionSystem ret) {
 		// The nodes which must be connected to reentrant consequences are those which are connected to any sources
-		ArrayList<NamedNode<?>> filters = new ArrayList<NamedNode<?>>();
+		Set<NamedNode<?>> filters = new HashSet<NamedNode<?>>();
 		for (NamedSourceNode source : ret.root) {
 			for (NamedNode<?> namedNode : source.children()) {
 				filters.add(namedNode);
@@ -97,7 +99,7 @@ public class GreedyOrchestrator implements Orchestrator{
 		
 		for (NamedNode<?> filt : filters) {
 			
-			ret.reentrant.connect(new NamedStream("reentrant_stream"), filt);
+			ret.reentrant.connect(new NamedStream("reentrantstream"), filt);
 		}
 		
 	}

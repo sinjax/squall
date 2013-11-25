@@ -35,10 +35,12 @@ public class RIFTripleConsequence implements IVFunction<Context,Context> {
 		List<Triple> ret = new ArrayList<Triple>();
 		ret.add(BindingsUtils.instantiate(this.clause,bindings));
 		
-		Context out = new Context();
-		out.put("triple", ret);
 		List<Context> ctxs = new ArrayList<Context>();
-		ctxs.add(out);
+		for (Triple triple : ret) {
+			Context out = new Context();
+			out.put("triple", triple);
+			ctxs.add(out);			
+		}
 		return ctxs;
 	}
 
@@ -71,5 +73,9 @@ public class RIFTripleConsequence implements IVFunction<Context,Context> {
 		
 	}
 
-
+	@Override
+	public String toString() {
+		return this.clause.toString();
+	}
+	
 }

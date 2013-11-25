@@ -1,6 +1,7 @@
 package org.openimaj.squall.functions.rif.consequences;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -82,6 +83,11 @@ public class BaseBindingConsequence implements IVFunction<Context,Context> {
 		String[] newInVars = new String[this.inVariables.length];
 		for (int i = 0; i < newInVars.length; i++)
 			newInVars[i] = varmap.get(this.inVariables[i]);
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("%s -> %s", Arrays.toString(this.inVariables), Arrays.toString(this.outVariables));
 	}
 
 }
