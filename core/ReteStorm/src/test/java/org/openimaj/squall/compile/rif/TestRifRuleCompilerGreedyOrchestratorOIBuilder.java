@@ -4,19 +4,32 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.openimaj.rif.RIFRuleSet;
+import org.openimaj.rif.conditions.atomic.RIFAtom;
+import org.openimaj.rif.conditions.data.RIFExternalExpr;
+import org.openimaj.rif.conditions.formula.RIFExternalValue;
 import org.openimaj.rif.contentHandler.RIFEntailmentImportProfiles;
 import org.openimaj.squall.build.OIStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.IOperation;
+import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.functions.rif.predicates.NumericRIFPredicateFunction;
+import org.openimaj.squall.compile.rif.provider.ExternalFunctionProvider;
+import org.openimaj.squall.compile.rif.provider.ExternalFunctionRegistry;
+import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
 import org.xml.sax.SAXException;
+
+import com.hp.hpl.jena.graph.Node;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -42,7 +55,7 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 
 
 
-	private RIFRuleSet allRules;
+	private RIFRuleSet lsbenchRules;
 	private RIFRuleSet simpleRules;
 	private RIFRuleSet simplejoinRules;
 	private RIFRuleSet complexjoinRules;
@@ -73,28 +86,11 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 	 */
 	@Before
 	public void before() throws IOException{
-		
-		
-		this.allRules = readRules("/test.rules.rif");
 		this.simpleRules = readRules("/test.simple.rule.rif");
 		this.simplejoinRules = readRules("/test.simplejoin.rule.rif");
 		this.complexjoinRules = readRules("/test.complexjoin.rule.rif");
 		this.multiunionRules = readRules("/test.multiunion.rule.rif");
-		
-	}
-
-
-
-	
-
-	
-	
-	/**
-	 * 
-	 */
-	@Test
-	public void testAllRulesBuilder(){
-		testRuleSet(allRules);
+		this.lsbenchRules = readRules("/lsbench/queries.rif");
 	}
 	
 	/**
@@ -129,6 +125,82 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 		testRuleSet(multiunionRules);
 	}
 	
+	private static final class GeoInHaversineDistanceProvider extends ExternalFunctionProvider {
+
+		private static final class GeoInHaversineDistanceFunction extends NumericRIFPredicateFunction {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -7445044998530563542L;
+			private static final long earthRadius = 6371;//kilometres
+			private Node[] nodes;
+			
+			public GeoInHaversineDistanceFunction(Node[] ns)
+					throws RIFPredicateException {
+				super(ns);
+				this.nodes = ns;
+			}
+			
+			private double haversin(double pheta){
+				return (1d - Math.cos(pheta)) / 2d;
+			}
+
+			@Override
+			public List<Context> apply(Context in) {
+				List<Context> ret = new ArrayList<Context>();
+				Map<String,Node> binds = in.getTyped("bindings");
+				
+				Double maxDist = extractBinding(binds, nodes[0]);//kilometres
+				Double long1 = Math.PI * extractBinding(binds, nodes[1]) / 180d;
+				Double lat1 = Math.PI * extractBinding(binds, nodes[2]) / 180d;
+				Double long2 = Math.PI * extractBinding(binds, nodes[3]) / 180d;
+				Double lat2 = Math.PI * extractBinding(binds, nodes[4]) / 180d;
+				
+				Double distance = 2 * earthRadius * Math.asin(
+														Math.sqrt(
+															haversin(lat2 - lat1) +
+															Math.cos(lat1) * Math.cos(lat2) * haversin(long2 - long1)
+														)
+													);
+				if (distance <= maxDist) ret.add(in);
+				
+				return ret;
+			}
+			
+		}
+		
+		@Override
+		public IVFunction<Context, Context> apply(RIFExternalExpr in) {
+			RIFAtom atom = in.getExpr().getCommand();
+			try {
+				return new GeoInHaversineDistanceFunction(extractNodes(atom));
+			} catch (RIFPredicateException e) {
+				throw new UnsupportedOperationException(e);
+			}
+		}
+
+		@Override
+		public IVFunction<Context, Context> apply(RIFExternalValue in) {
+			RIFAtom atom = in.getVal();
+			try {
+				return new GeoInHaversineDistanceFunction(extractNodes(atom));
+			} catch (RIFPredicateException e) {
+				throw new UnsupportedOperationException(e);
+			}
+		}
+		
+	}
+	
+	/**
+	 * 
+	 */
+	@Test
+	public void testLSBenchRulesBuilder(){
+		ExternalFunctionRegistry.register("http://www.ins.cwi.nl/sib/rif-builtin-predicate/geo-in-haversine-distance", new GeoInHaversineDistanceProvider());
+		testRuleSet(lsbenchRules);
+	}
+	
 	
 	private void testRuleSet(RIFRuleSet ruleSet) {
 		IOperation<Context> op = new PrintAllOperation();
@@ -139,7 +211,7 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 		GreedyOrchestrator go = new GreedyOrchestrator();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		
-		OPSDisplayUtils.display(orchestrated);
+//		OPSDisplayUtils.display(orchestrated);
 		
 		OIStreamBuilder builder = new OIStreamBuilder();
 		builder.build(orchestrated);

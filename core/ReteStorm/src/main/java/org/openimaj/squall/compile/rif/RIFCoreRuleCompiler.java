@@ -32,6 +32,7 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.source.URIProfileISourceFactory;
+import org.openimaj.squall.compile.rif.provider.ExternalFunctionRegistry;
 import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.functions.rif.RIFExprLibrary;

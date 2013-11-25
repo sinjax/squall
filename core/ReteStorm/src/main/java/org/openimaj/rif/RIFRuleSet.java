@@ -1,6 +1,7 @@
 package org.openimaj.rif;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -22,29 +23,6 @@ import org.xml.sax.SAXException;
  * @author David Monks <david.monks@zepler.net>
  */
 public class RIFRuleSet implements Iterable<RIFGroup> {
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args){
-		System.out.println("%s %s".replaceFirst("%s", "Hello"));
-		try {
-			RIFRuleSet rs = new RIFOWLImportProfiles().parse(
-								new URI("http://www.w3.org/2005/rules/test/repository/tc/IRI_from_RDF_Literal/IRI_from_RDF_Literal-premise.rif"),
-								new URI("http://www.w3.org/ns/entailment/Core")
-							);
-			System.out.println(rs.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SAXException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 	
 	//  VARIABLES
 	
@@ -184,21 +162,23 @@ public class RIFRuleSet implements Iterable<RIFGroup> {
 	 * @param prof
 	 */
 	public void addImport(URI loc, URI prof) {
+		InputStream resourceAsStream = Object.class.getResourceAsStream(loc.toString());
 		if (this.parserMap == null){
 			this.imports.put(loc, prof);
 			return;
 		}
 		if (prof == null){
 			try {
-				this.parserMap.parse(loc, this.profile.peek(), this);
+				this.parserMap.parse(resourceAsStream, this.profile.peek(), this);
 			} catch (Exception e) {
+				e.printStackTrace();
 				this.imports.put(loc, prof);
 			}
 			return;
 		}
 		this.profile.push(prof);
 		try {
-			this.parserMap.parse(loc, prof, this);
+			this.parserMap.parse(resourceAsStream, prof, this);
 		} catch (Exception e) {
 //			e.printStackTrace();
 			this.imports.put(loc, prof);

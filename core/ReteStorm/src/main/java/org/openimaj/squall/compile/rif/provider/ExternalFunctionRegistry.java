@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.rif;
+package org.openimaj.squall.compile.rif.provider;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,8 +7,6 @@ import org.openimaj.rif.conditions.RIFExternal;
 import org.openimaj.rif.conditions.data.RIFExternalExpr;
 import org.openimaj.rif.conditions.formula.RIFExternalValue;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.rif.provider.ExternalFunctionProvider;
-import org.openimaj.squall.compile.rif.provider.NumericGreaterThanProvider;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 
@@ -32,7 +30,7 @@ public class ExternalFunctionRegistry {
 	 */
 	public static IVFunction<Context,Context> compile(RIFExternal ext){
 		String name = getOp(ext);
-		if(!providers.containsKey(name)) throw new UnsupportedOperationException("The external was not provided");
+		if(!providers.containsKey(name)) throw new UnsupportedOperationException("The external '"+name+"' was not provided.");
 		return providers.get(name).apply(ext);
 	}
 	
@@ -58,6 +56,7 @@ public class ExternalFunctionRegistry {
 	
 	static {
 		register("http://www.w3.org/2007/rif-builtin-predicate#numeric-greater-than", new NumericGreaterThanProvider());
+		register("http://www.w3.org/2007/rif-builtin-predicate#literal-not-equal", new LiteralNotEqualProvider());
 	}
 	
 }
