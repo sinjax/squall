@@ -213,6 +213,7 @@ public class StormStreamBuilder implements Builder{
 
 		public LocalClusterOperation(Config conf) {
 			this.conf = conf;
+			this.conf.put(Config.STORM_LOCAL_MODE_ZMQ, true);
 		}
 
 		@Override

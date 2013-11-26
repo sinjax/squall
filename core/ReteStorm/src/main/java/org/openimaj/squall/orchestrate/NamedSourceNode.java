@@ -118,10 +118,4 @@ public class NamedSourceNode extends NamedNode<ISource<Stream<Context>>> {
 	public ISource<Stream<Context>> getData() {
 		return wrapped;
 	}
-
-
-
-	
-	
-	
 }

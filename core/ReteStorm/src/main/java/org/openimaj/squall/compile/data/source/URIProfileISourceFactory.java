@@ -56,6 +56,11 @@ public class URIProfileISourceFactory {
 				throw new RuntimeException(e);
 			}
 		}
+		
+		@Override
+		public String toString() {
+			return this.location.toString();
+		}
 	}
 	
 	private final class LocationISource implements ISource<Stream<Context>> {

@@ -1,9 +1,11 @@
 package org.openimaj.squall.compile.rif.provider;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.openimaj.rif.conditions.atomic.RIFAtom;
 import org.openimaj.rif.conditions.data.RIFExternalExpr;
 import org.openimaj.rif.conditions.formula.RIFExternalValue;
@@ -36,6 +38,7 @@ public class LiteralNotEqualProvider extends ExternalFunctionProvider {
 		
 		@Override
 		public List<Context> apply(Context in){
+			logger .debug(String.format("Context(%s) sent to Predicate(neq(%s))" , in, Arrays.toString(this.nodes)));
 			List<Context> ret = new ArrayList<Context>();
 			Map<String,Node> binds = in.getTyped("bindings");
 			Object first = extractBinding(binds, nodes[0]);
@@ -45,6 +48,8 @@ public class LiteralNotEqualProvider extends ExternalFunctionProvider {
 		}
 		
 	}
+
+	private static final Logger logger = Logger.getLogger(LiteralNotEqualFunction.class);
 	
 	@Override
 	public IVFunction<Context, Context> apply(RIFExternalExpr in) {

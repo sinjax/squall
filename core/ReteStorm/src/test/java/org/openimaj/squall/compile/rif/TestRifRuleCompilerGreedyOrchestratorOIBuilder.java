@@ -19,6 +19,7 @@ import org.openimaj.squall.build.OIStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
 import org.openimaj.squall.compile.functions.rif.predicates.NumericRIFPredicateFunction;
 import org.openimaj.squall.compile.rif.provider.ExternalFunctionProvider;
 import org.openimaj.squall.compile.rif.provider.ExternalFunctionRegistry;
@@ -125,79 +126,12 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 		testRuleSet(multiunionRules);
 	}
 	
-	private static final class GeoInHaversineDistanceProvider extends ExternalFunctionProvider {
-
-		private static final class GeoInHaversineDistanceFunction extends NumericRIFPredicateFunction {
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -7445044998530563542L;
-			private static final long earthRadius = 6371;//kilometres
-			private Node[] nodes;
-			
-			public GeoInHaversineDistanceFunction(Node[] ns)
-					throws RIFPredicateException {
-				super(ns);
-				this.nodes = ns;
-			}
-			
-			private double haversin(double pheta){
-				return (1d - Math.cos(pheta)) / 2d;
-			}
-
-			@Override
-			public List<Context> apply(Context in) {
-				List<Context> ret = new ArrayList<Context>();
-				Map<String,Node> binds = in.getTyped("bindings");
-				
-				Double maxDist = extractBinding(binds, nodes[0]);//kilometres
-				Double long1 = Math.PI * extractBinding(binds, nodes[1]) / 180d;
-				Double lat1 = Math.PI * extractBinding(binds, nodes[2]) / 180d;
-				Double long2 = Math.PI * extractBinding(binds, nodes[3]) / 180d;
-				Double lat2 = Math.PI * extractBinding(binds, nodes[4]) / 180d;
-				
-				Double distance = 2 * earthRadius * Math.asin(
-														Math.sqrt(
-															haversin(lat2 - lat1) +
-															Math.cos(lat1) * Math.cos(lat2) * haversin(long2 - long1)
-														)
-													);
-				if (distance <= maxDist) ret.add(in);
-				
-				return ret;
-			}
-			
-		}
-		
-		@Override
-		public IVFunction<Context, Context> apply(RIFExternalExpr in) {
-			RIFAtom atom = in.getExpr().getCommand();
-			try {
-				return new GeoInHaversineDistanceFunction(extractNodes(atom));
-			} catch (RIFPredicateException e) {
-				throw new UnsupportedOperationException(e);
-			}
-		}
-
-		@Override
-		public IVFunction<Context, Context> apply(RIFExternalValue in) {
-			RIFAtom atom = in.getVal();
-			try {
-				return new GeoInHaversineDistanceFunction(extractNodes(atom));
-			} catch (RIFPredicateException e) {
-				throw new UnsupportedOperationException(e);
-			}
-		}
-		
-	}
-	
 	/**
 	 * 
 	 */
 	@Test
 	public void testLSBenchRulesBuilder(){
-		ExternalFunctionRegistry.register("http://www.ins.cwi.nl/sib/rif-builtin-predicate/geo-in-haversine-distance", new GeoInHaversineDistanceProvider());
+		ExternalLoader.loadExternals();
 		testRuleSet(lsbenchRules);
 	}
 	

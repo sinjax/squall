@@ -25,8 +25,8 @@ public class RIFForAllBindingConsequence extends BaseBindingConsequence {
 	/**
 	 * @param fa 
 	 */
-	public RIFForAllBindingConsequence(RIFForAll fa) {
-		super(extractBindings(fa));
+	public RIFForAllBindingConsequence(RIFForAll fa, String ruleID) {
+		super(extractBindings(fa), ruleID);
 	}
 
 }

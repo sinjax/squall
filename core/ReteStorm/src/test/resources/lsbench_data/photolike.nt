@@ -21,3 +21,7 @@
 @prefix sibpho: <http://www.ins.cwi.nl/sib/photoalbum/photo/> .
 @prefix sibpha: <http://www.ins.cwi.nl/sib/photoalbum/> .
 @prefix sibgps: <http://www.ins.cwi.nl/sib/gps/> .
+
+sibu:2 sib:trackedAt sibgps:1 .
+
+sibpho:2 sib:usertag sibu:2.

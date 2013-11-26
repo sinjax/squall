@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
@@ -20,7 +21,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
  */
 @SuppressWarnings("serial")
 public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
-	
+	private static final Logger logger = Logger.getLogger(BaseRIFPredicateFunction.class);
 	private Node_Concrete val;
 	
 	/**
@@ -47,6 +48,7 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 	
 	@Override
 	public List<Context> apply(Context in) {
+		logger.debug(String.format("Context(%s) sent to Predicate(eq(%s) == %s)" , in, Arrays.toString(this.vars), this.val));
 		Map<String,Node> bindings = in.getTyped("bindings");
 		Node[] env = BindingsUtils.mapToArray(bindings,vars);
 		

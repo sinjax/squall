@@ -11,22 +11,36 @@ import org.openimaj.rdf.storm.utils.CircularPriorityWindow;
 
 import com.hp.hpl.jena.graph.Node;
 
+/**
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
+ *
+ */
 public class MapRETEQueue{
 	MapRETEQueue sibling;
 	CircularPriorityWindow<Map<String,Node>> window;
 	List<String> sharedVariables; // must match the sibling stream
 	
+	/**
+	 * @param sharedVariables
+	 */
 	public MapRETEQueue(List<String> sharedVariables) {
 		this.sharedVariables = sharedVariables;
 		
 		window = new CircularPriorityWindow<Map<String,Node>>(null, 100, 15, TimeUnit.MINUTES);
 	}
 	
+	/**
+	 * @param other
+	 */
 	public void pair(MapRETEQueue other ){
 		this.sibling = other;
 		other.sibling = this;
 	}
 
+	/**
+	 * @param typed
+	 * @return
+	 */
 	public List<Map<String,Node>> offer(Map<String, Node> typed) {
 		window.offer(typed);
 		List<Map<String, Node>> ret = new ArrayList<Map<String,Node>>();

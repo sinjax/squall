@@ -89,7 +89,7 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 									throw new SAXException("RIF: 'id' elements can only contain rif:iri typed 'Const' elements.");
 								}
 							}else{
-								currentConst = new RIFIRIConst();
+								throw new SAXException("RIF: 'id' elements can only contain rif:iri typed 'Const' elements.");
 							}
 							this.currentMetaHolder.setID((RIFIRIConst) this.currentConst);
 							
@@ -1219,6 +1219,7 @@ elementSwitch:	switch (descent.peek()){
 							((RIFXSDTypedConst) currentConst).setData(content);
 						break elementSwitch;
 					case IRICONST:
+						((RIFURIConst) currentConst).setData(findURI(content));
 						break elementSwitch;
 						
 					case LOCATION:

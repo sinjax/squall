@@ -1,9 +1,11 @@
 package org.openimaj.squall.compile.rif;
 
 import java.net.URI;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.openimaj.rif.RIFRuleSet;
 import org.openimaj.rif.conditions.RIFExternal;
 import org.openimaj.rif.conditions.atomic.RIFAtom;
@@ -111,15 +113,27 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 			// TODO
 			throw new UnsupportedOperationException("RIF translation: Universal facts are currently unsupported.");
 		} else if (fa.getStatement() instanceof RIFRule) {
+			if (fa.getStatement().getID() == null)
+				fa.getStatement().setID(fa.getID());
 			translate((RIFRule) fa.getStatement(), ccps); 
 		}
 		
-		ccps.addConsequence(new RIFForAllBindingConsequence(fa));
+		String id;
+		if (fa.getID() == null)
+			id = DigestUtils.md5Hex(fa.toString());
+		else
+			id = fa.getID().getNode().getURI();
+		ccps.addConsequence(new RIFForAllBindingConsequence(fa, id));
 	}
 	
 	protected void translate(RIFRule r, ContextCPS ccps) throws RIFPredicateException, UnsupportedOperationException {
 		translateBody(r.getBody(), ccps);
-		translateHead(r.getHead(), ccps);
+		String id;
+		if (r.getID() == null)
+			id = DigestUtils.md5Hex(r.toString());
+		else
+			id = r.getID().getNode().getURI();
+		translateHead(id, r.getHead(), ccps);
 	}
 	
 	protected void translateBody(RIFFormula formula, ContextCPS ccps) throws RIFPredicateException, UnsupportedOperationException {
@@ -166,16 +180,16 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 		}
 	}
 	
-	protected void translateHead(RIFFormula formula, ContextCPS ccps) throws RIFPredicateException, UnsupportedOperationException {
+	protected void translateHead(String ruleID, RIFFormula formula, ContextCPS ccps) throws RIFPredicateException, UnsupportedOperationException {
 		if (formula instanceof RIFAtomic){
 			List<TriplePattern> triples = translate((RIFAtomic) formula, ccps);
 			for (TriplePattern tp : triples){
-				ccps.addConsequence(new RIFTripleConsequence(tp));
-				ccps.setReentrat(true);
+				ccps.addConsequence(new RIFTripleConsequence(tp, ruleID));
+				ccps.setReentrant(true);
 			}
 		} else if (formula instanceof RIFAnd){
 			for (RIFFormula f : (RIFAnd) formula) {
-				translateHead(f, ccps);
+				translateHead(ruleID, f, ccps);
 			}
 		} else if (formula instanceof RIFOr){
 			throw new UnsupportedOperationException("RIF-Core translation: Disjunctive statements in rule heads are not supported in RIF Core.");

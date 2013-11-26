@@ -22,10 +22,15 @@ import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 public class RIFTripleConsequence implements IVFunction<Context,Context> {
 
 	private TriplePattern clause;
-	private Node_RuleVariable[] ruleVariables;
+	private String id;
 
-	public RIFTripleConsequence(TriplePattern clause) {
-		this.clause = clause;
+	/**
+	 * @param tp
+	 * @param ruleID
+	 */
+	public RIFTripleConsequence(TriplePattern tp, String ruleID) {
+		this.clause = tp;
+		id = ruleID;
 	}
 
 	@Override
@@ -39,6 +44,7 @@ public class RIFTripleConsequence implements IVFunction<Context,Context> {
 		for (Triple triple : ret) {
 			Context out = new Context();
 			out.put("triple", triple);
+			out.put("rule", this.id);
 			ctxs.add(out);			
 		}
 		return ctxs;

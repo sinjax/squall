@@ -27,6 +27,7 @@ import org.openimaj.squall.compile.rif.provider.ExternalFunctionProvider;
 import org.openimaj.squall.compile.rif.provider.ExternalFunctionRegistry;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.squall.orchestrate.greedy.CombinedSourceGreedyOrchestrator;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.util.data.Context;
 import org.xml.sax.SAXException;
@@ -37,7 +38,7 @@ import com.hp.hpl.jena.graph.Node;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
+public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	
 	private static final class PrintAllOperation implements IOperation<Context>, Serializable {
 		@Override
@@ -52,7 +53,8 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 		@Override
 		public void perform(Context object) {
 			String typed = object.getTyped("rule");
-			if (typed != null && typed.endsWith("lsbench-query-7.5")) System.out.println(object);
+			if (typed != null && typed.endsWith("lsbench-query-7.5")) 
+				System.out.println(object);
 		}
 	}
 
@@ -68,7 +70,7 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 		RIFRuleSet rules = null;
 		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
 		try {
-			InputStream resourceAsStream = TestRifRuleCompilerGreedyOrchestratorStormBuilder.class.getResourceAsStream(ruleSource);
+			InputStream resourceAsStream = TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder.class.getResourceAsStream(ruleSource);
 //			System.out.println(FileUtils.readall(resourceAsStream));
 			rules = profs.parse(
 					resourceAsStream,
@@ -144,10 +146,10 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 		RIFCoreRuleCompiler jrc = new RIFCoreRuleCompiler();
 		CompiledProductionSystem comp = jrc.compile(ruleSet);
 		
-		GreedyOrchestrator go = new GreedyOrchestrator();
+		CombinedSourceGreedyOrchestrator go = new CombinedSourceGreedyOrchestrator();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		
-		Builder builder = StormStreamBuilder.localClusterBuilder(20000000);
+		Builder builder = StormStreamBuilder.localClusterBuilder(-1);
 		builder.build(orchestrated);
 	}
 	

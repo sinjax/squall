@@ -18,6 +18,26 @@
     	<location>java:///lsbench/rules.rif</location>
     </Import>
   </directive>
+<!--
+  <directive>
+    <Import>
+    	<location>java:///lsbench_data/photo.nt</location>
+    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    </Import>
+  </directive>
+  <directive>
+    <Import>
+    	<location>java:///lsbench_data/photolike.nt</location>
+    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    </Import>
+  </directive>
+  <directive>
+    <Import>
+    	<location>java:///lsbench_data/post.nt</location>
+    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    </Import>
+  </directive>
+-->
   <directive>
     <Import>
     	<location>file:///Users/david.monks/Downloads/lsbench/rdfPostStream1000.nt</location>
@@ -33,6 +53,24 @@
   <directive>
     <Import>
     	<location>file:///Users/david.monks/Downloads/lsbench/rdfPhotoLikeStream1000.nt</location>
+    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    </Import>
+  </directive>
+  <directive>
+    <Import>
+    	<location>file:///Users/david.monks/Downloads/lsbench/gpsStream1000.nt</location>
+    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    </Import>
+  </directive>
+  <directive>
+    <Import>
+    	<location>file:///Users/david.monks/Downloads/lsbench/mr0_sibdataset1000.nt</location>
+    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    </Import>
+  </directive>
+  <directive>
+    <Import>
+    	<location>file:///Users/david.monks/Downloads/lsbench/rdfPostLikeStream1000.nt</location>
     	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
@@ -553,7 +591,6 @@
 			  	              </formula>
 			  	            </Exists>
 			  	          </formula>
-<!--
 			  	          <formula>
 			  	            <External>
 			  	              <content>
@@ -562,7 +599,7 @@
 				  	      	        <Const type="&rif;iri">http://www.ins.cwi.nl/sib/rif-builtin-predicate/geo-in-haversine-distance</Const>
 				  	      	      </op>
 				  	      	      <args ordered="yes">
-				  	      	        <Const type="&xs;integer">1</Const>
+				  	      	        <Const type="&xs;integer">10000</Const>
 				  	      	        <Var>userlong</Var>
 				  	      	        <Var>userlat</Var>
 				  	      	      	<Var>photolong</Var>
@@ -572,7 +609,6 @@
 			  	              </content>
 			  	            </External>
 			  	          </formula>
--->
 			  	        </And>
 			  	      </formula>
   	      	        </Exists>

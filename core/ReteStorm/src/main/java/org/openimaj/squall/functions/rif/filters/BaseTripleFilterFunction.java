@@ -67,20 +67,22 @@ public class BaseTripleFilterFunction implements IVFunction<Context,Context>{
 	@Override
 	public List<Context> apply(Context inc) {
 		List<Context> ctxs = new ArrayList<Context>();
-		logger.debug(String.format("Context(%s) sent to Filter(%s)" , inc, this.clause));
+//		logger.debug(String.format("Context(%s) sent to Filter(%s)" , inc, this.clause));
 		Triple in = inc.getTyped("triple");
 //		if(!in.getSubject().matches(this.extended.getMatchSubject())) return null;
 //		if(!in.getPredicate().matches(this.extended.getMatchPredicate())) return null;
 //		if(!in.getObject().matches(this.extended.getMatchObject())) return null;
 		if(!this.extended.matches(in)){
-			logger.debug(String.format("No match!"));
+//			logger.debug(String.format("No match!"));
 			return null;
 		}
 		
-		logger.debug(String.format("Match at Filter(%s)", this.clause));
+//		logger.debug(String.format("Match at Filter(%s): %s", this.clause, inc));
 		
 		// We have a match!
 		Context out = new Context();
+		Map<String,Node> binds = extractVars(in);
+		logger.debug(String.format("Match at Filter(%s): %s", this.clause, binds));
 		out.put("bindings", extractVars(in));
 		ctxs.add(out);
 		return ctxs ;

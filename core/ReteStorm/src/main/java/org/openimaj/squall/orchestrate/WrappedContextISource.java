@@ -55,4 +55,9 @@ public class WrappedContextISource implements ISource<Stream<Context>>{
 		strm.cleanup();
 	}
 	
+	@Override
+	public String toString() {
+		return this.strm.toString();
+	}
+	
 }

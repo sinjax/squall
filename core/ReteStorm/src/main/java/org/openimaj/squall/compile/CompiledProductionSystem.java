@@ -122,7 +122,7 @@ public abstract class CompiledProductionSystem {
 	 * @param reentrant whether the current {@link CompiledProductionSystem} should have its output re-entered into the system
 	 * @return the current {@link CompiledProductionSystem}
 	 */
-	public CompiledProductionSystem setReentrat(boolean reentrant){
+	public CompiledProductionSystem setReentrant(boolean reentrant){
 		this.isReentrant = reentrant;
 		return this;
 	}

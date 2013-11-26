@@ -21,3 +21,12 @@
 @prefix sibpho: <http://www.ins.cwi.nl/sib/photoalbum/photo/> .
 @prefix sibpha: <http://www.ins.cwi.nl/sib/photoalbum/> .
 @prefix sibgps: <http://www.ins.cwi.nl/sib/gps/> .
+
+sibpho:1 dbpprop:latd "10"^^xsd:integer .
+sibpho:1 dbpprop:longd "10"^^xsd:integer .
+
+sibpho:2 dbpprop:latd "10"^^xsd:integer .
+sibpho:2 dbpprop:longd "10"^^xsd:integer . 
+
+sibgps:1 dbpprop:latd "10"^^xsd:integer .
+sibgps:1 dbpprop:longd "10"^^xsd:integer .

@@ -21,17 +21,20 @@ public class BaseBindingConsequence implements IVFunction<Context,Context> {
 
 	private String[] inVariables;
 	private String[] outVariables;
+	private String id;
 	
 	/**
 	 * @param vars 
+	 * @param ruleID 
 	 */
-	public BaseBindingConsequence(List<Node_RuleVariable> vars){
+	public BaseBindingConsequence(List<Node_RuleVariable> vars, String ruleID){
 		this.inVariables = new String[vars.size()];
 		this.outVariables = new String[this.inVariables.length];
 		for (int i = 0; i < this.inVariables.length; i ++){
 			this.inVariables[i] = vars.get(i).getName();
 			this.outVariables[i] = vars.get(i).getName();
 		}
+		this.id = ruleID;
 	}
 	
 	@Override
@@ -47,6 +50,7 @@ public class BaseBindingConsequence implements IVFunction<Context,Context> {
 		
 		Context out = new Context();
 		out.put("bindings", ret);
+		out.put("rule", this.id);
 		List<Context> ctxs = new ArrayList<Context>();
 		ctxs.add(out);
 		return ctxs;

@@ -118,7 +118,7 @@ public class GreedyOrchestrator implements Orchestrator{
 		}
 	}
 
-	private void orchestrateSources(
+	protected void orchestrateSources(
 			CompiledProductionSystem sys,
 			OrchestratedProductionSystem root) {
 		if(sys.getSources().size()>0){
@@ -276,7 +276,7 @@ public class GreedyOrchestrator implements Orchestrator{
 		
 	}
 
-	private String nextSourceName(OrchestratedProductionSystem ret) {
+	protected String nextSourceName(OrchestratedProductionSystem ret) {
 		return "source_" + ret.root.size();
 	}
 

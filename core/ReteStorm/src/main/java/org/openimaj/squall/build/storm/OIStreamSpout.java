@@ -2,6 +2,7 @@ package org.openimaj.squall.build.storm;
 
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.storm.utils.StormUtils;
@@ -30,6 +31,7 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 	private ISource<Stream<Context>> streamSource;
 	private SpoutOutputCollector collector;
 	private byte[] serializedStreamSource;
+	private static final Logger logger = Logger.getLogger(OIStreamSpout.class);
 
 	/**
 	 * @param namedNode
@@ -51,6 +53,7 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 		setup(conf,context);
 		this.collector = collector;
 		this.streamSource = StormUtils.deserialiseFunction(kryo,serializedStreamSource);
+		logger.debug("Initialising stream: " + this.streamSource);
 		this.streamSource.setup();
 		this.stream = this.streamSource.apply();
 	}
@@ -71,11 +74,14 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 	@Override
 	public void nextTuple() {
 		Context item = null;
-		if(this.stream.hasNext()) item = this.stream.next();
+		if(this.stream.hasNext()) 
+		{
+			item = this.stream.next();
+		}
 		if (item != null) {
 			this.fire(item);
 		} else { 
-			Utils.sleep(10);
+			Utils.sleep(100);
 		}
 	}
 

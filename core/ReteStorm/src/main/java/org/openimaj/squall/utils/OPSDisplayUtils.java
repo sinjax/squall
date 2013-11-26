@@ -47,6 +47,8 @@ public class OPSDisplayUtils {
 			cells.put(vert.getName(),mxgraph.insertVertex(mxgraph.getDefaultParent(), null, vert.getName(), 0, 0, 50, 50));
 			if(vert.isFunction()){
 				details.put(vert.getName(),vert.getFunction().toString());
+			} else if(vert.isSource()){
+				details.put(vert.getName(),vert.getSource().toString());
 			}
 
 		}

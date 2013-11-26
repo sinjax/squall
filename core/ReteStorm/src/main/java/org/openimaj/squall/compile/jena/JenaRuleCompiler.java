@@ -46,7 +46,7 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 		List<Rule> rules = sourceRules.secondObject();
 		List<ISource<Stream<Context>>> sources = sourceRules.firstObject();
 		ContextCPS ret = new ContextCPS();
-		ret.setReentrat(false);
+		ret.setReentrant(false);
 		OptionalProductionSystems options = new OptionalProductionSystems();
 		ret.addOption(options);
 		for (ISource<Stream<Context>> stream : sources) {
@@ -59,7 +59,7 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 			else
 			{
 				ContextCPS ruleret = new ContextCPS();
-				ruleret.setReentrat(true);
+				ruleret.setReentrant(true);
 				options.add(ruleret);
 
 				// Extract all the parts of the body
