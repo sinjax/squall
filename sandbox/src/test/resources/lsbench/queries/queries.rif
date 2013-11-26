@@ -15,25 +15,25 @@
 <Document>
   <directive>
     <Import>
-    	<location>java:///lsbench/rules.rif</location>
+    	<location>java:///lsbench/rules/rules.rif</location>
     </Import>
   </directive>
 <!--
   <directive>
     <Import>
-    	<location>java:///lsbench_data/photo.nt</location>
+    	<location>java:///lsbench/data/photo.nt</location>
     	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>java:///lsbench_data/photolike.nt</location>
+    	<location>java:///lsbench/data/photolike.nt</location>
     	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>java:///lsbench_data/post.nt</location>
+    	<location>java:///lsbench/data/post.nt</location>
     	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
