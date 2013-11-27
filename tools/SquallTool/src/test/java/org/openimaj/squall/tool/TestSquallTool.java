@@ -19,11 +19,11 @@ public class TestSquallTool {
 	public void testSquallTool() throws IOException{
 		SquallTool.main(toArgs(""
 		+ "-tm RIF "
-			+ " -rifr java:///queries.rif "
+			+ " -rifr java:///queries.rif"
 		+ " -pm GREEDYCS"
 		+ " -bm STORM"
 			+ " -stm LOCAL"
-				+ " -st 500000"
+				+ " -st 5000"
 		));
 	}
 

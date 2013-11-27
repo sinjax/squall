@@ -22,7 +22,18 @@ public enum OperationModeOption implements CmdLineOptionsProvider{
 	/**
 	 * 
 	 */
-	KESTREL{
+	TRIPLEFILE{
+
+		@Override
+		public OperationMode getOptions() {
+			return new TripleFileOperationMode();
+		}
+		
+	},
+	/**
+	 * 
+	 */
+	TRIPLEKESTREL{
 
 		@Override
 		public OperationMode getOptions() {
