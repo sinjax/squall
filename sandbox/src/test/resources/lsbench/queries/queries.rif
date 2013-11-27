@@ -18,59 +18,39 @@
     	<location>java:///lsbench/rules/rules.rif</location>
     </Import>
   </directive>
-<!--
   <directive>
     <Import>
-    	<location>java:///lsbench/data/photo.nt</location>
+    	<location>file://lsbench/data/rdfPostStream1000.nt</location>
     	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>java:///lsbench/data/photolike.nt</location>
+    	<location>file://lsbench/data/rdfPhotoStream1000.nt</location>
     	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>java:///lsbench/data/post.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
-    </Import>
-  </directive>
--->
-  <directive>
-    <Import>
-    	<location>file:///Users/david.monks/Downloads/lsbench/rdfPostStream1000.nt</location>
+    	<location>file://lsbench/data/rdfPhotoLikeStream1000.nt</location>
     	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>file:///Users/david.monks/Downloads/lsbench/rdfPhotoStream1000.nt</location>
+    	<location>file://lsbench/data/gpsStream1000.nt</location>
     	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>file:///Users/david.monks/Downloads/lsbench/rdfPhotoLikeStream1000.nt</location>
+    	<location>file://lsbench/data/mr0_sibdataset1000.nt</location>
     	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>file:///Users/david.monks/Downloads/lsbench/gpsStream1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
-    </Import>
-  </directive>
-  <directive>
-    <Import>
-    	<location>file:///Users/david.monks/Downloads/lsbench/mr0_sibdataset1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
-    </Import>
-  </directive>
-  <directive>
-    <Import>
-    	<location>file:///Users/david.monks/Downloads/lsbench/rdfPostLikeStream1000.nt</location>
+    	<location>file://lsbench/data/rdfPostLikeStream1000.nt</location>
     	<profile>http://www.w3.org/ns/stream/Turtle</profile>
     </Import>
   </directive>
@@ -468,7 +448,7 @@
   	      </formula>
   	    </Forall>
   	  </sentence>
-  	  -->
+-->
   	  <sentence>
   	    <Forall>
   	      <id>
@@ -632,108 +612,6 @@
   	      </formula>
   	    </Forall>
   	  </sentence>
-<!--
-  	  <sentence>
-  	    <Forall>
-  	      <id>
-  	      	<Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/lsbench-rule-visited-by-tag</Const>
-  	      </id>
-  	      <meta>
-  	      	<Frame>
-  	      	  <object>
-  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/usertag</Const>
-  	      	  </object>
-  	      	  <slot ordered="yes">
-  	      	    <Const type="&rif;iri">http://www.w3.org/2000/01/rdf-schema#subPropertyOf</Const>
-  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/visited</Const>
-  	      	  </slot>
-  	      	</Frame>
-  	      </meta>
-  	      <declare>
-  	      	<Var>photo</Var>
-  	      </declare>
-  	      <declare>
-  	      	<Var>user</Var>
-  	      </declare>
-  	      <formula>
-  	      	<Implies>
-  	      	  <if>
-  	      	    <Frame>
-	  	      	  <object>
-	  	      	    <Var>photo</Var>
-	  	      	  </object>
-	  	      	  <slot ordered="yes">
-	  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/usertag</Const>
-	  	      	    <Var>user</Var>
-	  	      	  </slot>
-	  	      	</Frame>
-  	      	  </if>
-  	      	  <then>
-  	      	  	<Frame>
-	  	      	  <object>
-	  	      	    <Var>user</Var>
-	  	      	  </object>
-	  	      	  <slot ordered="yes">
-	  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/visited</Const>
-	  	      	    <Var>photo</Var>
-	  	      	  </slot>
-	  	      	</Frame>
-  	      	  </then>
-  	      	</Implies>
-  	      </formula>
-  	    </Forall>
-  	  </sentence>
-  	  <sentence>
-  	    <Forall>
-  	      <id>
-  	      	<Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/lsbench-rule-visited-by-tracked</Const>
-  	      </id>
-  	      <meta>
-  	      	<Frame>
-  	      	  <object>
-  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/trackedAt</Const>
-  	      	  </object>
-  	      	  <slot ordered="yes">
-  	      	    <Const type="&rif;iri">http://www.w3.org/2000/01/rdf-schema#subPropertyOf</Const>
-  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/visited</Const>
-  	      	  </slot>
-  	      	</Frame>
-  	      </meta>
-  	      <declare>
-  	      	<Var>gps</Var>
-  	      </declare>
-  	      <declare>
-  	      	<Var>user</Var>
-  	      </declare>
-  	      <formula>
-  	      	<Implies>
-  	      	  <if>
-  	      	    <Frame>
-	  	      	  <object>
-	  	      	    <Var>user</Var>
-	  	      	  </object>
-	  	      	  <slot ordered="yes">
-	  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/trackedAt</Const>
-	  	      	    <Var>gps</Var>
-	  	      	  </slot>
-	  	      	</Frame>
-  	      	  </if>
-  	      	  <then>
-  	      	    <Frame>
-	  	      	  <object>
-	  	      	    <Var>user</Var>
-	  	      	  </object>
-	  	      	  <slot ordered="yes">
-	  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/visited</Const>
-	  	      	    <Var>gps</Var>
-	  	      	  </slot>
-	  	      	</Frame>
-  	      	  </then>
-  	      	</Implies>
-  	      </formula>
-  	    </Forall>
-  	  </sentence>
--->
   	</Group>
   </payload>
 </Document>

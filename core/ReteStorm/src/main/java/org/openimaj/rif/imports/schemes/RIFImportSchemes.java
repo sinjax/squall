@@ -22,7 +22,7 @@ public class RIFImportSchemes extends HashMap<String, Function<URI, InputStream>
 	 */
 	public RIFImportSchemes(){
 		this.put("http", new HTTPSchemeFunction());
-		this.put("file", new URLSchemeFunction());
+		this.put("file", new FileSchemeFunction());
 		this.put("java", new JavaSchemeFunction());
 	}
 	

@@ -1,24 +1,24 @@
 package org.openimaj.rif.imports.schemes;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 
-import org.mortbay.io.RuntimeIOException;
-import org.openimaj.io.HttpUtils;
 import org.openimaj.util.function.Function;
 
 /**
- * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class URLSchemeFunction implements Function<URI, InputStream> {
+public class FileSchemeFunction implements Function<URI, InputStream> {
 
 	@Override
 	public InputStream apply(URI in) {
+		File f = new File(in.getHost()+in.getPath());
 		try {
-			return in.toURL().openStream();
+			return new FileInputStream(f);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
