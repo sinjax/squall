@@ -51,10 +51,8 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 		}
 
 		@Override
-		public void perform(Context object) {
-			String typed = object.getTyped("rule");
-			if (typed != null && typed.endsWith("lsbench-query-7.5")) 
-				System.out.println(object);
+		public void perform(Context object) { 
+			System.out.println(object);
 		}
 	}
 
@@ -149,7 +147,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 		CombinedSourceGreedyOrchestrator go = new CombinedSourceGreedyOrchestrator();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		
-		Builder builder = StormStreamBuilder.localClusterBuilder(-1);
+		Builder builder = StormStreamBuilder.localClusterBuilder(5000);
 		builder.build(orchestrated);
 	}
 	

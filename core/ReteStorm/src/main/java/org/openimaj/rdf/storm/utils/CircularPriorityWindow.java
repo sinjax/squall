@@ -52,6 +52,9 @@ import scala.actors.threadpool.Arrays;
  */
 public class CircularPriorityWindow <T> implements Queue <T> {
 
+	static{
+		System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+	}
 	protected PriorityQueue<TimeWrapped> queue;
 	protected Map<T, Count> data;
 	protected final int capacity;

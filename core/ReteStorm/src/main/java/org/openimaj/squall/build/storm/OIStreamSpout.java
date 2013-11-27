@@ -70,7 +70,7 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 	@Override
 	public void deactivate() {
 	}
-
+	int seen = 0;
 	@Override
 	public void nextTuple() {
 		Context item = null;
@@ -79,10 +79,17 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 			item = this.stream.next();
 		}
 		if (item != null) {
+			seen++;
 			this.fire(item);
-		} else { 
-			Utils.sleep(100);
+			if(seen%5000 == 0){
+				logger.debug("Emitted 5000");
+//				Utils.sleep(100);
+			}
+		} else {
+			logger.debug("Stream empty, waiting 10");
+			Utils.sleep(10);
 		}
+		
 	}
 
 	@Override

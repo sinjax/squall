@@ -118,7 +118,7 @@ public class StormStreamBuilder implements Builder{
 			else if(namedNode.isSource()){
 				// build a spout
 				IRichSpout s = new OIStreamSpout(namedNode);
-				tb.setSpout(name, s);
+				tb.setSpout(name, s,1);
 				
 				state.put(name, namedNode);
 				remove = true;

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
@@ -22,7 +23,7 @@ import com.hp.hpl.jena.graph.Node;
  * 
  */
 public class FixedJoinFunction implements IVFunction<Context, Context>{
-
+	private static final Logger logger = Logger.getLogger(FixedJoinFunction.class);
 	private VariableHolder left;
 	private VariableHolder right;
 	private ArrayList<String> shared;
@@ -38,6 +39,7 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 			IVFunction<Context,Context> left,
 			IVFunction<Context,Context> right
 	) {
+		
 		this.left = left;
 		this.right = right;
 		
@@ -61,14 +63,16 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 	@Override
 	public List<Context> apply(Context in) {
 		Map<String, Node> typed = in.getTyped("bindings");
+		logger.debug(String.format("Joining: %s <-> %s",left,right));
 		List<Context> ret = new ArrayList<Context>();
 		if(in.getTyped("stream").equals("left")){
-			
+			logger.debug("Joining Left Stream");
 			for (Map<String, Node> bindings : leftQueue.offer(typed)) {
 				ret.add(new Context("bindings",bindings));
 			}
 		}
 		else if(in.getTyped("stream").equals("right")){
+			logger.debug("Joining Right Stream");
 			for (Map<String, Node> bindings : rightQueue.offer(typed)) {
 				ret.add(new Context("bindings",bindings));
 			}
