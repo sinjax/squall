@@ -4,35 +4,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.conditions.atomic.RIFAtom;
-import org.openimaj.rif.conditions.data.RIFExternalExpr;
-import org.openimaj.rif.conditions.formula.RIFExternalValue;
 import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
-import org.openimaj.squall.build.OIStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;
-import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.IOperation;
-import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
-import org.openimaj.squall.compile.functions.rif.predicates.NumericRIFPredicateFunction;
-import org.openimaj.squall.compile.jena.JenaRuleCompiler;
-import org.openimaj.squall.compile.jena.SourceRulePair;
-import org.openimaj.squall.compile.jena.TestJenaRuleCompilerGreedyOrchestratorOIBuilder;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
-import org.openimaj.squall.compile.rif.TestRifRuleCompilerGreedyOrchestratorStormBuilder;
-import org.openimaj.squall.compile.rif.provider.ExternalFunctionProvider;
-import org.openimaj.squall.compile.rif.provider.ExternalFunctionRegistry;
 import org.openimaj.squall.data.ISource;
-import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.CombinedSourceGreedyOrchestrator;
-import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
@@ -41,7 +23,6 @@ import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
 import org.xml.sax.SAXException;
 
-import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
@@ -78,7 +59,7 @@ public class VisRIFGreedyRule {
 		
 		@Override
 		public void setup() { 
-			nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
+			nTripleStream = VisRIFGreedyRule.class.getResourceAsStream("/test.rdfs");
 		}
 		
 		@Override
@@ -101,7 +82,7 @@ public class VisRIFGreedyRule {
 		RIFRuleSet rules = null;
 		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
 		try {
-			InputStream resourceAsStream = TestRifRuleCompilerGreedyOrchestratorStormBuilder.class.getResourceAsStream(ruleSource);
+			InputStream resourceAsStream = VisRIFGreedyRule.class.getResourceAsStream(ruleSource);
 //			System.out.println(FileUtils.readall(resourceAsStream));
 			rules = profs.parse(
 					resourceAsStream,

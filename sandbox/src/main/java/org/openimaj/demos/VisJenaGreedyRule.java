@@ -3,13 +3,10 @@ package org.openimaj.demos;
 import java.io.InputStream;
 import java.util.List;
 
-import org.openimaj.rdf.storm.topology.ReteTopologyTest;
-import org.openimaj.squall.build.OIStreamBuilder;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.jena.JenaRuleCompiler;
 import org.openimaj.squall.compile.jena.SourceRulePair;
-import org.openimaj.squall.compile.jena.TestJenaRuleCompilerGreedyOrchestratorOIBuilder;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
@@ -56,7 +53,7 @@ public class VisJenaGreedyRule {
 		
 		@Override
 		public void setup() { 
-			nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
+			nTripleStream = VisJenaGreedyRule.class.getResourceAsStream("/test.rdfs");
 		}
 		
 		@Override

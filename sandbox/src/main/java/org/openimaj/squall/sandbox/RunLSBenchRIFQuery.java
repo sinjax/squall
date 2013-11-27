@@ -15,14 +15,21 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
-import org.openimaj.squall.compile.rif.TestRifRuleCompilerGreedyOrchestratorOIBuilder;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.util.data.Context;
 import org.xml.sax.SAXException;
 
+/**
+ * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ *
+ */
 public class RunLSBenchRIFQuery {
 	private static final class PrintAllOperation implements IOperation<Context>,Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1409401688854637882L;
 		private static final Logger logger = Logger.getLogger(PrintAllOperation.class);
 		@Override
 		public void setup() {
@@ -46,7 +53,7 @@ public class RunLSBenchRIFQuery {
 		RIFRuleSet rules = null;
 		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
 		try {
-			InputStream resourceAsStream = TestRifRuleCompilerGreedyOrchestratorOIBuilder.class.getResourceAsStream(ruleSource);
+			InputStream resourceAsStream = RunLSBenchRIFQuery.class.getResourceAsStream(ruleSource);
 //			System.out.println(FileUtils.readall(resourceAsStream));
 			rules = profs.parse(
 					resourceAsStream,
