@@ -16,6 +16,7 @@
   <description>Squall tools projects.</description>
   <modules>
     <module>ReteStormTool</module>
+    <module>SquallTool</module>
     <module>core-storm-tools</module>
   </modules>
 </project>

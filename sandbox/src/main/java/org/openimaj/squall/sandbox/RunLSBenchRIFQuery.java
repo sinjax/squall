@@ -9,6 +9,7 @@ import java.net.URISyntaxException;
 import org.apache.log4j.Logger;
 import org.openimaj.rif.RIFRuleSet;
 import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
+import org.openimaj.rif.utils.RifUtils;
 import org.openimaj.squall.build.Builder;
 import org.openimaj.squall.build.storm.StormStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;
@@ -19,6 +20,8 @@ import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.util.data.Context;
 import org.xml.sax.SAXException;
+
+import com.sun.media.jai.opimage.RIFUtil;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -49,32 +52,12 @@ public class RunLSBenchRIFQuery {
 		}
 	}
 	
-	private static RIFRuleSet readRules(String ruleSource) {
-		RIFRuleSet rules = null;
-		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
-		try {
-			InputStream resourceAsStream = RunLSBenchRIFQuery.class.getResourceAsStream(ruleSource);
-//			System.out.println(FileUtils.readall(resourceAsStream));
-			rules = profs.parse(
-					resourceAsStream,
-					new URI("http://www.w3.org/ns/entailment/Core")
-				);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-		return rules;
-	}
-	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		ExternalLoader.loadExternals();
-		RIFRuleSet lsbenchRules = readRules("/queries.rif");
+		RIFRuleSet lsbenchRules = RifUtils.readRules("/queries.rif");
 		IOperation<Context> op = new PrintAllOperation();
 
 		RIFCoreRuleCompiler jrc = new RIFCoreRuleCompiler();
