@@ -122,7 +122,6 @@ public class StormReteTopologyTest {
 		cluster.submitTopology("reteTopology", conf, topology);
 
 		Utils.sleep(5000);
-		SysRIOT.wireIntoJena();
 		final Model model = ModelFactory.createDefaultModel();
 		model.read(outURL.toString(), null, "N-TRIPLES");
 

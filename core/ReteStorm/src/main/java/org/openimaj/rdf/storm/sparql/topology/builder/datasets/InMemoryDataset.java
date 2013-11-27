@@ -1,6 +1,7 @@
 package org.openimaj.rdf.storm.sparql.topology.builder.datasets;
 
-import org.openjena.atlas.lib.Sink;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.openjena.riot.RiotReader;
 
 import com.hp.hpl.jena.graph.Triple;
@@ -34,23 +35,7 @@ public class InMemoryDataset extends StaticRDFDatasetBase{
 
 	@Override
 	public void prepare() {
-		this.model = ModelFactory.createDefaultModel();
-		RiotReader.parseTriples(dataset, new Sink<Triple>() {
-
-			@Override
-			public void close() {
-			}
-
-			@Override
-			public void send(Triple item) {
-				model.add(model.asStatement(item));
-			}
-
-			@Override
-			public void flush() {
-
-			}
-		});
+		this.model = RDFDataMgr.loadModel(dataset,Lang.NTRIPLES);
 	}
 
 	@Override

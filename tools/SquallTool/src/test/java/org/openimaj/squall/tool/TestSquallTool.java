@@ -17,11 +17,18 @@ public class TestSquallTool {
 	 */
 	@Test
 	public void testSquallTool() throws IOException{
-		SquallTool.main(toArgs("-tm RIF -pm GREEDYCS -bm STORM"));
+		SquallTool.main(toArgs(""
+		+ "-tm RIF "
+			+ " -rifr java:///queries.rif "
+		+ " -pm GREEDYCS"
+		+ " -bm STORM"
+			+ " -stm LOCAL"
+				+ " -st 500000"
+		));
 	}
 
 	private String[] toArgs(String string) {
-		return string.split(" ");
+		return string.replaceAll("[ ]+", " ").split(" ");
 	}
 
 }

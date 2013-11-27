@@ -10,6 +10,9 @@ import java.util.Set;
 
 import org.openimaj.rdf.storm.utils.JenaStormUtils;
 import org.openimaj.squall.build.Builder;
+import org.openimaj.squall.build.storm.topology.LocalClusterOperation;
+import org.openimaj.squall.build.storm.topology.LocalClusterOperationTOF;
+import org.openimaj.squall.build.storm.topology.TopologyOperationFactory;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
@@ -23,13 +26,11 @@ import org.openimaj.util.stream.Stream;
 import org.openimaj.util.stream.StreamLoopGuard;
 
 import backtype.storm.Config;
-import backtype.storm.LocalCluster;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.topology.BoltDeclarer;
 import backtype.storm.topology.IRichBolt;
 import backtype.storm.topology.IRichSpout;
 import backtype.storm.topology.TopologyBuilder;
-import backtype.storm.utils.Utils;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -38,8 +39,6 @@ import backtype.storm.utils.Utils;
  *
  */
 public class StormStreamBuilder implements Builder{
-
-	private static final String SLEEPKEY = "org.openimaj.squall.build.storm.sleep";
 	private Config conf;
 	private TopologyOperationFactory topopf;
 
@@ -203,88 +202,6 @@ public class StormStreamBuilder implements Builder{
 		return true;
 	}
 
-	static class LocalClusterOperation implements IOperation<StormTopology>{		
-		long DEFAULT_SLEEP_TIME = 5000;
-		
-		private Config conf;
-		private String name = "local";
-
-		private LocalCluster cluster;
-
-		public LocalClusterOperation(Config conf) {
-			this.conf = conf;
-			this.conf.put(Config.STORM_LOCAL_MODE_ZMQ, true);
-		}
-
-		@Override
-		public void perform(StormTopology object) {
-			cluster.submitTopology(name, conf, object);
-		}
-
-		@Override
-		public void setup() {
-			this.cluster = new LocalCluster();
-			JenaStormUtils.registerSerializers(conf);
-			conf.setFallBackOnJavaSerialization(true);
-		}
-
-		@Override
-		public void cleanup() {
-			long sleepTime = (Long) conf.get(SLEEPKEY);
-			try {
-				if (sleepTime < 0) {
-					while (true) {
-						Utils.sleep(DEFAULT_SLEEP_TIME);
-					}
-				} else {
-					Utils.sleep(sleepTime);
-
-				}
-			} finally {
-				cluster.killTopology(name);
-//				cluster.shutdown();
-			}
-			
-		}
-		
-	}
-	
-	/**
-	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
-	 *
-	 */
-	public abstract static class TopologyOperationFactory {
-		/**
-		 * @param conf
-		 * @return an operation which handles a {@link StormTopology}
-		 */
-		public abstract IOperation<StormTopology> topop(Config conf);
-	}
-	
-	/**
-	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
-	 *
-	 */
-	public static class LocalClusterOperationTOF extends TopologyOperationFactory{
-
-		private static LocalClusterOperationTOF instance = null;
-
-		@Override
-		public IOperation<StormTopology> topop(Config conf) {
-			return new LocalClusterOperation(conf);
-		}
-
-		/**
-		 * @return the instance of this factory
-		 */
-		public static LocalClusterOperationTOF instance() {
-			if(instance == null){
-				instance  = new LocalClusterOperationTOF();
-			}
-			return instance;
-		}
-		
-	}
 	/**
 	 * Calls {@link #localClusterBuilder(long)} with -1 (sleep forever)
 	 * @return build a {@link StormStreamBuilder} deployed on a local cluster
@@ -300,7 +217,7 @@ public class StormStreamBuilder implements Builder{
 	public static StormStreamBuilder localClusterBuilder(long sleep) {
 		Config conf = new Config();
 		JenaStormUtils.registerSerializers(conf);
-		conf.put(SLEEPKEY, sleep);
+		conf.put(LocalClusterOperation.SLEEPKEY, sleep);
 		return new StormStreamBuilder(LocalClusterOperationTOF.instance(), conf);
 	}
 

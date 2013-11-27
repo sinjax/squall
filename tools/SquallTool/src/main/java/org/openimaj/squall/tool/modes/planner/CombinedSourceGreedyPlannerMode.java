@@ -8,7 +8,7 @@ import org.openimaj.squall.orchestrate.greedy.CombinedSourceGreedyOrchestrator;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class GreedySSPlannerMode extends PlannerMode {
+public class CombinedSourceGreedyPlannerMode extends PlannerMode {
 
 	@Override
 	public OrchestratedProductionSystem ops(CompiledProductionSystem cps) {

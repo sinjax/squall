@@ -1,12 +1,13 @@
 package org.openimaj.squall.compile.data.source;
 
 import java.io.InputStream;
+import java.util.Iterator;
 
+import org.apache.jena.riot.Lang;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
-import org.openimaj.util.stream.CollectionStream;
+import org.openimaj.util.stream.AbstractStream;
 import org.openimaj.util.stream.Stream;
 
 import com.hp.hpl.jena.graph.Triple;
@@ -19,9 +20,28 @@ import com.hp.hpl.jena.graph.Triple;
 public class NTriplesProfileFunction implements
 		Function<InputStream, Stream<Context>> {
 
+	private final class NTripleStream extends AbstractStream<Context> {
+		
+		private Iterator<Triple> iter;
+
+		public NTripleStream(InputStream in) {
+			this.iter = JenaUtils.createIterator(in, Lang.NTRIPLES);
+		}
+
+		@Override
+		public boolean hasNext() {
+			return iter.hasNext();
+		}
+
+		@Override
+		public Context next() {
+			return new Context("triple",iter.next());
+		}
+	}
+
 	@Override
 	public Stream<Context> apply(InputStream in) {
-		return new CollectionStream<Triple>(JenaUtils.readNTriples(in)).map(new ContextWrapper("triple"));
+		return new NTripleStream(in);
 	}
 
 }

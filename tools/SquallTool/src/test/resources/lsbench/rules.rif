@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE Document [
+  <!ENTITY rif  	"http://www.w3.org/2007/rif#">
+  <!ENTITY xs   	"http://www.w3.org/2001/XMLSchema#">
+  <!ENTITY rdf  	"http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <!ENTITY rdfs		"http://www.w3.org/2000/01/rdf-schema#">
+  <!ENTITY sib  	"http://www.ins.cwi.nl/sib/vocabulary/">
+]>
+
+<Document>
+  <payload>
+    <Group>
+      <sentence>
+  	    <Forall> 
+  	      <id>
+  	      	<Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/lsbench-rule-visited-by-tag</Const>
+  	      </id>
+  	      <meta>
+  	      	<Frame>
+  	      	  <object>
+  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/usertag</Const>
+  	      	  </object>
+  	      	  <slot ordered="yes">
+  	      	    <Const type="&rif;iri">http://www.w3.org/2000/01/rdf-schema#subPropertyOf</Const>
+  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/visited</Const>
+  	      	  </slot>
+  	      	</Frame>
+  	      </meta>
+  	      <declare>
+  	      	<Var>photo</Var>
+  	      </declare>
+  	      <declare>
+  	      	<Var>user</Var>
+  	      </declare>
+  	      <formula>
+  	      	<Implies>
+  	      	  <if>
+  	      	    <Frame>
+	  	      	  <object>
+	  	      	    <Var>photo</Var>
+	  	      	  </object>
+	  	      	  <slot ordered="yes">
+	  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/usertag</Const>
+	  	      	    <Var>user</Var>
+	  	      	  </slot>
+	  	      	</Frame>
+  	      	  </if>
+  	      	  <then>
+  	      	  	<Frame>
+	  	      	  <object>
+	  	      	    <Var>user</Var>
+	  	      	  </object>
+	  	      	  <slot ordered="yes">
+	  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/visited</Const>
+	  	      	    <Var>photo</Var>
+	  	      	  </slot>
+	  	      	</Frame>
+  	      	  </then>
+  	      	</Implies>
+  	      </formula>
+  	    </Forall>
+  	  </sentence>
+  	  <sentence>
+  	    <Forall>
+  	      <id>
+  	      	<Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/lsbench-rule-visited-by-tracked</Const>
+  	      </id>
+  	      <meta>
+  	      	<Frame>
+  	      	  <object>
+  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/trackedAt</Const>
+  	      	  </object>
+  	      	  <slot ordered="yes">
+  	      	    <Const type="&rif;iri">http://www.w3.org/2000/01/rdf-schema#subPropertyOf</Const>
+  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/visited</Const>
+  	      	  </slot>
+  	      	</Frame>
+  	      </meta>
+  	      <declare>
+  	      	<Var>gps</Var>
+  	      </declare>
+  	      <declare>
+  	      	<Var>user</Var>
+  	      </declare>
+  	      <formula>
+  	      	<Implies>
+  	      	  <if>
+  	      	    <Frame>
+	  	      	  <object>
+	  	      	    <Var>user</Var>
+	  	      	  </object>
+	  	      	  <slot ordered="yes">
+	  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/trackedAt</Const>
+	  	      	    <Var>gps</Var>
+	  	      	  </slot>
+	  	      	</Frame>
+  	      	  </if>
+  	      	  <then>
+  	      	    <Frame>
+	  	      	  <object>
+	  	      	    <Var>user</Var>
+	  	      	  </object>
+	  	      	  <slot ordered="yes">
+	  	      	    <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/visited</Const>
+	  	      	    <Var>gps</Var>
+	  	      	  </slot>
+	  	      	</Frame>
+  	      	  </then>
+  	      	</Implies>
+  	      </formula>
+  	    </Forall>
+  	  </sentence>
+  	</Group>
+  </payload>
+</Document>

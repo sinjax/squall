@@ -23,7 +23,7 @@ public enum PlannerModeOption implements CmdLineOptionsProvider{
 	GREEDYCS {
 		@Override
 		public PlannerMode getOptions() {
-			return new GreedySSPlannerMode();
+			return new CombinedSourceGreedyPlannerMode();
 		}
 	};
 

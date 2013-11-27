@@ -9,15 +9,15 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.openimaj.time.Timer;
 import org.openimaj.util.function.Operation;
 import org.openimaj.util.parallel.GlobalExecutorPool.DaemonThreadFactory;
 import org.openimaj.util.parallel.Parallel;
-import org.openjena.riot.Lang;
-import org.openjena.riot.RiotLoader;
-import org.openjena.riot.SysRIOT;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
@@ -107,8 +107,8 @@ public class SDBPlayground {
 				System.out.println("creating dataset: " + Thread.currentThread().getId());
 				Dataset dataset = SDBFactory.connectDataset(store);
 				QuerySolutionMap sol = new QuerySolutionMap();
-				sol.add("?2", ModelUtils.convertGraphNodeToRDFNode(Node.createURI("http://www.ins.cwi.nl/sib/forum/fo1928"), dataset.getDefaultModel()));
-				sol.add("?0", ModelUtils.convertGraphNodeToRDFNode(Node.createURI("http://www.ins.cwi.nl/sib/user/u941"), dataset.getDefaultModel()));
+				sol.add("?2", ModelUtils.convertGraphNodeToRDFNode(NodeFactory.createURI("http://www.ins.cwi.nl/sib/forum/fo1928"), dataset.getDefaultModel()));
+				sol.add("?0", ModelUtils.convertGraphNodeToRDFNode(NodeFactory.createURI("http://www.ins.cwi.nl/sib/user/u941"), dataset.getDefaultModel()));
 				Query query = QueryFactory.create(qString);
 				dataset.getDefaultModel().enterCriticalSection(Lock.READ);
 				System.out.println("Started timer" + Thread.currentThread().getId());
@@ -126,7 +126,6 @@ public class SDBPlayground {
 	}
 
 	private static void createTestDatabase() throws Throwable{
-		SysRIOT.wireIntoJena();
 
 		Connection connection;
 		connection = DriverManager.getConnection(url, username, password);
@@ -151,7 +150,7 @@ public class SDBPlayground {
 		store.getTableFormatter().create();
 		String fileURL = "file:///Users/ss/Development/java/openimaj/trunk/tools/ReteStormTool/src/test/resources/osn_users.nt";
 		Model tmpModel = ModelFactory.createDefaultModel();
-		RiotLoader.read(fileURL, tmpModel.getGraph(), Lang.NTRIPLES);
+		RDFDataMgr.read(tmpModel.getGraph(), fileURL, Lang.NTRIPLES);
 		Dataset dataset = SDBFactory.connectDataset(store);
 		dataset.getDefaultModel().add(tmpModel);
 		store.close();

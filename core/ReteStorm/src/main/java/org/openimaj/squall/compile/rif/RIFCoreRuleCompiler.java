@@ -5,7 +5,6 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.openimaj.rif.RIFRuleSet;
 import org.openimaj.rif.conditions.RIFExternal;
 import org.openimaj.rif.conditions.atomic.RIFAtom;
@@ -45,8 +44,11 @@ import org.openimaj.squall.functions.rif.core.RIFForAllBindingConsequence;
 import org.openimaj.squall.functions.rif.core.RIFMemberFilterFunction;
 import org.openimaj.squall.functions.rif.filters.BaseTripleFilterFunction;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
+import org.openimaj.squall.util.MD5Utils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
+import org.openrdf.query.algebra.evaluation.function.hash.MD5;
+import org.springframework.util.DigestUtils;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.reasoner.TriplePattern;
@@ -120,7 +122,7 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 		
 		String id;
 		if (fa.getID() == null)
-			id = DigestUtils.md5Hex(fa.toString());
+			id = MD5Utils.md5Hex(fa.toString());
 		else
 			id = fa.getID().getNode().getURI();
 		ccps.addConsequence(new RIFForAllBindingConsequence(fa, id));
@@ -130,7 +132,7 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 		translateBody(r.getBody(), ccps);
 		String id;
 		if (r.getID() == null)
-			id = DigestUtils.md5Hex(r.toString());
+			id = MD5Utils.md5Hex(r.toString());
 		else
 			id = r.getID().getNode().getURI();
 		translateHead(id, r.getHead(), ccps);
