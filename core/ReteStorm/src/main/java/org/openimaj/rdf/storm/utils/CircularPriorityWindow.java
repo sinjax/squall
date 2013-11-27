@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
@@ -50,7 +49,7 @@ import scala.actors.threadpool.Arrays;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  * @param <T>
  */
-public class CircularPriorityWindow <T> implements Queue <T> {
+public class CircularPriorityWindow <T> implements TimedQueue <T> {
 
 	static{
 		System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
@@ -104,7 +103,8 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 		this.data = new HashMap<T,Count>();
 	}
 
-	private void prune() {
+	@Override
+	public int prune() {
 		Iterator<TimeWrapped> pruner = new Iterator<TimeWrapped>(){
 			TimeWrapped last;
 			@Override
@@ -133,8 +133,12 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 			}
 		};
 
-		while (pruner.hasNext())
+		int pruned = 0;
+		while (pruner.hasNext()){
 			pruner.remove();
+			pruned++;
+		}
+		return pruned;
 	}
 
 	@Override
@@ -238,7 +242,8 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	@Override
 	public boolean addAll(@SuppressWarnings("rawtypes") Collection arg0) {
 		boolean success = true;
-		for (Object item : arg0)
+		List<Object> added = new ArrayList<Object>();
+		for (Object item : arg0){
 			try {
 				success &= add((T)item);
 			} catch (ClassCastException e) {
@@ -248,6 +253,17 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 					success = false;
 				}
 			}
+			if (success){
+				added.add(item);
+			} else {
+				break;
+			}
+		}
+		if (!success){
+			for (Object item : added){
+				remove(item);
+			}
+		}
 		return success;
 	}
 
@@ -269,65 +285,21 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 
 	@Override
 	public boolean add(T arg0) {
-		return add(arg0,(new Date()).getTime(),this.delay,this.unit);
+		return add(arg0,new Date().getTime(),this.delay,this.unit);
 	}
 	
-	/**
-	 * Adds a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue (in milliseconds).
-	 * @param arg0
-	 * 		The datum
-	 * @param delay
-	 * 		a datum-specific life span, defined in the unit of the Window
-	 * @return
-	 * 		whether the add was successful
-	 */
-	public boolean add(T arg0, long delay) {
-		return add(arg0,(new Date()).getTime(),delay,this.unit);
+	
+	@Override
+	public boolean add(T arg0, long timestamp) {
+		return add(arg0,timestamp,this.delay,this.unit);
 	}
 	
-	/**
-	 * Adds a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue (in milliseconds).
-	 * @param arg0
-	 * 		The datum
-	 * @param timestamp
-	 * 		an externally defined timestamp to be applied in the system.
-	 * @param delay
-	 * 		a datum-specific life span, defined in the unit of the Window
-	 * @return
-	 * 		whether the add was successful
-	 */
+	@Override
 	public boolean add(T arg0, long timestamp, long delay) {
 		return add(arg0,timestamp,delay,this.unit);
 	}
 	
-	/**
-	 * Adds a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue, given in the specified time unit.
-	 * @param arg0
-	 * 		The datum
-	 * @param delay
-	 * 		a datum-specific life span
-	 * @param unit
-	 * 		the time unit that the datum-specific life span is defined in
-	 * @return
-	 * 		whether the add was successful
-	 */
-	public boolean add(T arg0, long delay, TimeUnit unit) {
-		return add(arg0,(new Date()).getTime(),delay,unit);
-	}
-	
-	/**
-	 * Adds a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue, given in the specified time unit.
-	 * @param arg0
-	 * 		The datum
-	 * @param timestamp
-	 * 		an externally defined timestamp to be applied in the system.
-	 * @param delay
-	 * 		a datum-specific life span
-	 * @param unit
-	 * 		the time unit that the datum-specific life span is defined in
-	 * @return
-	 * 		whether the add was successful
-	 */
+	@Override
 	public boolean add(T arg0, long timestamp, long delay, TimeUnit unit) {
 		return add(new TimeWrapped(arg0,timestamp,delay,unit));
 	}
@@ -341,34 +313,16 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 		}
 	}
 	
-	/**
-	 * offers a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue (in milliseconds).
-	 * @param arg0
-	 * 		The datum
-	 * @param delay
-	 * 		a datum-specific life span, defined in the unit of the Window
-	 * @return
-	 * 		whether the add was successful
-	 */
-	public boolean offer(T arg0, long delay) {
+	@Override
+	public boolean offer(T arg0, long timestamp) {
 		try {
-			return add(arg0,delay);
+			return add(arg0,timestamp);
 		} catch (IllegalStateException e) {
 			return false;
 		}
 	}
 	
-	/**
-	 * offers a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue (in milliseconds).
-	 * @param arg0
-	 * 		The datum
-	 * @param timestamp
-	 * 		an externally defined timestamp to be applied in the system.
-	 * @param delay
-	 * 		a datum-specific life span, defined in the unit of the Window
-	 * @return
-	 * 		whether the add was successful
-	 */
+	@Override
 	public boolean offer(T arg0, long timestamp, long delay) {
 		try {
 			return add(arg0, timestamp, delay);
@@ -377,38 +331,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 		}
 	}
 	
-	/**
-	 * offers a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue, given in the specified time unit.
-	 * @param arg0
-	 * 		The datum
-	 * @param delay
-	 * 		a datum-specific life span
-	 * @param unit
-	 * 		the time unit that the datum-specific life span is defined in
-	 * @return
-	 * 		whether the add was successful
-	 */
-	public boolean offer(T arg0, long delay, TimeUnit unit) {
-		try {
-			return add(arg0, delay, unit);
-		} catch (IllegalStateException e) {
-			return false;
-		}
-	}
-	
-	/**
-	 * offers a new object of type T to the time-based priority queue, along with the timestamp related to the object and its intended life span in the queue, given in the specified time unit.
-	 * @param arg0
-	 * 		The datum
-	 * @param timestamp
-	 * 		an externally defined timestamp to be applied in the system.
-	 * @param delay
-	 * 		a datum-specific life span
-	 * @param unit
-	 * 		the time unit that the datum-specific life span is defined in
-	 * @return
-	 * 		whether the add was successful
-	 */
+	@Override
 	public boolean offer(T arg0, long timestamp, long delay, TimeUnit unit) {
 		try {
 			return add(arg0,timestamp,delay,unit);
@@ -453,6 +376,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 	public Iterator <T> iterator() {
 		prune();
 		try {
+			@SuppressWarnings("unchecked")
 			final List<TimeWrapped> dc = Arrays.asList(queue.toArray());
 			Collections.sort(dc);
 			return new Iterator<T>(){
@@ -542,6 +466,7 @@ public class CircularPriorityWindow <T> implements Queue <T> {
 			return this.wrapped.hashCode();
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public boolean equals(Object obj){
 			try {
