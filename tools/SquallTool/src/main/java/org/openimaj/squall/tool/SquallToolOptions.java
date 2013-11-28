@@ -79,11 +79,25 @@ public class SquallToolOptions {
 	}
 
 	private void validate() {
+		
+	}
+	
+	/**
+	 * 
+	 */
+	public void setup(){
 		this.tmOp.setup(this);
 		this.pmOp.setup(this);
 		this.bmOp.setup(this);
-		
-		this.pmOp.setOperation(omOp.op());
+	}
+	
+	/**
+	 * 
+	 */
+	public void shutdown(){
+		this.tmOp.shutdown(this);
+		this.pmOp.shutdown(this);
+		this.bmOp.shutdown(this);
 	}
 
 	/**

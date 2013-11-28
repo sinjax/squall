@@ -56,20 +56,24 @@ public class StormStreamBuilder implements Builder{
 	public void build(OrchestratedProductionSystem ops) {
 		IOperation<StormTopology> topop = topopf.topop(conf);
 		topop.setup();
-		Set<NamedNode<?>> rootset = new HashSet<>();
-		rootset.addAll(ops.root);
-		if(ops.reentrant!=null){			
-			rootset.add(ops.reentrant);
+		try{
+			Set<NamedNode<?>> rootset = new HashSet<>();
+			rootset.addAll(ops.root);
+			if(ops.reentrant!=null){			
+				rootset.add(ops.reentrant);
+			}
+			TopologyBuilder tb = new TopologyBuilder();
+			try {
+				buildTopology(tb,ops,new HashMap<String,NamedNode<?>>(),rootset);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			StormTopology top = tb.createTopology();
+			topop.perform(top);
 		}
-		TopologyBuilder tb = new TopologyBuilder();
-		try {
-			buildTopology(tb,ops,new HashMap<String,NamedNode<?>>(),rootset);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+		finally{			
+			topop.cleanup();
 		}
-		StormTopology top = tb.createTopology();
-		topop.perform(top);
-		topop.cleanup();
 	}
 
 	private void buildTopology(TopologyBuilder tb, OrchestratedProductionSystem ops, Map<String, NamedNode<?>> state, Set<? extends NamedNode<?>> disconnected) throws Exception {

@@ -10,4 +10,9 @@ public interface SquallToolSetup {
 	 * @param opts
 	 */
 	public void setup(SquallToolOptions opts);
+	
+	/**
+	 * @param opts
+	 */
+	public void shutdown(SquallToolOptions opts);
 }

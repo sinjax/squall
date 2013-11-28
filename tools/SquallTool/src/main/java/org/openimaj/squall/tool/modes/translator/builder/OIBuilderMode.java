@@ -8,16 +8,12 @@ import org.openimaj.squall.tool.SquallToolOptions;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class OIBuilderMode implements BuilderMode {
+public class OIBuilderMode extends BuilderMode {
 
 	@Override
 	public void run(OrchestratedProductionSystem ops) {
 		OIStreamBuilder oisb = new OIStreamBuilder();
 		oisb.build(ops);
-	}
-
-	@Override
-	public void setup(SquallToolOptions opts) {		
 	}
 
 }

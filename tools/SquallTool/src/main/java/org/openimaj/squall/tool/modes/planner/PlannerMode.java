@@ -33,5 +33,12 @@ public abstract class PlannerMode implements SquallToolSetup{
 		return op;
 	}
 	
-	public void setup(SquallToolOptions opts) { }
+	public void setup(SquallToolOptions opts) {
+		IOperation<Context> operation = opts.omOp.op();
+		setOperation(operation);
+	}
+	
+	@Override
+	public void shutdown(SquallToolOptions opts) {
+	}
 }

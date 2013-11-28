@@ -9,7 +9,7 @@ import org.openimaj.squall.tool.SquallToolOptions;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class JenaTranslatorMode implements TranslatorMode {
+public class JenaTranslatorMode extends TranslatorMode {
 
 	@Override
 	public CompiledProductionSystem cps() {
@@ -22,8 +22,6 @@ public class JenaTranslatorMode implements TranslatorMode {
 		return null;
 	}
 
-	@Override
-	public void setup(SquallToolOptions opts) {
-	}
+	
 
 }

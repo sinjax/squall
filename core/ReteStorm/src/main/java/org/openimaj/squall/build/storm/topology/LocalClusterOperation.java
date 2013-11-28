@@ -54,7 +54,7 @@ import backtype.storm.utils.Utils;
 				}
 			} finally {
 				cluster.killTopology(name);
-//				cluster.shutdown();
+				cluster.shutdown();
 			}
 			
 		}

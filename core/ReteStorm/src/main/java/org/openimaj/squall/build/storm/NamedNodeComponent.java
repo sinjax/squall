@@ -38,18 +38,14 @@ public abstract class NamedNodeComponent implements IComponent{
 	 * 
 	 */
 	private static final long serialVersionUID = 843143889101579968L;
-	private Initialisable init;
 	private Set<String> streams;
-	private byte[] serializedInit;
 	private List<String> outputStreams;
 	private HashMap<String, String> correctedStreamName;
 	/**
 	 * @param nn
 	 */
 	public NamedNodeComponent(NamedNode<?> nn) {
-		if(nn.isInitialisable()) {
-			this.serializedInit = StormUtils.serialiseFunction(kryo,nn.getInit());
-		}
+		
 		new HashMap<String,Function<Context, Context>>();
 		this.outputStreams = new ArrayList<String>();
 		for (NamedStream edge : nn.childEdges()) {
@@ -67,18 +63,13 @@ public abstract class NamedNodeComponent implements IComponent{
 	 * @param context
 	 */
 	public void setup(@SuppressWarnings("rawtypes") Map conf, TopologyContext context) {
-		if(this.serializedInit!=null) {
-			init = StormUtils.deserialiseFunction(kryo,serializedInit);
-			init.setup();
-		}
 		this.streams = context.getThisStreams();
 	}
-	
+
 	/**
 	 * 
 	 */
 	public void cleanup() {
-		if(init!=null) init.cleanup();
 	}
 	
 	@Override

@@ -1,5 +1,6 @@
 package org.openimaj.squall.orchestrate;
 
+import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
@@ -101,7 +102,7 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	/**
 	 * @return is this node an operation
 	 */
-	public abstract Operation<Context> getOperation();
+	public abstract IOperation<Context> getOperation();
 
 	
 }

@@ -12,7 +12,7 @@ import org.openimaj.squall.tool.SquallToolOptions;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class RIFTranslatorMode implements TranslatorMode {
+public class RIFTranslatorMode extends TranslatorMode {
 
 	/**
 	 * the ketrel queues for input and output
@@ -37,7 +37,7 @@ public class RIFTranslatorMode implements TranslatorMode {
 	
 	@Override
 	public void setup(SquallToolOptions opts) {
-		ExternalLoader.loadExternals();		
+		ExternalLoader.loadExternals();	
 	}
 
 }

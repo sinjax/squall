@@ -29,8 +29,14 @@ public class SquallTool {
 	}
 
 	private void run() {
-		CompiledProductionSystem cps = opts.tmOp.cps();
-		OrchestratedProductionSystem ops = opts.pmOp.ops(cps);
-		opts.bmOp.run(ops);
+		try{
+			this.opts.setup();
+			CompiledProductionSystem cps = opts.tmOp.cps();
+			OrchestratedProductionSystem ops = opts.pmOp.ops(cps);
+			opts.bmOp.run(ops);
+			System.out.println("ALL DONE");
+		} finally {
+			this.opts.shutdown();
+		}
 	}
 }

@@ -14,7 +14,7 @@ import backtype.storm.Config;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class StormBuilderMode implements BuilderMode {
+public class StormBuilderMode extends BuilderMode {
 	
 	/**
 	 * The topology
