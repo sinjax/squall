@@ -78,7 +78,7 @@ public class JenaUtils {
 	        // You can optionally supply a buffer size here for the
 	        // PipedRDFIterator, see the documentation for details about recommended
 	        // buffer sizes
-	        PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>();
+	        PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>(1000000);
 	        final PipedRDFStream<Triple> inputStream = new PipedTriplesStream(iter);
 
 	        // PipedRDFStream and PipedRDFIterator need to be on different threads

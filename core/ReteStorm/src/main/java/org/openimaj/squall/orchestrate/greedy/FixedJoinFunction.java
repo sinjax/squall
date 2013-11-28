@@ -62,21 +62,26 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 
 	@Override
 	public List<Context> apply(Context in) {
-		Map<String, Node> typed = in.getTyped("bindings");
-		logger.debug(String.format("Joining: [%s] <-> [%s] -> %s", left, right, this));
+		Map<String, Node> typed = in.getTyped("bindings");		
+		logger.debug(String.format("Joining: [%s] <-> [%s] -> %s with bindings: %s", left, right, this, typed));
 		List<Context> ret = new ArrayList<Context>();
 		if(in.getTyped("stream").equals("left")){
 			logger.debug("Joining Left Stream");
-			for (Map<String, Node> bindings : leftQueue.offer(typed)) {
+			List<Map<String, Node>> offered = leftQueue.offer(typed);
+			logger.debug("MapRETEQueue Bindings found: " + offered);
+			for (Map<String, Node> bindings : offered) {
 				ret.add(new Context("bindings",bindings));
 			}
 		}
 		else if(in.getTyped("stream").equals("right")){
 			logger.debug("Joining Right Stream");
-			for (Map<String, Node> bindings : rightQueue.offer(typed)) {
+			List<Map<String, Node>> offered = rightQueue.offer(typed);
+			logger.debug("MapRETEQueue Bindings found: " + offered);
+			for (Map<String, Node> bindings : offered) {
 				ret.add(new Context("bindings",bindings));
 			}
 		}
+		logger.debug("Join complete!");
 		return ret;
 	}
 

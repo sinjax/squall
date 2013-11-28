@@ -17,6 +17,7 @@ import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.squall.orchestrate.greedy.CombinedSourceGreedyOrchestrator;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.util.data.Context;
 import org.xml.sax.SAXException;
@@ -63,7 +64,7 @@ public class RunLSBenchRIFQuery {
 		RIFCoreRuleCompiler jrc = new RIFCoreRuleCompiler();
 		CompiledProductionSystem comp = jrc.compile(lsbenchRules);
 		
-		GreedyOrchestrator go = new GreedyOrchestrator();
+		GreedyOrchestrator go = new CombinedSourceGreedyOrchestrator();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		
 		Builder builder = StormStreamBuilder.localClusterBuilder(-1);

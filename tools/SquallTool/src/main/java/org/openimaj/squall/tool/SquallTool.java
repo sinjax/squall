@@ -34,7 +34,6 @@ public class SquallTool {
 			CompiledProductionSystem cps = opts.tmOp.cps();
 			OrchestratedProductionSystem ops = opts.pmOp.ops(cps);
 			opts.bmOp.run(ops);
-			System.out.println("ALL DONE");
 		} finally {
 			this.opts.shutdown();
 		}

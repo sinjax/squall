@@ -21,7 +21,7 @@ import com.hp.hpl.jena.graph.Triple;
  *
  */
 public class TurtleProfileFunction implements Function<InputStream, Stream<Context>> {
-
+	
 	private final class TurtleStream extends AbstractStream<Context> {
 		
 		private Iterator<Triple> iter;
@@ -37,7 +37,8 @@ public class TurtleProfileFunction implements Function<InputStream, Stream<Conte
 
 		@Override
 		public Context next() {
-			return new Context("triple",iter.next());
+			Context context = new Context("triple",iter.next());
+			return context;
 		}
 	}
 
