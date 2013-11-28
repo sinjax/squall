@@ -6,10 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.openimaj.rdf.storm.utils.CircularPriorityWindow;
 import org.openimaj.rdf.storm.utils.HashedCircularPriorityWindow;
+
+import scala.actors.threadpool.Arrays;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Node_Concrete;
@@ -105,7 +108,7 @@ public class MapRETEQueue{
 	private List<Map<String,Node>> check(Map<String, Node> typed) {
 		List<Map<String, Node>> ret = new ArrayList<Map<String,Node>>();
 		DeepHashArray<Node> sharedBindings = extractSharedBindings(typed);
-		Queue<Map<String, Node>> matchedQueue = sibling.window.getWindow(sharedBindings);
+		List<Map<String, Node>> matchedQueue = sibling.window.getWindow(sharedBindings);
 		if (matchedQueue != null){
 			for (Map<String, Node> sibitem : matchedQueue) {
 				Map<String,Node> newbind = new HashMap<String, Node>();
@@ -141,15 +144,17 @@ public class MapRETEQueue{
 		
 		@Override
 		public int hashCode() {
-			int ret = 0;
-			for (T item : this.arr)
-				ret += item.hashCode();
-			return ret;
+			return Arrays.deepHashCode(this.arr);
 		}
 		
 		@Override
 		public boolean equals(Object obj) {
 			return (obj instanceof DeepHashArray) && obj.hashCode() == this.hashCode();
+		}
+		
+		@Override
+		public String toString() {
+			return Arrays.toString(this.arr);
 		}
 		
 	}

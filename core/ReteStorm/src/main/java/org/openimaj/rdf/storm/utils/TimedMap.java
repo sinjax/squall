@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  * @param <K>
  * @param <V>
  */
-public interface TimedMap<K, V> extends TimedCollection, Map<K, V> {
+public interface TimedMap<K, V> extends TimeLimitedCollection, Map<K, V> {
 	
 	/**
 	 * Adds a new object of type T to the time-based priority queue.  A timestamp should be generated for the object by the Collection.

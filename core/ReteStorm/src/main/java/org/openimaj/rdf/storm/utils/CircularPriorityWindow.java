@@ -49,7 +49,7 @@ import scala.actors.threadpool.Arrays;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  * @param <T>
  */
-public class CircularPriorityWindow <T> implements TimedQueue <T> {
+public class CircularPriorityWindow <T> implements TimedQueue <T>, SpaceLimitedCollection {
 
 	static{
 		System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
@@ -104,7 +104,7 @@ public class CircularPriorityWindow <T> implements TimedQueue <T> {
 	}
 
 	@Override
-	public int prune() {
+	public void pruneToDuration() {
 		Iterator<TimeWrapped> pruner = new Iterator<TimeWrapped>(){
 			TimeWrapped last;
 			@Override
@@ -133,12 +133,44 @@ public class CircularPriorityWindow <T> implements TimedQueue <T> {
 			}
 		};
 
-		int pruned = 0;
 		while (pruner.hasNext()){
 			pruner.remove();
-			pruned++;
 		}
-		return pruned;
+	}
+	
+	@Override
+	public void pruneToCapacity() {
+		Iterator<TimeWrapped> pruner = new Iterator<TimeWrapped>(){
+			TimeWrapped last;
+			@Override
+			public boolean hasNext() {
+				last = queue.peek();
+				if(last == null) return false;
+				return queue.size() > capacity;
+			}
+			@Override
+			public TimeWrapped next() {
+				return last;
+			}
+			@Override
+			public void remove() {
+				queue.remove(last);
+				T lastUnwrapped = last.getWrapped();
+				decrement(lastUnwrapped);
+				try {
+					((CapacityOverflowHandler<T>)continuation).handleCapacityOverflow(lastUnwrapped);
+				} catch (NullPointerException e) {
+					
+				}catch (ClassCastException e) {
+					
+				}
+				last = null;
+			}
+		};
+
+		while (pruner.hasNext()){
+			pruner.remove();
+		}
 	}
 
 	@Override
@@ -240,7 +272,7 @@ public class CircularPriorityWindow <T> implements TimedQueue <T> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean addAll(@SuppressWarnings("rawtypes") Collection arg0) {
+	public boolean addAll(Collection<? extends T> arg0) {
 		boolean success = true;
 		List<Object> added = new ArrayList<Object>();
 		for (Object item : arg0){
@@ -268,7 +300,7 @@ public class CircularPriorityWindow <T> implements TimedQueue <T> {
 	}
 
 	private boolean add(TimeWrapped arg0){
-		prune();
+		pruneToDuration();
 		if (arg0.getWrapped() == null) return false;
 		if (queue.size() >= capacity){
 			try {
@@ -342,7 +374,7 @@ public class CircularPriorityWindow <T> implements TimedQueue <T> {
 
 	@Override
 	public T element() {
-		prune();
+		pruneToDuration();
 		return queue.element().getWrapped();
 	}
 
@@ -366,7 +398,7 @@ public class CircularPriorityWindow <T> implements TimedQueue <T> {
 
 	@Override
 	public T remove() {
-		prune();
+		pruneToDuration();
 		T item = queue.remove().getWrapped();
 		decrement(item);
 		return item;
@@ -374,7 +406,7 @@ public class CircularPriorityWindow <T> implements TimedQueue <T> {
 
 	@Override
 	public Iterator <T> iterator() {
-		prune();
+		pruneToDuration();
 		try {
 			@SuppressWarnings("unchecked")
 			final List<TimeWrapped> dc = Arrays.asList(queue.toArray());

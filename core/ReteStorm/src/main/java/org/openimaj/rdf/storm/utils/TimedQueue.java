@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @param <T>
  */
-public interface TimedQueue<T> extends TimedCollection, Queue<T> {
+public interface TimedQueue<T> extends TimeLimitedCollection, Queue<T> {
 	
 	/**
 	 * Adds a new object of type T to the time-based priority queue.  A timestamp should be generated for the object by the Collection.

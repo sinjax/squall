@@ -68,12 +68,15 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 		if(in.getTyped("stream").equals("left")){
 			logger.debug("Joining Left Stream");
 			for (Map<String, Node> bindings : leftQueue.offer(typed)) {
+				logger.debug(String.format("Joined: %s -> %s", typed, bindings));
 				ret.add(new Context("bindings",bindings));
 			}
 		}
 		else if(in.getTyped("stream").equals("right")){
 			logger.debug("Joining Right Stream");
 			for (Map<String, Node> bindings : rightQueue.offer(typed)) {
+				logger.debug(String.format("Joined: %s -> %s", typed, bindings));
+				
 				ret.add(new Context("bindings",bindings));
 			}
 		}
