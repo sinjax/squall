@@ -32,13 +32,12 @@ package org.openimaj.kestrel.writing;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.openjena.atlas.lib.Sink;
-import org.openjena.riot.RiotReader;
-import org.openjena.riot.RiotWriter;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.openimaj.squall.utils.JenaUtils;
 
 import backtype.storm.tuple.Fields;
 
@@ -67,7 +66,7 @@ public class NTripleWritingScheme implements WritingScheme {
 			Triple triple = (Triple) object;
 			graph.add(triple);
 		}
-		RiotWriter.writeTriples(os, graph);
+		RDFDataMgr.write(os, graph, Lang.NTRIPLES);
 		try {
 			os.flush();
 			os.close();
@@ -82,23 +81,7 @@ public class NTripleWritingScheme implements WritingScheme {
 	@Override
 	public List<Object> deserialize(byte[] ser) {
 		ByteArrayInputStream bais = new ByteArrayInputStream(ser);
-		final Object triples = new ArrayList<Object>();
-		RiotReader.createParserNTriples(bais, new Sink<Triple>() {
-
-			@Override
-			public void close() {
-			}
-
-			@SuppressWarnings("unchecked")
-			@Override
-			public void send(Triple item) {
-				((List<Object>) triples).add(item);
-			}
-
-			@Override
-			public void flush() {
-			}
-		}).parse();
+		final Object triples = JenaUtils.readNTriples(bais);
 		return Arrays.asList(triples);
 	}
 

@@ -70,7 +70,7 @@ class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 	}
 
 	@Override
-	public Operation<Context> getOperation() {
+	public IOperation<Context> getOperation() {
 		return this.op;
 	}
 

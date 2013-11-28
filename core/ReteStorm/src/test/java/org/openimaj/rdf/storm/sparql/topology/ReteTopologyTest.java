@@ -40,12 +40,13 @@ import org.openimaj.rdf.storm.topology.builder.ReteTopologyBuilder;
 
 import backtype.storm.generated.StormTopology;
 
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.sparql.core.Var;
 import com.hp.hpl.jena.sparql.engine.binding.Binding;
 import com.hp.hpl.jena.sparql.engine.binding.BindingFactory;
 import com.hp.hpl.jena.sparql.engine.binding.BindingHashMap;
 import com.hp.hpl.jena.sparql.engine.binding.BindingMap;
-import com.hp.hpl.jena.sparql.util.NodeFactory;
+import com.hp.hpl.jena.sparql.util.NodeFactoryExtra;
 
 import eu.larkc.csparql.streams.formats.TranslationException;
 
@@ -141,12 +142,12 @@ public class ReteTopologyTest extends SPARQLTopologyTest {
 		String sparqlSource = "/test.optional.csparql";
 		List<Binding> expectedValues = new ArrayList<Binding>();
 		BindingMap e = new BindingHashMap();
-		e.add(Var.alloc("given"), NodeFactory.createLiteralNode("Bob", "", ""));
-		e.add(Var.alloc("family"), NodeFactory.createLiteralNode("Smith", "", ""));
+		e.add(Var.alloc("given"), NodeFactory.createLiteral("Bob"));
+		e.add(Var.alloc("family"), NodeFactory.createLiteral("Smith"));
 		expectedValues.add(e);
 		e = new BindingHashMap();
-		e.add(Var.alloc("given"), NodeFactory.createLiteralNode("", "", ""));
-		e.add(Var.alloc("family"), NodeFactory.createLiteralNode("", "", ""));
+		e.add(Var.alloc("given"), NodeFactory.createLiteral(""));
+		e.add(Var.alloc("family"), NodeFactory.createLiteral(""));
 		expectedValues.add(e);
 		performQuery(sparqlSource, "/test.optional.rdfs", expectedValues);
 	}
@@ -179,14 +180,14 @@ public class ReteTopologyTest extends SPARQLTopologyTest {
 		String sparqlSource = "/test.aggregate.csparql";
 		List<Binding> expectedValues = new ArrayList<Binding>();
 		BindingMap e = new BindingHashMap();
-		e.add(Var.alloc("org"), NodeFactory.parseNode("<http://books.example/org1>"));
-		e.add(Var.alloc("totalPrice"), NodeFactory.intToNode(18));
-		e.add(Var.alloc("avgPrice"), NodeFactory.createLiteralNode("12", "", "http://www.w3.org/2001/XMLSchema#decimal"));
+		e.add(Var.alloc("org"), NodeFactoryExtra.parseNode("<http://books.example/org1>"));
+		e.add(Var.alloc("totalPrice"), NodeFactoryExtra.intToNode(18));
+		e.add(Var.alloc("avgPrice"), NodeFactoryExtra.parseNode("\"12.0\"^^xsd:decimal"));
 		expectedValues.add(e);
 		e = new BindingHashMap();
-		e.add(Var.alloc("org"), NodeFactory.parseNode("<http://books.example/org1>"));
-		e.add(Var.alloc("totalPrice"), NodeFactory.intToNode(12));
-		e.add(Var.alloc("avgPrice"), NodeFactory.createLiteralNode("12", "", "http://www.w3.org/2001/XMLSchema#decimal"));
+		e.add(Var.alloc("org"), NodeFactoryExtra.parseNode("<http://books.example/org1>"));
+		e.add(Var.alloc("totalPrice"), NodeFactoryExtra.intToNode(12));
+		e.add(Var.alloc("avgPrice"), NodeFactoryExtra.parseNode("\"12.0\"^^xsd:decimal"));
 		expectedValues.add(e);
 		performQuery(sparqlSource, "/test.aggregate.rdfs", expectedValues);
 	}
@@ -201,20 +202,20 @@ public class ReteTopologyTest extends SPARQLTopologyTest {
 		String sparqlSource = "/test.aggregate.countstar.csparql";
 		List<Binding> expectedValues = new ArrayList<Binding>();
 		BindingMap e = new BindingHashMap();
-		e.add(Var.alloc("sumprice"), NodeFactory.intToNode(24));
-		e.add(Var.alloc("count"), NodeFactory.intToNode(4));
+		e.add(Var.alloc("sumprice"), NodeFactoryExtra.intToNode(24));
+		e.add(Var.alloc("count"), NodeFactoryExtra.intToNode(4));
 		expectedValues.add(e);
 		e = new BindingHashMap();
-		e.add(Var.alloc("sumprice"), NodeFactory.intToNode(18));
-		e.add(Var.alloc("count"), NodeFactory.intToNode(3));
+		e.add(Var.alloc("sumprice"), NodeFactoryExtra.intToNode(18));
+		e.add(Var.alloc("count"), NodeFactoryExtra.intToNode(3));
 		expectedValues.add(e);
 		e = new BindingHashMap();
-		e.add(Var.alloc("sumprice"), NodeFactory.intToNode(12));
-		e.add(Var.alloc("count"), NodeFactory.intToNode(2));
+		e.add(Var.alloc("sumprice"), NodeFactoryExtra.intToNode(12));
+		e.add(Var.alloc("count"), NodeFactoryExtra.intToNode(2));
 		expectedValues.add(e);
 		e = new BindingHashMap();
-		e.add(Var.alloc("sumprice"), NodeFactory.intToNode(6));
-		e.add(Var.alloc("count"), NodeFactory.intToNode(1));
+		e.add(Var.alloc("sumprice"), NodeFactoryExtra.intToNode(6));
+		e.add(Var.alloc("count"), NodeFactoryExtra.intToNode(1));
 		expectedValues.add(e);
 		performQuery(sparqlSource, "/test.aggregate.countstar.rdfs", expectedValues);
 	}
@@ -228,8 +229,8 @@ public class ReteTopologyTest extends SPARQLTopologyTest {
 	public void testReteTopologyBindGroupBy() throws IOException, TranslationException {
 		String sparqlSource = "/test.groupby.csparql";
 		List<Binding> expectedValues = new ArrayList<Binding>();
-		expectedValues.add(BindingFactory.binding(Var.alloc("p"), NodeFactory.intToNode(42)));
-		expectedValues.add(BindingFactory.binding(Var.alloc("p"), NodeFactory.intToNode(23)));
+		expectedValues.add(BindingFactory.binding(Var.alloc("p"), NodeFactoryExtra.intToNode(42)));
+		expectedValues.add(BindingFactory.binding(Var.alloc("p"), NodeFactoryExtra.intToNode(23)));
 		performQuery(sparqlSource, "/test.groupby.rdfs", expectedValues);
 	}
 
@@ -243,16 +244,16 @@ public class ReteTopologyTest extends SPARQLTopologyTest {
 		String sparqlSource = "/test.userpost.csparql";
 		List<Binding> expectedValues = new ArrayList<Binding>();
 		BindingMap e = new BindingHashMap();
-		e.add(Var.alloc("postcontent"), NodeFactory.createLiteralNode("out on January 5 2007 by the Chinese police against a suspected East Turkestan Islamic Movement training", "", ""));
-		e.add(Var.alloc("user1"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
-		e.add(Var.alloc("createDate"), NodeFactory.parseNode("\"2010-02-01T11:49:51Z\"^^xsd:dateTime"));
-		e.add(Var.alloc("friend"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u627>"));
+		e.add(Var.alloc("postcontent"), NodeFactoryExtra.createLiteralNode("out on January 5 2007 by the Chinese police against a suspected East Turkestan Islamic Movement training", "", ""));
+		e.add(Var.alloc("user1"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
+		e.add(Var.alloc("createDate"), NodeFactoryExtra.parseNode("\"2010-02-01T11:49:51Z\"^^xsd:dateTime"));
+		e.add(Var.alloc("friend"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u627>"));
 		expectedValues.add(e);
 		e = new BindingHashMap();
-		e.add(Var.alloc("postcontent"), NodeFactory.createLiteralNode("Christine Cris Bonacci is an Australian-born producer songwriter and musician", "", ""));
-		e.add(Var.alloc("user1"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
-		e.add(Var.alloc("createDate"), NodeFactory.parseNode("\"2010-02-01T10:25:05Z\"^^xsd:dateTime"));
-		e.add(Var.alloc("friend"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u59>"));
+		e.add(Var.alloc("postcontent"), NodeFactoryExtra.createLiteralNode("Christine Cris Bonacci is an Australian-born producer songwriter and musician", "", ""));
+		e.add(Var.alloc("user1"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
+		e.add(Var.alloc("createDate"), NodeFactoryExtra.parseNode("\"2010-02-01T10:25:05Z\"^^xsd:dateTime"));
+		e.add(Var.alloc("friend"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u59>"));
 		expectedValues.add(e);
 		File staticData = fileFromStream(ReteTopologyBuilder.class.getResourceAsStream("/osn_users.nt"));
 		performQuery(sparqlSource, "/osn_posts.nt", expectedValues, "file://" + staticData.getAbsolutePath());
@@ -268,16 +269,16 @@ public class ReteTopologyTest extends SPARQLTopologyTest {
 		String sparqlSource = "/test.userpost.subquery.csparql";
 		List<Binding> expectedValues = new ArrayList<Binding>();
 		BindingMap e = new BindingHashMap();
-		e.add(Var.alloc("postcontent"), NodeFactory.createLiteralNode("out on January 5 2007 by the Chinese police against a suspected East Turkestan Islamic Movement training", "", ""));
-		e.add(Var.alloc("user1"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
-		e.add(Var.alloc("createDate"), NodeFactory.parseNode("\"2010-02-01T11:49:51Z\"^^xsd:dateTime"));
-		e.add(Var.alloc("friend"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u627>"));
+		e.add(Var.alloc("postcontent"), NodeFactoryExtra.createLiteralNode("out on January 5 2007 by the Chinese police against a suspected East Turkestan Islamic Movement training", "", ""));
+		e.add(Var.alloc("user1"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
+		e.add(Var.alloc("createDate"), NodeFactoryExtra.parseNode("\"2010-02-01T11:49:51Z\"^^xsd:dateTime"));
+		e.add(Var.alloc("friend"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u627>"));
 		expectedValues.add(e);
 		e = new BindingHashMap();
-		e.add(Var.alloc("postcontent"), NodeFactory.createLiteralNode("Christine Cris Bonacci is an Australian-born producer songwriter and musician", "", ""));
-		e.add(Var.alloc("user1"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
-		e.add(Var.alloc("createDate"), NodeFactory.parseNode("\"2010-02-01T10:25:05Z\"^^xsd:dateTime"));
-		e.add(Var.alloc("friend"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u59>"));
+		e.add(Var.alloc("postcontent"), NodeFactoryExtra.createLiteralNode("Christine Cris Bonacci is an Australian-born producer songwriter and musician", "", ""));
+		e.add(Var.alloc("user1"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
+		e.add(Var.alloc("createDate"), NodeFactoryExtra.parseNode("\"2010-02-01T10:25:05Z\"^^xsd:dateTime"));
+		e.add(Var.alloc("friend"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u59>"));
 		expectedValues.add(e);
 		File staticData = fileFromStream(ReteTopologyBuilder.class.getResourceAsStream("/osn_users.nt"));
 		performQuery(sparqlSource, "/osn_posts.nt", expectedValues, "file://" + staticData.getAbsolutePath());
@@ -293,16 +294,16 @@ public class ReteTopologyTest extends SPARQLTopologyTest {
 		String sparqlSource = "/test.userpost.subquery.complex.csparql";
 		List<Binding> expectedValues = new ArrayList<Binding>();
 		BindingMap e = new BindingHashMap();
-		e.add(Var.alloc("postcontent"), NodeFactory.createLiteralNode("out on January 5 2007 by the Chinese police against a suspected East Turkestan Islamic Movement training", "", ""));
-		e.add(Var.alloc("user1"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
-		e.add(Var.alloc("createDate"), NodeFactory.parseNode("\"2010-02-01T11:49:51Z\"^^xsd:dateTime"));
-		e.add(Var.alloc("friend"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u627>"));
+		e.add(Var.alloc("postcontent"), NodeFactoryExtra.createLiteralNode("out on January 5 2007 by the Chinese police against a suspected East Turkestan Islamic Movement training", "", ""));
+		e.add(Var.alloc("user1"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
+		e.add(Var.alloc("createDate"), NodeFactoryExtra.parseNode("\"2010-02-01T11:49:51Z\"^^xsd:dateTime"));
+		e.add(Var.alloc("friend"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u627>"));
 		expectedValues.add(e);
 		e = new BindingHashMap();
-		e.add(Var.alloc("postcontent"), NodeFactory.createLiteralNode("Christine Cris Bonacci is an Australian-born producer songwriter and musician", "", ""));
-		e.add(Var.alloc("user1"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
-		e.add(Var.alloc("createDate"), NodeFactory.parseNode("\"2010-02-01T10:25:05Z\"^^xsd:dateTime"));
-		e.add(Var.alloc("friend"), NodeFactory.parseNode("<http://www.ins.cwi.nl/sib/user/u59>"));
+		e.add(Var.alloc("postcontent"), NodeFactoryExtra.createLiteralNode("Christine Cris Bonacci is an Australian-born producer songwriter and musician", "", ""));
+		e.add(Var.alloc("user1"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u941>"));
+		e.add(Var.alloc("createDate"), NodeFactoryExtra.parseNode("\"2010-02-01T10:25:05Z\"^^xsd:dateTime"));
+		e.add(Var.alloc("friend"), NodeFactoryExtra.parseNode("<http://www.ins.cwi.nl/sib/user/u59>"));
 		expectedValues.add(e);
 		File staticData = fileFromStream(ReteTopologyBuilder.class.getResourceAsStream("/osn_users.nt"));
 		performQuery(sparqlSource, "/osn_posts.nt", expectedValues, "file://" + staticData.getAbsolutePath());

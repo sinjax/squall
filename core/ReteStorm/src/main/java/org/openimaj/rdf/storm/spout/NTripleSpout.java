@@ -30,20 +30,17 @@
 package org.openimaj.rdf.storm.spout;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.jena.riot.Lang;
 import org.openimaj.rdf.storm.topology.bolt.StormReteBolt;
+import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.storm.spout.SimpleSpout;
-import org.openjena.atlas.lib.Sink;
-import org.openjena.riot.RiotReader;
-import org.openjena.riot.lang.LangNTriples;
 
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
-import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 
@@ -60,12 +57,13 @@ import com.hp.hpl.jena.mem.GraphMem;
  *
  */
 @SuppressWarnings({ "rawtypes", "serial" })
-public class NTripleSpout extends SimpleSpout implements Sink<Triple> {
+public class NTripleSpout extends SimpleSpout {
 	
 	public static final String TRIPLES_FIELD = "triples";
 
 	private String nTriplesURL;
-	private LangNTriples parser;
+
+	private Iterator<Triple> iter;
 
 	/**
 	 * @param nTriplesURL
@@ -82,15 +80,15 @@ public class NTripleSpout extends SimpleSpout implements Sink<Triple> {
 		URL url;
 		try {
 			url = new URL(this.nTriplesURL);
-			parser = RiotReader.createParserNTriples(url.openStream(), this);
+			iter = JenaUtils.createIterator(url.openStream(), Lang.NTRIPLES);
 		} catch (Exception e) {
 		}
 	}
 
 	@Override
 	public void nextTuple() {
-		if (parser.hasNext()) {
-			Triple parsed = parser.next();
+		if (iter.hasNext()) {
+			Triple parsed = iter.next();
 			Graph graph = new GraphMem();
 			graph.add(parsed);
 			try {
@@ -123,16 +121,6 @@ public class NTripleSpout extends SimpleSpout implements Sink<Triple> {
 	@Override
 	public void close() {
 		super.close();
-	}
-
-
-	@Override
-	public void send(Triple item) {
-		System.out.println("Sent a triple!");
-	}
-
-	@Override
-	public void flush() {
 	}
 
 	public static Triple asTriple(Tuple input) {

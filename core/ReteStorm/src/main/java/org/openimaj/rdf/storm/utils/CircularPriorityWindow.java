@@ -404,7 +404,26 @@ public class CircularPriorityWindow <T> implements TimedQueue <T> {
 		}
 		return null;
 	}
-
+	
+	/**
+	 * Gets the time-to-expiry of the oldest item in the queue.  If the queue is empty, returns null.
+	 * @param unit
+	 * 		Granularity of time-to-expiry
+	 * @return
+	 * 		The time-to-expiry of the oldest item in the queue.
+	 */
+	public Long getNextExpiry(TimeUnit unit){
+		return this.queue.peek() == null ? null : this.queue.peek().getDelay(unit);
+	}
+	
+	/**
+	 * Removes the item that would expire next from the queue.
+	 * @return
+	 * 		The removed item.
+	 */
+	public T removeNextToExpire(){
+		return this.queue.remove().getWrapped();
+	}
 
 
 	

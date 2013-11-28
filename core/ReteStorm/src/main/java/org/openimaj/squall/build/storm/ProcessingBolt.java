@@ -40,6 +40,7 @@ public abstract class ProcessingBolt extends NamedNodeComponent implements IRich
 		super.cleanup();
 	}
 
+	
 	@Override
 	public void fire(String strm, Tuple anchor, Values ctx) {
 		this.collector.emit(strm, anchor, ctx);

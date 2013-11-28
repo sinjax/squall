@@ -33,16 +33,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import org.apache.jena.riot.Lang;
 import org.apache.log4j.Logger;
 import org.apache.thrift7.TException;
 import org.openimaj.kestrel.writing.WritingScheme;
+import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.util.function.Operation;
 import org.openimaj.util.parallel.Parallel;
-import org.openjena.atlas.lib.Sink;
-import org.openjena.riot.RiotReader;
-import org.openjena.riot.lang.LangNTriples;
 
 import backtype.storm.spout.KestrelThriftClient;
 import backtype.storm.tuple.Tuple;
@@ -58,7 +58,7 @@ import com.hp.hpl.jena.graph.Triple;
  * @author Jon Hare (jsh2@ecs.soton.ac.uk), Sina Samangooei (ss@ecs.soton.ac.uk)
  * 
  */
-public abstract class KestrelTupleWriter implements Sink<Triple> {
+public abstract class KestrelTupleWriter  {
 
 	protected final static Logger logger = Logger
 			.getLogger(KestrelTupleWriter.class);
@@ -128,15 +128,16 @@ public abstract class KestrelTupleWriter implements Sink<Triple> {
 		Parallel.forEach(this.tripleSources, new Operation<InputStream>() {
 			@Override
 			public void perform(InputStream tripleSource) {
-				LangNTriples parser = RiotReader.createParserNTriples(tripleSource, KestrelTupleWriter.this);
-				parser.parse();
+				Iterator<Triple> iter = JenaUtils.createIterator(tripleSource, Lang.NTRIPLES);
+				while(iter.hasNext()){
+					send(iter.next());
+				}
 				logger.debug("Finished parsing");
 			}
 		});
 		close();
 	}
 
-	@Override
 	public void close() {
 		flushTripleCache();
 		for (KestrelThriftClient client : this.clients) {
@@ -145,7 +146,6 @@ public abstract class KestrelTupleWriter implements Sink<Triple> {
 		}
 	}
 
-	@Override
 	public void send(Triple item) {
 		this.tripleCache.add(item);
 		if (this.tripleCache.size() >= this.tripleCacheSizeLimit) {
@@ -163,11 +163,6 @@ public abstract class KestrelTupleWriter implements Sink<Triple> {
 	 *            send the entire cache to kestrel
 	 */
 	public abstract void send(List<Triple> cache);
-
-	@Override
-	public void flush() {
-		logger.debug("Queue flushed");
-	}
 
 	int currentIndex = 0;
 

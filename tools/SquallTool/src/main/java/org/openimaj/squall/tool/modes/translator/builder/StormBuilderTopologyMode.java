@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2012, The University of Southampton and the individual contributors.
+ * Copyright (c) 2011, The University of Southampton and the individual contributors.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -27,36 +27,24 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.openimaj.rdf.riot.sink;
+package org.openimaj.squall.tool.modes.translator.builder;
 
-import org.openjena.atlas.lib.Sink;
-
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.Triple;
+import org.openimaj.squall.build.storm.StormStreamBuilder;
 
 /**
- * A graph is filled with triples from the sink
+ * A topoogy mode controls how a topology is submitted
+ * 
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- *
+ * 
  */
-public class GraphFillingSink implements Sink<Triple> {
-	private final Graph graph;
+public interface StormBuilderTopologyMode {
 
 	/**
-	 * @param graph the grpah to fill
+	 * @param stormBuilderMode 
+	 * @return 
+	 * @throws Exception
 	 */
-	public GraphFillingSink(Graph graph) {
-		this.graph = graph;
-	}
+	public StormStreamBuilder topologyOperation(StormBuilderMode stormBuilderMode) throws Exception;
 
-	@Override
-	public void close() {}
 
-	@Override
-	public void send(Triple item) {
-		graph.add(item);
-	}
-
-	@Override
-	public void flush() {}
 }

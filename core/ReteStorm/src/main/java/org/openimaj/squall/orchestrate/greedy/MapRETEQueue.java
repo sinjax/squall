@@ -19,8 +19,13 @@ import com.hp.hpl.jena.graph.Node_Concrete;
  *
  */
 public class MapRETEQueue{
+	
+	private static final int capacity = 1000;
+	private static final long duration = 1;
+	private static final TimeUnit unit = TimeUnit.MINUTES;
+	
 	MapRETEQueue sibling;
-	HashedCircularPriorityWindow<Object[],Map<String,Node>> window;
+	HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>> window;
 	List<String> sharedVariables; // must match the sibling stream
 	
 	/**
@@ -29,7 +34,7 @@ public class MapRETEQueue{
 	public MapRETEQueue(List<String> sharedVariables) {
 		this.sharedVariables = sharedVariables;
 		
-		window = new HashedCircularPriorityWindow<Object[],Map<String,Node>>(null, 100, 15, TimeUnit.MINUTES);
+		window = new HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>>(null, capacity, duration, unit);
 	}
 	
 	/**
@@ -82,13 +87,13 @@ public class MapRETEQueue{
 		return check(typed);
 	}
 	
-	private Node[] extractSharedBindings(Map<String, Node> binds) {
-		Node[] vals = new Node[this.sharedVariables.size()];
+	private DeepHashArray<Node> extractSharedBindings(Map<String, Node> binds) {
+		DeepHashArray<Node> vals = new DeepHashArray<Node>(new Node[this.sharedVariables.size()]);
 		int i = 0;
 		for (String key : this.sharedVariables){
 			Node node = binds.get(key);
 			if(node.isConcrete()){
-				vals[i++] = node;
+				vals.set(i++, node);
 				continue;
 			} else {
 				throw new UnsupportedOperationException("Incorrect node type for comparison: " + node);
@@ -99,7 +104,8 @@ public class MapRETEQueue{
 
 	private List<Map<String,Node>> check(Map<String, Node> typed) {
 		List<Map<String, Node>> ret = new ArrayList<Map<String,Node>>();
-		Queue<Map<String, Node>> matchedQueue = sibling.window.getWindow(extractSharedBindings(typed));
+		DeepHashArray<Node> sharedBindings = extractSharedBindings(typed);
+		Queue<Map<String, Node>> matchedQueue = sibling.window.getWindow(sharedBindings);
 		if (matchedQueue != null){
 			for (Map<String, Node> sibitem : matchedQueue) {
 				Map<String,Node> newbind = new HashMap<String, Node>();
@@ -114,5 +120,37 @@ public class MapRETEQueue{
 		}
 		
 		return ret ;
+	}
+	
+	
+	private static final class DeepHashArray <T> {
+		
+		private final T[] arr;
+		
+		public DeepHashArray(T[] a){
+			this.arr = a;
+		}
+		
+		public void set(int index, T item){
+			this.arr[index] = item;
+		}
+		
+		public T get(int index){
+			return this.arr[index];
+		}
+		
+		@Override
+		public int hashCode() {
+			int ret = 0;
+			for (T item : this.arr)
+				ret += item.hashCode();
+			return ret;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			return (obj instanceof DeepHashArray) && obj.hashCode() == this.hashCode();
+		}
+		
 	}
 }

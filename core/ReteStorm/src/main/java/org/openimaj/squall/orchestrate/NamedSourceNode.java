@@ -1,6 +1,7 @@
 package org.openimaj.squall.orchestrate;
 
 import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.squall.data.ISource;
@@ -103,7 +104,7 @@ public class NamedSourceNode extends NamedNode<ISource<Stream<Context>>> {
 
 
 	@Override
-	public Operation<Context> getOperation() {
+	public IOperation<Context> getOperation() {
 		throw new UnsupportedOperationException();
 	}
 

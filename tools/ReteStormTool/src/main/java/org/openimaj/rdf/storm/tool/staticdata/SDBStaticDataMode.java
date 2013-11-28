@@ -11,13 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Option;
 import org.openimaj.rdf.storm.sparql.topology.builder.datasets.SDBStaticDataset;
 import org.openimaj.rdf.storm.sparql.topology.builder.datasets.StaticRDFDataset;
-import org.openjena.riot.Lang;
-import org.openjena.riot.RiotLoader;
-import org.openjena.riot.SysRIOT;
 
 import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -101,7 +100,6 @@ public class SDBStaticDataMode implements StaticDataMode {
 
 	private StaticRDFDataset prepareDataset(String name, String location) {
 		logger.debug("Preparing static data using Jena SDB");
-		SysRIOT.wireIntoJena();
 		String dbName = String.format("jeandb_%s", name);
 		String dbURL = String.format("%s/%s?%s", url, dbName,jdbcUnicode);
 		logger.debug("Attempting to connect to: " + dbURL);
@@ -156,7 +154,7 @@ public class SDBStaticDataMode implements StaticDataMode {
 					logger.debug("...Loading triples from: " + fileURL);
 					Model tmpModel = ModelFactory.createDefaultModel();
 					// RiotLoader.read(fileURL, dataset.asDatasetGraph(),Lang.TURTLE);
-					RiotLoader.read(location, tmpModel.getGraph(), Lang.NTRIPLES);
+					RDFDataMgr.read(tmpModel.getGraph(), location, Lang.NTRIPLES);
 					logger.debug("Done!...populating SQL model...");
 					dataset.getDefaultModel().add(tmpModel);
 					logger.debug("Done!");

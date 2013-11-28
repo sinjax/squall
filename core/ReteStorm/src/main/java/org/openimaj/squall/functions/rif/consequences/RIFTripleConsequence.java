@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
@@ -21,6 +22,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 @SuppressWarnings("serial")
 public class RIFTripleConsequence implements IVFunction<Context,Context> {
 
+	private static final Logger logger = Logger.getLogger(RIFTripleConsequence.class);
 	private TriplePattern clause;
 	private String id;
 
@@ -42,6 +44,8 @@ public class RIFTripleConsequence implements IVFunction<Context,Context> {
 		
 		List<Context> ctxs = new ArrayList<Context>();
 		for (Triple triple : ret) {
+			logger.debug(this.toString());
+			
 			Context out = new Context();
 			out.put("triple", triple);
 			out.put("rule", this.id);
@@ -81,7 +85,7 @@ public class RIFTripleConsequence implements IVFunction<Context,Context> {
 
 	@Override
 	public String toString() {
-		return this.clause.toString();
+		return String.format("CONSEQUENCE: clause %s",this.clause.toString());
 	}
 	
 }

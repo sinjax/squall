@@ -4,11 +4,13 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.openimaj.rdf.storm.utils.CircularPriorityWindow.CapacityOverflowHandler;
 import org.openimaj.rdf.storm.utils.CircularPriorityWindow.OverflowHandler;
 
 
@@ -22,7 +24,8 @@ public class HashedCircularPriorityWindow<K, V> implements TimedMap<K,V> {
 
 	private final Map<K,CircularPriorityWindow<V>> map;
 	
-	protected final int capacity;
+	protected final int semanticCapacity;
+	protected final int maxCapacity;
 	protected final long delay;
 	protected final TimeUnit unit;
 	protected final OverflowHandler<V> continuation;
@@ -31,15 +34,28 @@ public class HashedCircularPriorityWindow<K, V> implements TimedMap<K,V> {
 	
 	/**
 	 * @param handler 
-	 * @param cap 
+	 * @param queryCap 
 	 * @param delay 
 	 * @param unit 
 	 * 
 	 */
-	public HashedCircularPriorityWindow(OverflowHandler<V> handler, int cap, long delay, TimeUnit unit){
+	public HashedCircularPriorityWindow(OverflowHandler<V> handler, int queryCap, long delay, TimeUnit unit){
+		this(handler, queryCap, queryCap*2, delay, unit);
+	}
+	
+	/**
+	 * @param handler 
+	 * @param queryCap 
+	 * @param maxCap 
+	 * @param delay 
+	 * @param unit 
+	 * 
+	 */
+	public HashedCircularPriorityWindow(OverflowHandler<V> handler, int queryCap, int maxCap, long delay, TimeUnit unit){
 		this.map = new HashMap<K, CircularPriorityWindow<V>>();
 		
-		this.capacity = cap;
+		this.semanticCapacity = queryCap;
+		this.maxCapacity = maxCap;
 		this.unit = unit;
 		this.delay = delay;
 		this.continuation = handler;
@@ -47,14 +63,52 @@ public class HashedCircularPriorityWindow<K, V> implements TimedMap<K,V> {
 		this.size = 0;
 	}
 
+//	private int capPrune(){
+//		int capPruned = 0;
+//		while (this.size > this.semanticCapacity) {
+//			K soonestKey = null;
+//			for (K k : this.map.keySet()){
+//				if (soonestKey == null)
+//					soonestKey = k;
+//				if (this.map.get(soonestKey).getNextExpiry(TimeUnit.MILLISECONDS)
+//							> this.map.get(k).getNextExpiry(TimeUnit.MILLISECONDS)){
+//					soonestKey = k;
+//				}
+//			}
+//			if (soonestKey != null){
+//				V removed = this.map.get(soonestKey).removeNextToExpire();
+//				capPruned++;
+//				try {
+//					((CapacityOverflowHandler<V>)continuation).handleCapacityOverflow(removed);
+//				} catch (NullPointerException | ClassCastException e) {}
+//				if (this.map.get(soonestKey).isEmpty()){
+//					this.map.remove(soonestKey);
+//				}
+//			}
+//		}
+//		return capPruned;
+//	}
+	
 	@Override
 	public int prune() {
 		int pruned = 0;
 		for (K key : this.map.keySet()){
-			pruned += this.map.get(key).prune();
-			if (this.map.get(key).isEmpty())
-				this.map.remove(key);
+			pruned += this.prune(key);
 		}
+//		if (this.size > this.semanticCapacity){
+//			int capPruned = this.capPrune();
+//			pruned += capPruned;
+//			this.size -= capPruned;
+//		}
+		return pruned;
+	}
+	
+	private int prune(K key){
+		if (this.map.get(key) == null) return 0;
+		
+		int pruned = this.map.get(key).prune();
+		if (this.map.get(key).isEmpty())
+			this.map.remove(key);
 		this.size -= pruned;
 		return pruned;
 	}
@@ -84,8 +138,8 @@ public class HashedCircularPriorityWindow<K, V> implements TimedMap<K,V> {
 	@Override
 	public boolean containsValue(Object value) {
 		for (K key : this.map.keySet()){
-			this.size -= this.map.get(key).prune();
-			if (this.map.get(key).contains(value)){
+			this.prune(key);
+			if (this.map.containsKey(key) && this.map.get(key).contains(value)){
 				return true;
 			}
 		}
@@ -116,11 +170,15 @@ public class HashedCircularPriorityWindow<K, V> implements TimedMap<K,V> {
 	public V put(K key, V value, long timestamp, long delay, TimeUnit unit) {
 		CircularPriorityWindow<V> window = this.map.get(key);
 		if (window == null){
-			window = new CircularPriorityWindow<V>(this.continuation, this.capacity, this.delay, this.unit);
+			window = new CircularPriorityWindow<V>(this.continuation, this.semanticCapacity, this.delay, this.unit);
 			this.map.put(key, window);
 		}
 		if (window.offer(value, timestamp, delay, unit)){
 			this.size++;
+//			if (this.size > this.maxCapacity){
+//				int capPruned = this.capPrune();
+//				this.size -= capPruned;
+//			}
 			return value;
 		}
 		return null;
@@ -141,15 +199,9 @@ public class HashedCircularPriorityWindow<K, V> implements TimedMap<K,V> {
 	 * 		The queue of items that were added with the same key.  Returns null if there are no items with the given key.
 	 */
 	public Queue<V> getWindow(K key){
-		if (this.map.get(key) == null){
-			return null;
-		}
-		this.size -= this.map.get(key).prune();
-		if (this.map.get(key).isEmpty()){
-			this.map.remove(key);
-			return null;
-		}
-		return this.map.get(key);
+		this.prune(key);
+		CircularPriorityWindow<V> circularPriorityWindow = this.map.get(key);
+		return circularPriorityWindow;
 	}
 
 	@Override

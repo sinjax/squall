@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
@@ -19,6 +20,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 @SuppressWarnings("serial")
 public class BaseBindingConsequence implements IVFunction<Context,Context> {
 
+	private static final Logger logger = Logger.getLogger(BaseBindingConsequence.class);
 	private String[] inVariables;
 	private String[] outVariables;
 	private String id;
@@ -49,6 +51,7 @@ public class BaseBindingConsequence implements IVFunction<Context,Context> {
 								);
 		
 		Context out = new Context();
+		logger.debug(this.toString());
 		out.put("bindings", ret);
 		out.put("rule", this.id);
 		List<Context> ctxs = new ArrayList<Context>();
@@ -91,7 +94,7 @@ public class BaseBindingConsequence implements IVFunction<Context,Context> {
 	
 	@Override
 	public String toString() {
-		return String.format("%s -> %s", Arrays.toString(this.inVariables), Arrays.toString(this.outVariables));
+		return String.format("CONSEQUENCE: inVariables %s -> outVariables %s", Arrays.toString(this.inVariables), Arrays.toString(this.outVariables));
 	}
 
 }

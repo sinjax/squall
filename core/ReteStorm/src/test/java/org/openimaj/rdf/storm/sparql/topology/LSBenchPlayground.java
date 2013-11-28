@@ -4,11 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.SysRIOT;
 import org.openimaj.io.FileUtils;
 import org.openimaj.rdf.storm.utils.CsparqlUtils;
-import org.openjena.riot.Lang;
-import org.openjena.riot.RiotLoader;
-import org.openjena.riot.SysRIOT;
 
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.compose.MultiUnion;
@@ -41,10 +41,9 @@ public class LSBenchPlayground {
 
 	public static void main(String[] args) throws IOException {
 		// Load the LSBench posts into a model
-		SysRIOT.wireIntoJena();
 		File streamFile = new File("/Users/ss/Experiments/retestormlsbench/data/1000/rdfPostStream1000.ntriples");
 		URL fileURL = streamFile.toURI().toURL();
-		Graph streamGraph = RiotLoader.loadGraph(fileURL.toString(), Lang.NTRIPLES);
+		Graph streamGraph = RDFDataMgr.loadGraph(fileURL.toString(), Lang.NTRIPLES);
 
 		//		File staticFile = new File("/Users/ss/Experiments/retestormlsbench/data/1000/mr0_sibdataset1000.ntriples");
 		//		fileURL = staticFile.toURI().toURL();

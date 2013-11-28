@@ -1,5 +1,6 @@
 package org.openimaj.squall.orchestrate;
 
+import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.compile.data.VariableHolder;
@@ -79,7 +80,7 @@ public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
 	}
 
 	@Override
-	public Operation<Context> getOperation() {
+	public IOperation<Context> getOperation() {
 		throw new UnsupportedOperationException();
 	}
 
