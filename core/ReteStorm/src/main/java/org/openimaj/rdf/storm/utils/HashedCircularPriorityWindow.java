@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -84,82 +83,42 @@ public class HashedCircularPriorityWindow<K, V> implements TimedMap<K,V>, SpaceL
 		}
 	}
 	
+	private V removeOldest() {
+		TimedMapEntry last = HashedCircularPriorityWindow.this.queue.remove();
+		V lastValue = last.getValue();
+		K lastKey = last.getKey();
+		
+		logger.debug("Removing from key: " + lastKey + " by prune capacity");
+		if(map.get(lastKey) == null){
+			System.out.println("This should never ever happen. Ever.");
+		}
+		HashedCircularPriorityWindow.this.map.get(lastKey).remove(lastValue);
+		if (HashedCircularPriorityWindow.this.map.get(lastKey).isEmpty()){
+			logger.debug("Removing the window of key: " + lastKey);
+			HashedCircularPriorityWindow.this.map.remove(lastKey);
+		}
+		
+		return lastValue; 
+	}
+	
 	@Override
 	public void pruneToCapacity() {
-		Iterator<TimedMapEntry> pruner = new Iterator<TimedMapEntry>(){
-			TimedMapEntry last;
-			@Override
-			public boolean hasNext() {
-				last = HashedCircularPriorityWindow.this.queue.peek();
-				if(last == null) return false;
-				return HashedCircularPriorityWindow.this.queue.size() > HashedCircularPriorityWindow.this.maxCapacity;
-			}
-			@Override
-			public TimedMapEntry next() {
-				return last;
-			}
-			@Override
-			public void remove() {
-					V lastValue = last.getValue();
-					K lastKey = last.getKey();
-					if(map.get(lastKey) == null){
-						System.out.println("This should never ever happen. Ever.");
-					}
-					logger.debug("Removing from key: " + lastKey + " by prune capacity");
-					HashedCircularPriorityWindow.this.queue.remove(last);
-					HashedCircularPriorityWindow.this.map.get(lastKey).remove(lastValue);
-					if (HashedCircularPriorityWindow.this.map.get(lastKey).isEmpty()){
-						logger.debug("Removing the window of key: " + lastKey);
-						HashedCircularPriorityWindow.this.map.remove(lastKey);
-					}
-					
-					HashedCircularPriorityWindow.this.overflowCapacity(lastValue);
-					
-					last = null;
-			}
-		};
-		
-		while (pruner.hasNext()){
-			pruner.remove();
+		while (this.queue.size() > this.maxCapacity){
+			this.overflowCapacity(this.removeOldest());
 		}
+	}
+	
+	private boolean containsOldItems() {
+		if (this.queue.isEmpty()) return false;
+		long delay2 = this.queue.peek().getDelay(TimeUnit.MILLISECONDS);
+		if(delay2>0) return false;
+		return true;
 	}
 	
 	@Override
 	public void pruneToDuration() {
-		Iterator<TimedMapEntry> pruner = new Iterator<TimedMapEntry>(){
-			TimedMapEntry last;
-			@Override
-			public boolean hasNext() {
-				last = HashedCircularPriorityWindow.this.queue.peek();
-				if(last == null) return false;
-				return last.getDelay(HashedCircularPriorityWindow.this.unit) < 0;
-			}
-			@Override
-			public TimedMapEntry next() {
-				return last;
-			}
-			@Override
-			public void remove() {
-				V lastValue = last.getValue();
-				K lastKey = last.getKey();
-				if(map.get(lastKey) == null){
-					System.out.println("This should never ever happen. Ever.");
-				}
-				logger.debug("Removing from key: " + lastKey + " by prune duration");
-				HashedCircularPriorityWindow.this.queue.remove(last);
-				HashedCircularPriorityWindow.this.map.get(lastKey).remove(lastValue);
-				if (HashedCircularPriorityWindow.this.map.get(lastKey).isEmpty()){
-					HashedCircularPriorityWindow.this.map.remove(lastKey);
-				}
-				
-				HashedCircularPriorityWindow.this.overflowDuration(lastValue);
-				
-				last = null;
-			}
-		};
-
-		while (pruner.hasNext()){
-			pruner.remove();
+		while (containsOldItems()){
+			this.overflowDuration(this.removeOldest());
 		}
 	}
 
