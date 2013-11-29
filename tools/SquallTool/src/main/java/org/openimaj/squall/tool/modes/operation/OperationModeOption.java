@@ -33,7 +33,7 @@ public enum OperationModeOption implements CmdLineOptionsProvider{
 	/**
 	 * 
 	 */
-	BINDINGKESTREL{
+	KESTREL{
 
 		@Override
 		public OperationMode getOptions() {

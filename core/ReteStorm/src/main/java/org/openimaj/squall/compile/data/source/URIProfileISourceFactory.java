@@ -117,6 +117,7 @@ public class URIProfileISourceFactory {
 		schemeFunctions.put("http", new HTTPSchemeFunction());
 		schemeFunctions.put("file", new FileSchemeFunction());
 		schemeFunctions.put("java", new JavaSchemeFunction());
+		schemeFunctions.put("kestrel", new KestrelSchemeFunction());
 		
 		// Register the default pure scheme functions
 		// TODO: maybe kestrel? 
