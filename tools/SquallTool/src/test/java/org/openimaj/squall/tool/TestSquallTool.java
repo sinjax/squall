@@ -58,6 +58,30 @@ public class TestSquallTool {
 		
 		tmp.delete();
 	}
+	
+	/**
+	 * @throws IOException 
+	 * 
+	 */
+	@Test
+	public void testSquallToolKestrelQueue() throws IOException{
+		File tmp = File.createTempFile("out", ".nt");
+		SquallTool.main(toArgs(""
+			+ "-tm RIF "
+				+ " -rifr java:///queries.rif"
+			+ " -pm GREEDYCS"
+			+ " -bm STORM"
+				+ " -stm LOCAL"
+					+ " -st 10000" 
+			+ " -o KESTREL"
+		));
+		Iterator<Triple> iter = JenaUtils.createIterator(new FileInputStream(tmp), Lang.NTRIPLES);
+		while(iter.hasNext()){
+			System.out.println(iter.next());
+		}
+		
+		tmp.delete();
+	}
 
 	private String[] toArgs(String string) {
 		return string.replaceAll("[ ]+", " ").split(" ");

@@ -106,9 +106,9 @@ public class URIProfileISourceFactory {
 	private URIProfileISourceFactory() {
 	}
 	
+	public static URI NTRIPLES_URI;
+	public static URI TURTLE_URI;
 	static{
-		URI NTRIPLES_URI;
-		URI TURTLE_URI;
 		try {
 			NTRIPLES_URI = new URI("http://www.w3.org/ns/stream/NTriples");
 			TURTLE_URI = new URI("http://www.w3.org/ns/stream/Turtle");
@@ -117,6 +117,7 @@ public class URIProfileISourceFactory {
 		schemeFunctions.put("http", new HTTPSchemeFunction());
 		schemeFunctions.put("file", new FileSchemeFunction());
 		schemeFunctions.put("java", new JavaSchemeFunction());
+		schemeFunctions.put("kestrel", new KestrelSchemeFunction());
 		
 		// Register the default pure scheme functions
 		// TODO: maybe kestrel? 

@@ -33,12 +33,11 @@ public enum OperationModeOption implements CmdLineOptionsProvider{
 	/**
 	 * 
 	 */
-	TRIPLEKESTREL{
+	KESTREL{
 
 		@Override
 		public OperationMode getOptions() {
-			// TODO Auto-generated method stub
-			return null;
+			return new KestrelOperationMode();
 		}
 		
 	}

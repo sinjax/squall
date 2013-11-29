@@ -82,7 +82,7 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 			seen++;
 			this.fire(item);
 			if(seen%5000 == 0){
-				logger.debug("Emitted 5000");
+				logger.debug("Emitted " + seen);
 //				Utils.sleep(100);
 			}
 		} else {
