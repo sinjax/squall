@@ -68,7 +68,7 @@ public class TestSquallTool {
 		File tmp = File.createTempFile("out", ".nt");
 		SquallTool.main(toArgs(""
 			+ "-tm RIF "
-				+ " -rifr java:///queries.rif"
+				+ " -rifr java:///kestrelqueries.rif"
 			+ " -pm GREEDYCS"
 			+ " -bm STORM"
 				+ " -stm LOCAL"

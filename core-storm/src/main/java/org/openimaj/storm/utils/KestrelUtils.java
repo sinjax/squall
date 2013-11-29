@@ -29,8 +29,13 @@
  */
 package org.openimaj.storm.utils;
 
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.thrift7.TException;
 import org.openimaj.kestrel.KestrelServerSpec;
+import org.openimaj.util.pair.IndependentPair;
 
 import backtype.storm.spout.KestrelThriftClient;
 
@@ -53,6 +58,28 @@ public class KestrelUtils {
 			client.delete_queue(queue);
 		}
 		client.close();
+	}
+	
+	/**
+	 * @param in
+	 * @return turn {@link URI} into a list of hosts and a queue
+	 */
+	public static IndependentPair<List<KestrelServerSpec>, String> uriToHostsQueue(URI in) {
+		String kestrelHostString = in.getAuthority();
+		String[] parts = kestrelHostString.split(":");
+		List<String> hostStrings = Arrays.asList(parts);
+		List<KestrelServerSpec> hosts = KestrelServerSpec.parseKestrelAddressList(hostStrings);
+		String queue = in.getPath().replace("/", "");
+		
+		IndependentPair<List<KestrelServerSpec>, String> hostQueue = IndependentPair.pair(hosts, queue);
+		return hostQueue;
+	}
+
+	public static void deleteQueues(URI host) throws TException {
+		IndependentPair<List<KestrelServerSpec>, String> pair = uriToHostsQueue(host);
+		for (KestrelServerSpec kss : pair.firstObject()) {			
+			deleteQueues(kss, pair.secondObject());
+		}
 	}
 
 }

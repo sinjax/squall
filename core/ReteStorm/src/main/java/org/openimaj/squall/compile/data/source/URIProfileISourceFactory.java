@@ -69,6 +69,7 @@ public class URIProfileISourceFactory {
 
 		public LocationISource(URI location, Function<URI, Stream<Context>> r) {
 			this.reader = r;
+			this.location = location;
 		}
 
 		@Override
@@ -117,7 +118,7 @@ public class URIProfileISourceFactory {
 		schemeFunctions.put("http", new HTTPSchemeFunction());
 		schemeFunctions.put("file", new FileSchemeFunction());
 		schemeFunctions.put("java", new JavaSchemeFunction());
-		schemeFunctions.put("kestrel", new KestrelSchemeFunction());
+		registerPureScheme("kestrel", new KestrelSchemeFunction());//schemeFunctions.put("kestrel", new KestrelSchemeFunction());
 		
 		// Register the default pure scheme functions
 		// TODO: maybe kestrel? 
