@@ -54,8 +54,9 @@ public class KestrelWriter implements IOperation<byte[]>{
 
 	private void flushTripleCache() {
 		try {
-			logger.debug(String.format("Flushing Cache, size: %d",this.cache.size()));
-			this.getNextClient().put(queue, this.cache, 0);
+			KestrelThriftClient nextClient = this.getNextClient();
+			nextClient.put(queue, this.cache, 0);
+			logger.debug(String.format("Flushing %s Cache, size: %d",queue,this.cache.size()));
 			
 		} catch (TException e) {
 			throw new RuntimeException(e);
@@ -98,6 +99,10 @@ public class KestrelWriter implements IOperation<byte[]>{
 				this.cacheSizeLimit = Integer.parseInt(hostQueue.params.get("writecache").get(0));
 			}
 			
+			if(hostQueue.params.containsKey("predelete")){
+				KestrelUtils.deleteQueues(this.host);
+			}
+			
 		}catch (Exception e){
 			throw new RuntimeException(e);
 		}
@@ -117,8 +122,8 @@ public class KestrelWriter implements IOperation<byte[]>{
 	@Override
 	public void perform(byte[] item) {
 		this.cache.add(ByteBuffer.wrap(item));
-		logger.debug(String.format("Writing item, cache size: %d/%d",this.cache.size(),this.cacheSizeLimit));
 		if (this.cache.size() >= this.cacheSizeLimit) {
+//			logger.debug(String.format("Writing item, cache size: %d/%d",this.cache.size(),this.cacheSizeLimit));
 			flushTripleCache();
 		}
 	}

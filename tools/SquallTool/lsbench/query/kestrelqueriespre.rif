@@ -20,37 +20,37 @@
   </directive>
   <directive>
     <Import>
-    	<location>kestrel://localhost/lsbench-gps?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/gpsStream1000.nt</location>
+    	<location>kestrel://localhost/lsbench-gps?writecache=10000&amp;predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/gpsStream1000.nt</location>
     	<profile></profile>
     </Import>
   </directive>
   <directive>
     <Import>
-      <location>kestrel://localhost/lsbench-mr0?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/mr0_sibdataset1000.nt</location>
+      <location>kestrel://localhost/lsbench-mr0?writecache=10000&amp;predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/mr0_sibdataset1000.nt</location>
       <profile></profile>
     </Import>
   </directive>
   <directive>
     <Import>
-      <location>kestrel://localhost/lsbench-photolike?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPhotoLikeStream1000.nt</location>
+      <location>kestrel://localhost/lsbench-photolike?writecache=10000&amp;predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPhotoLikeStream1000.nt</location>
       <profile></profile>
     </Import>
   </directive>
   <directive>
     <Import>
-      <location>kestrel://localhost/lsbench-photo?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPhotoStream1000.nt</location>
+      <location>kestrel://localhost/lsbench-photo?writecache=10000&amp;predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPhotoStream1000.nt</location>
       <profile></profile>
     </Import>
   </directive>
   <directive>
     <Import>
-      <location>kestrel://localhost/lsbench-postlike?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPostLikeStream1000.nt</location>
+      <location>kestrel://localhost/lsbench-postlike?writecache=10000&amp;predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPostLikeStream1000.nt</location>
       <profile></profile>
     </Import>
   </directive>
   <directive>
     <Import>
-      <location>kestrel://localhost/lsbench-post?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPostStream1000.nt</location>
+      <location>kestrel://localhost/lsbench-post?writecache=10000&amp;predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPostStream1000.nt</location>
       <profile></profile>
     </Import>
   </directive>
