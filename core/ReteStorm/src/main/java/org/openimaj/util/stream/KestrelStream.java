@@ -1,5 +1,6 @@
 package org.openimaj.util.stream;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -13,7 +14,10 @@ import net.lag.kestrel.thrift.QueueInfo;
 import org.apache.log4j.Logger;
 import org.apache.thrift7.TException;
 import org.openimaj.kestrel.KestrelServerSpec;
+import org.openimaj.storm.utils.KestrelParsedURI;
+import org.openimaj.storm.utils.KestrelUtils;
 import org.openimaj.util.function.MultiFunction;
+import org.openimaj.util.pair.IndependentPair;
 import org.openimaj.util.stream.AbstractStream;
 
 import backtype.storm.spout.KestrelThriftClient;
@@ -61,6 +65,16 @@ public class KestrelStream<T> extends AbstractStream<T>{
 	private int port;
 	private MultiFunction<byte[], T> transform;
 
+	
+	/**
+	 * @param host
+	 * @param transform
+	 */
+	public KestrelStream(URI host, MultiFunction<byte[], T> transform) {
+		KestrelParsedURI hostQueue = KestrelUtils.parseKestrelURI(host);
+		init(hostQueue, transform);
+	}
+	
 	/**
 	 * @param serverSpecs
 	 *            servers to connect to in a round robin fasion
@@ -68,16 +82,18 @@ public class KestrelStream<T> extends AbstractStream<T>{
 	 *            queue from which to read
 	 * @param transform how to read items from the queue
 	 */
-	public KestrelStream(
-			List<KestrelServerSpec> serverSpecs,
-			String inputQueue, 
+	public KestrelStream(KestrelParsedURI hostQueue, 
 			MultiFunction<byte[], T> transform)
 	{
+		init(hostQueue, transform);
+	}
+
+	private void init(KestrelParsedURI hostQueue, MultiFunction<byte[], T> transform) {
 		this.transform = transform;
-		this.queue = inputQueue;
+		this.queue = hostQueue.queue;
 		this.port = -1;
 		this.hosts = new ArrayList<String>();
-		for (final KestrelServerSpec kestrelServerSpec : serverSpecs) {
+		for (final KestrelServerSpec kestrelServerSpec : hostQueue.hosts) {
 			this.hosts.add(kestrelServerSpec.host);
 			this.port = kestrelServerSpec.port;
 		}

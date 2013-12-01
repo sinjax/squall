@@ -37,29 +37,9 @@ public class TestKestrelSchemeFunction {
 	@Test
 	public void testLocalKestrel() throws URISyntaxException, TException{
 		URIProfileISourceFactory fact = URIProfileISourceFactory.instance();
-		URI host = new URI("kestrel://localhost/testQueue");
+		URI host = new URI("kestrel://localhost/testQueue?preload=java:///test.rdfs&predelete=true");
 		
-		KestrelUtils.deleteQueues(host);
-		Collection<Triple> triples = JenaUtils.readNTriples(TestKestrelSchemeFunction.class.getResourceAsStream("/test.rdfs"));
-		
-		KestrelWriter op = new KestrelWriter(host);
-		op.setup();
-		new CollectionStream<>(triples)
-		.map(new Function<Triple, byte[]>() {
-
-			@Override
-			public byte[] apply(Triple in) {
-				Graph graph = GraphFactory.createGraphMem();
-				graph.add(in);
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				RDFDataMgr.write(baos, graph, Lang.NTRIPLES);
-				return baos.toByteArray();
-			}
-		})
-		.forEach(op);
-		op.cleanup();
-		
-		ISource<Stream<Context>> source = fact.createSource(host, null);
+		ISource<Stream<Context>> source = fact.createSource(host, (Lang)null);
 		Stream<Context> strm = source.apply();
 		for (int i = 0; i < 100; i++) {
 			System.out.println(strm.next());

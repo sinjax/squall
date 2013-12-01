@@ -174,8 +174,9 @@ public class KestrelServerSpec {
 	 */
 	public KestrelThriftClient getValidClient() throws TException {
 		if (this.client == null) { // If client was blacklisted, remake it.
-			logger.info("Attempting reconnect to kestrel " + this.host + ":" + this.port);
+			logger.debug("Attempting reconnect to kestrel " + this.host + ":" + this.port);
 			this.client = new KestrelThriftClient(this.host, this.port);
+			logger.info("Successfully connected to kestrel " + this.host + ":" + this.port);
 		}
 		return this.client;
 	}

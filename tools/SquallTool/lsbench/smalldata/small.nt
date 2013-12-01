@@ -1,0 +1,37 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sioc: <http://rdfs.org/sioc/ns#> .
+@prefix sioct: <http://rdfs.org/sioc/type#> .
+@prefix dbp: <http://dbpedia.org/resource/> .
+@prefix dbpo: <http://dbpedia.org/ontology/> .
+@prefix dbpprop: <http://dbpedia.org/property/> .
+@prefix sib: <http://www.ins.cwi.nl/sib/vocabulary/> .
+@prefix sibp: <http://www.ins.cwi.nl/sib/person/> .
+@prefix sibu: <http://www.ins.cwi.nl/sib/user/> .
+@prefix sibfo: <http://www.ins.cwi.nl/sib/forum/> .
+@prefix sibfr: <http://www.ins.cwi.nl/sib/friendship/> .
+@prefix sibg: <http://www.ins.cwi.nl/sib/group/> .
+@prefix sibgm: <http://www.ins.cwi.nl/sib/group/membership/> .
+@prefix sibpo: <http://www.ins.cwi.nl/sib/post/> .
+@prefix sibc: <http://www.ins.cwi.nl/sib/post/comment/> .
+@prefix sibpho: <http://www.ins.cwi.nl/sib/photoalbum/photo/> .
+@prefix sibpha: <http://www.ins.cwi.nl/sib/photoalbum/> .
+@prefix sibgps: <http://www.ins.cwi.nl/sib/gps/> .
+sibu:2 sib:trackedAt sibgps:1 .
+sibpho:2 sib:usertag sibu:2.@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+sibpho:1 sib:usertag sibu:1 .
+sibu:2 foaf:knows sibu:1 .
+sibu:3 sib:like sibpho:1 .
+
+sibpho:1 dbpprop:latd "10"^^xsd:integer .
+sibpho:1 dbpprop:longd "10"^^xsd:integer .
+
+sibpho:2 dbpprop:latd "10"^^xsd:integer .
+sibpho:2 dbpprop:longd "10"^^xsd:integer . 
+
+sibgps:1 dbpprop:latd "10"^^xsd:integer .
+sibgps:1 dbpprop:longd "10"^^xsd:integer .

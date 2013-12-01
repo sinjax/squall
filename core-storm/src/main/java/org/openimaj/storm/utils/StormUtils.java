@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.openimaj.io.IOUtils;
+import org.openimaj.rdf.storm.utils.JenaStormUtils;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;

@@ -38,6 +38,7 @@ public class WrappedContextISource implements ISource<Stream<Context>>{
 
 				@Override
 				public Context apply(Context in) {
+					if(in == null) return null;
 					nn.addName(in);
 					return in;
 				}

@@ -2,8 +2,10 @@ package org.openimaj.squall.build.storm;
 
 import java.util.Map;
 
+import org.openimaj.rdf.storm.utils.JenaStormUtils;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.orchestrate.NamedNode;
+import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.storm.utils.StormUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Operation;
@@ -31,7 +33,8 @@ public class OperationBolt extends ProcessingBolt {
 	public OperationBolt(NamedNode<?> nn) throws Exception {
 		super(nn);
 		if(nn.isOperation()) {
-			this.serializedOp = StormUtils.serialiseFunction(kryo,nn.getOperation());
+			IOperation<Context> op = nn.getOperation();
+			this.serializedOp = StormUtils.serialiseFunction(JenaStormUtils.kryo(),op);
 		}
 		else{
 			throw new Exception("Inappropriate node");
@@ -41,8 +44,27 @@ public class OperationBolt extends ProcessingBolt {
 	@Override
 	public void prepare(@SuppressWarnings("rawtypes") Map stormConf, TopologyContext context,OutputCollector collector) {
 		super.prepare(stormConf, context, collector);
-		this.op = StormUtils.deserialiseFunction(kryo,this.serializedOp);
-		this.op.setup();
+		innersetup();
+	}
+
+	/**
+	 * 
+	 */
+	@SuppressWarnings("unchecked")
+	public void innersetup() {
+		try{
+			Object ret = StormUtils.deserialiseFunction(JenaStormUtils.kryo(),this.serializedOp);
+			if(ret instanceof IOperation){				
+				this.op = (IOperation<Context>) ret;
+			}
+			else{
+				throw new RuntimeException("IOperation incorrectly deserialised!");
+			}
+			this.op.setup();
+		}
+		catch(Exception e){
+			throw new RuntimeException(e);
+		}
 	}
 	
 	@Override

@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import org.apache.thrift7.TException;
 import org.openimaj.kestrel.KestrelServerSpec;
 import org.openimaj.squall.compile.data.IOperation;
+import org.openimaj.storm.utils.KestrelParsedURI;
 import org.openimaj.storm.utils.KestrelUtils;
 import org.openimaj.util.pair.IndependentPair;
 
@@ -53,7 +54,9 @@ public class KestrelWriter implements IOperation<byte[]>{
 
 	private void flushTripleCache() {
 		try {
+			logger.debug(String.format("Flushing Cache, size: %d",this.cache.size()));
 			this.getNextClient().put(queue, this.cache, 0);
+			
 		} catch (TException e) {
 			throw new RuntimeException(e);
 		}
@@ -83,14 +86,17 @@ public class KestrelWriter implements IOperation<byte[]>{
 		try{
 			logger.debug("Opening kestrel client");
 			this.clients = new ArrayList<KestrelThriftClient>();
-			IndependentPair<List<KestrelServerSpec>, String> hostQueue = KestrelUtils.uriToHostsQueue(host);
-			List<KestrelServerSpec> specs = hostQueue.firstObject();
+			KestrelParsedURI hostQueue = KestrelUtils.parseKestrelURI(host);
+			List<KestrelServerSpec> specs = hostQueue.hosts;
 			for (KestrelServerSpec spec : specs) {
 				this.clients.add(new KestrelThriftClient(spec.host, spec.port));
 			}
-			this.queue = hostQueue.secondObject();
+			this.queue = hostQueue.queue;
 			this.cache = new ArrayList<ByteBuffer>();
 			this.cacheSizeLimit = 1000;
+			if(hostQueue.params.containsKey("writecache")){
+				this.cacheSizeLimit = Integer.parseInt(hostQueue.params.get("writecache").get(0));
+			}
 			
 		}catch (Exception e){
 			throw new RuntimeException(e);
@@ -111,6 +117,7 @@ public class KestrelWriter implements IOperation<byte[]>{
 	@Override
 	public void perform(byte[] item) {
 		this.cache.add(ByteBuffer.wrap(item));
+		logger.debug(String.format("Writing item, cache size: %d/%d",this.cache.size(),this.cacheSizeLimit));
 		if (this.cache.size() >= this.cacheSizeLimit) {
 			flushTripleCache();
 		}

@@ -15,13 +15,13 @@
 <Document>
   <directive>
     <Import>
-    	<location>java:///lsbench/rules.rif</location>
+    	<location>file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/query/rules.rif</location>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>kestrel://localhost/triples?preload=java:///lsbench_data/photo.nt&amp;preload=java:///lsbench_data/photolike.nt&amp;preload=java:///lsbench_data/post.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    	<location>kestrel://localhost/triples?preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/smalldata/small.nt</location>
+    	<profile></profile>
     </Import>
   </directive>
   <payload>

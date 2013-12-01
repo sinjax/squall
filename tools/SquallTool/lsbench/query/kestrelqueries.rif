@@ -15,13 +15,43 @@
 <Document>
   <directive>
     <Import>
-    	<location>java:///lsbench/rules.rif</location>
+    	<location>file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/query/rules.rif</location>
     </Import>
   </directive>
   <directive>
     <Import>
-    	<location>kestrel://localhost/triples?preload=java:///lsbench_data/photo.nt&amp;preload=java:///lsbench_data/photolike.nt&amp;preload=java:///lsbench_data/post.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    	<location>kestrel://localhost/lsbench-gps</location>
+    	<profile></profile>
+    </Import>
+  </directive>
+  <directive>
+    <Import>
+      <location>kestrel://localhost/lsbench-mr0?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/mr0_sibdataset1000.nt</location>
+      <profile></profile>
+    </Import>
+  </directive>
+  <directive>
+    <Import>
+      <location>kestrel://localhost/lsbench-photolike?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPhotoLikeStream1000.nt</location>
+      <profile></profile>
+    </Import>
+  </directive>
+  <directive>
+    <Import>
+      <location>kestrel://localhost/lsbench-photo?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPhotoStream1000.nt</location>
+      <profile></profile>
+    </Import>
+  </directive>
+  <directive>
+    <Import>
+      <location>kestrel://localhost/lsbench-postlike?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPostLikeStream1000.nt</location>
+      <profile></profile>
+    </Import>
+  </directive>
+  <directive>
+    <Import>
+      <location>kestrel://localhost/lsbench-post?predelete=true&amp;preload=file:///mnt/data/home/ss/Development/java/squall/tools/SquallTool/lsbench/data/rdfPostStream1000.nt</location>
+      <profile></profile>
     </Import>
   </directive>
   <payload>

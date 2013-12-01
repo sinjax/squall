@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.openimaj.kestrel.KestrelServerSpec;
+import org.openimaj.util.data.Context;
 
 import backtype.storm.Config;
 
@@ -47,6 +48,7 @@ import com.hp.hpl.jena.datatypes.RDFDatatype;
 import com.hp.hpl.jena.datatypes.TypeMapper;
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Node_Blank;
 import com.hp.hpl.jena.graph.Node_Literal;
 import com.hp.hpl.jena.graph.Node_URI;
@@ -86,7 +88,7 @@ public class JenaStormUtils {
 
 		@Override
 		public Node_URI read(Kryo kryo, Input input, Class<Node_URI> type) {
-			return (Node_URI) Node.createURI(input.readString());
+			return (Node_URI) NodeFactory.createURI(input.readString());
 		}
 
 	}
@@ -138,7 +140,7 @@ public class JenaStormUtils {
 			final String langauge = input.readString();
 			final String datatypeURI = input.readString();
 			final RDFDatatype dtype = TypeMapper.getInstance().getSafeTypeByName(datatypeURI);
-			return (Node_Literal) Node.createLiteral(lexicalForm, langauge, dtype);
+			return (Node_Literal) NodeFactory.createLiteral(lexicalForm, langauge, dtype);
 
 		}
 
@@ -159,7 +161,7 @@ public class JenaStormUtils {
 		@Override
 		public Node_Blank read(Kryo kryo, Input input, Class<Node_Blank> type) {
 			final String label = input.readString();
-			final Node_Blank retNode = (Node_Blank) Node.createAnon(AnonId.create(label));
+			final Node_Blank retNode = (Node_Blank) NodeFactory.createAnon(AnonId.create(label));
 			return retNode;
 		}
 
@@ -180,7 +182,7 @@ public class JenaStormUtils {
 		@Override
 		public Node_Variable read(Kryo kryo, Input input, Class<Node_Variable> type) {
 			final String label = input.readString();
-			final Node_Variable retNode = (Node_Variable) Node.createVariable(label.replaceFirst("\\?", ""));
+			final Node_Variable retNode = (Node_Variable) NodeFactory.createVariable(label.replaceFirst("\\?", ""));
 			return retNode;
 		}
 
@@ -417,12 +419,42 @@ public class JenaStormUtils {
 		}
 
 	}
+	
+	/**
+	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+	 * 
+	 */
+	public static class ContextSerializer extends Serializer<Context> {
+
+		@Override
+		public void write(Kryo kryo, Output output, Context object) {
+			output.writeInt(object.size());
+			for (String key : object.keySet()) {
+				output.writeString(key);
+				kryo.writeClassAndObject(output, object.get(key));
+			}
+		}
+
+		@Override
+		public Context read(Kryo kryo, Input input, Class<Context> type) {
+			int count = input.readInt();
+			Context ret = new Context();
+			for (int i = 0; i < count; i++) {
+				String key = input.readString();
+				Object value = kryo.readClassAndObject(input);
+				ret.put(key, value);
+			}
+			return ret;
+		}
+
+	}
 
 	/**
 	 * @param conf
 	 *            register some Jena serialisers to this configuration
 	 */
 	public static void registerSerializers(Config conf) {
+		conf.registerSerialization(Context.class, ContextSerializer.class);
 		conf.registerSerialization(URI.class, URISerializer.class);
 		conf.registerSerialization(Node_URI.class, NodeSerialiser_URI.class);
 		conf.registerSerialization(Node_Literal.class, NodeSerialiser_Literal.class);
@@ -445,7 +477,11 @@ public class JenaStormUtils {
 		conf.registerSerialization(Node[].class, NodeSerialiser_ARRAY.class);
 	}
 
+	/**
+	 * @param conf
+	 */
 	public static void registerSerializers(Kryo conf) {
+		conf.addDefaultSerializer(Context.class, ContextSerializer.class);
 		conf.addDefaultSerializer(URI.class, URISerializer.class);
 		conf.addDefaultSerializer(Node_URI.class, NodeSerialiser_URI.class);
 		conf.addDefaultSerializer(Node_Literal.class, NodeSerialiser_Literal.class);
@@ -464,5 +500,14 @@ public class JenaStormUtils {
 		conf.register(ElementFilter.class);
 		conf.addDefaultSerializer(Node_RuleVariable[].class, NodeSerialiser_RuleVariableARRAY.class);
 		conf.addDefaultSerializer(Node[].class, NodeSerialiser_ARRAY.class);
+	}
+	
+	/**
+	 * @return
+	 */
+	public static Kryo kryo(){
+		Kryo kryo = new Kryo();
+		registerSerializers(kryo);
+		return kryo;
 	}
 }
