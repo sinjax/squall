@@ -1,5 +1,7 @@
 package org.openimaj.squall.orchestrate.greedy;
 
+import java.util.concurrent.TimeUnit;
+
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.data.ISource;
@@ -14,6 +16,22 @@ import org.openimaj.util.stream.Stream;
  */
 public class CombinedSourceGreedyOrchestrator extends GreedyOrchestrator {
 	
+	/**
+	 * @param capacity
+	 * @param duration
+	 * @param time
+	 */
+	public CombinedSourceGreedyOrchestrator(int capacity, long duration, TimeUnit time) {
+		super(capacity, duration, time);
+	}
+	
+	/**
+	 * 
+	 */
+	public CombinedSourceGreedyOrchestrator() {
+		super();
+	}
+
 	@Override
 	protected void orchestrateSources(CompiledProductionSystem sys,
 			OrchestratedProductionSystem root) {

@@ -23,9 +23,9 @@ import com.hp.hpl.jena.graph.Node_Concrete;
  */
 public class MapRETEQueue{
 	
-	private static final int capacity = 1000;
-	private static final long duration = 1;
-	private static final TimeUnit unit = TimeUnit.MINUTES;
+//	private static final int capacity = 1000;
+//	private static final long duration = 1;
+//	private static final TimeUnit unit = TimeUnit.MINUTES;
 	
 	MapRETEQueue sibling;
 	HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>> window;
@@ -33,11 +33,14 @@ public class MapRETEQueue{
 	
 	/**
 	 * @param sharedVariables
+	 * @param capacity 
+	 * @param duration 
+	 * @param unit 
 	 */
-	public MapRETEQueue(List<String> sharedVariables) {
+	public MapRETEQueue(List<String> sharedVariables, WindowInformation wi) {
 		this.sharedVariables = sharedVariables;
 		
-		window = new HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>>(null, capacity, duration, unit);
+		window = new HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>>(null, wi.capacity, wi.duration, wi.unit);
 	}
 	
 	/**

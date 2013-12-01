@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.openimaj.rif.RIFRuleSet;
 import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
@@ -63,6 +64,23 @@ public class GreedyOrchestrator implements Orchestrator{
 	private int predicate = 0;
 	private int filter = 0;
 	private int join = 0;
+	private WindowInformation wi;
+	
+	/**
+	 * @param capacity the capacity of the window
+	 * @param duration the duration of time
+	 * @param time the time unit
+	 */
+	public GreedyOrchestrator(int capacity, long duration, TimeUnit time) {
+		this.wi = new WindowInformation();
+		this.wi.capacity = capacity;
+		this.wi.duration= duration;
+		this.wi.unit = time;
+	}
+	
+	public GreedyOrchestrator() {
+		this(1000,1,TimeUnit.MINUTES);
+	}
 
 	@Override
 	public OrchestratedProductionSystem orchestrate(CompiledProductionSystem sys, IOperation<Context> op) {
@@ -380,7 +398,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			NamedNode<? extends IVFunction<Context, Context>> left,
 			NamedNode<? extends IVFunction<Context, Context>> right) {
 		
-		NGNJoin joined = new NGNJoin(root,nextJoinName(), left, right);
+		NGNJoin joined = new NGNJoin(root,nextJoinName(), left, right, this.wi);
 		return joined;
 	}
 
