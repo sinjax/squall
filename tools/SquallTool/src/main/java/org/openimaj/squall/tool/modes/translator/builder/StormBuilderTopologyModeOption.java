@@ -40,7 +40,7 @@ public enum StormBuilderTopologyModeOption implements CmdLineOptionsProvider{
 	/**
 	 * Submit to the specified Storm cluster
 	 */
-	STORM {
+	CLUSTER {
 		@Override
 		public StormBuilderTopologyMode getOptions() {
 			return new StormTopologyMode();

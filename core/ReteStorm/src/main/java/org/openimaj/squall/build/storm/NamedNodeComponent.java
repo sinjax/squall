@@ -29,11 +29,7 @@ import backtype.storm.tuple.Values;
  */
 public abstract class NamedNodeComponent implements IComponent{
 	
-	protected static final Kryo kryo;
-	static{
-		kryo = new Kryo();
-		JenaStormUtils.registerSerializers(kryo);
-	}
+	
 	/**
 	 * 
 	 */

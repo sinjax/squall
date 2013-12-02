@@ -6,6 +6,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 
+import org.apache.jena.riot.Lang;
+import org.apache.log4j.Logger;
 import org.openimaj.rif.imports.schemes.HTTPSchemeFunction;
 import org.openimaj.rif.imports.schemes.JavaSchemeFunction;
 import org.openimaj.rif.imports.schemes.FileSchemeFunction;
@@ -20,7 +22,7 @@ import org.openimaj.util.stream.Stream;
  *
  */
 public class URIProfileISourceFactory {
-	
+	private static final Logger logger = Logger.getLogger(URIProfileISourceFactory.class);
 	private final class LocationProfileISource implements ISource<Stream<Context>> {
 		private Function<URI, InputStream> reader;
 		private Function<InputStream, Stream<Context>> creator;
@@ -69,6 +71,7 @@ public class URIProfileISourceFactory {
 
 		public LocationISource(URI location, Function<URI, Stream<Context>> r) {
 			this.reader = r;
+			this.location = location;
 		}
 
 		@Override
@@ -106,24 +109,37 @@ public class URIProfileISourceFactory {
 	private URIProfileISourceFactory() {
 	}
 	
+	/**
+	 * 
+	 */
 	public static URI NTRIPLES_URI;
+	/**
+	 * 
+	 */
 	public static URI TURTLE_URI;
 	private static URI CACHED_TURTLE_URI;
+	private static HashMap<Lang, URI> langs;
 	static{
 		try {
 			NTRIPLES_URI = new URI("http://www.w3.org/ns/stream/NTriples");
 			TURTLE_URI = new URI("http://www.w3.org/ns/stream/Turtle");
 			CACHED_TURTLE_URI = new URI("http://www.w3.org/ns/stream/Turtle#Cached");
+			
+			langs = new HashMap<Lang,URI>();
+			langs.put(Lang.NTRIPLES, NTRIPLES_URI);
+			langs.put(Lang.TURTLE, TURTLE_URI);
 		} catch (URISyntaxException e) { throw new RuntimeException(e);}
+		logger.debug("Regsitering basic scheme functions");
 		// Register the default scheme functions
 		schemeFunctions.put("http", new HTTPSchemeFunction());
 		schemeFunctions.put("file", new FileSchemeFunction());
 		schemeFunctions.put("java", new JavaSchemeFunction());
-		schemeFunctions.put("kestrel", new KestrelSchemeFunction());
 		
-		// Register the default pure scheme functions
-		// TODO: maybe kestrel? 
+		logger.debug("Regsitering pure scheme functions");
+		// Register the default pure scheme functions 
+		registerPureScheme("kestrel", new KestrelSchemeFunction());//schemeFunctions.put("kestrel", new KestrelSchemeFunction());
 		
+		logger.debug("Register profile functions");
 		// Register the default profile functions
 		profileFunctions.put(NTRIPLES_URI, new NTriplesProfileFunction());
 		profileFunctions.put(TURTLE_URI, new TurtleProfileFunction());
@@ -131,7 +147,17 @@ public class URIProfileISourceFactory {
 	}
 	
 	
-
+	/**
+	 * Calls {@link #createSource(URI, URI)} using a map between {@link Lang} instances and 
+	 * URI
+	 * @param preload
+	 * @param l
+	 * @return 
+	 */
+	public ISource<Stream<Context>> createSource(URI preload, Lang l) {
+		return createSource(preload, langs.get(l));
+	}
+	
 	/**
 	 * Given a location and a profile produce a source for a {@link Stream} of {@link Context}
 	 * instances which contain triples.
@@ -156,6 +182,7 @@ public class URIProfileISourceFactory {
 	 * @return An object which can create a stream of triples
 	 */
 	public ISource<Stream<Context>> createSource(URI location, URI profile){
+		logger.debug(String.format("Finding source for location: %s, profile: %s",location,profile));
 		Function<URI,InputStream> reader = schemeFunctions .get(location.getScheme());
 		if(reader == null){
 			Function<URI,Stream<Context>> pureReader = pureSchemeFunctions.get(location.getScheme());
@@ -208,5 +235,7 @@ public class URIProfileISourceFactory {
 		}
 		return instance;
 	}
+
+	
 
 }

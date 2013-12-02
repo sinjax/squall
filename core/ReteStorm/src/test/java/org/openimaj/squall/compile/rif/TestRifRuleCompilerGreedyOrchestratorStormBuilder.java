@@ -13,6 +13,7 @@ import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.squall.build.Builder;
 import org.openimaj.squall.build.storm.StormStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;
+import org.openimaj.squall.compile.CountingOperation;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
@@ -25,23 +26,6 @@ import org.xml.sax.SAXException;
  *
  */
 public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
-	
-	private static final class PrintAllOperation implements IOperation<Context>, Serializable {
-		@Override
-		public void setup() {
-			System.out.println("Starting Test");
-		}
-
-		@Override
-		public void cleanup() {
-		}
-
-		@Override
-		public void perform(Context object) {
-			System.out.println(object);
-		}
-	}
-
 
 
 	private RIFRuleSet simpleRules;
@@ -87,7 +71,7 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testSimpleRulesBuilder(){
-		testRuleSet(simpleRules);
+		testRuleSet(simpleRules,4);
 	}
 	
 	/**
@@ -95,7 +79,7 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testSimpleJoinBuilder(){
-		testRuleSet(simplejoinRules);
+		testRuleSet(simplejoinRules,2);
 	}
 	
 	/**
@@ -103,7 +87,7 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testComplexRules(){
-		testRuleSet(complexjoinRules);
+		testRuleSet(complexjoinRules,2);
 	}
 	
 	/**
@@ -111,7 +95,7 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testMultiUnionRules(){
-		testRuleSet(multiunionRules);
+		testRuleSet(multiunionRules,6);
 	}
 	
 	/**
@@ -119,13 +103,13 @@ public class TestRifRuleCompilerGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testLSBenchRulesBuilder(){
-		testRuleSet(lsbench);
+		testRuleSet(lsbench,8);
 	}
 	
-	private void testRuleSet(RIFRuleSet ruleSet) {
+	private void testRuleSet(RIFRuleSet ruleSet, int expected) {
 		ExternalLoader.loadExternals();
 		
-		IOperation<Context> op = new PrintAllOperation();
+		IOperation<Context> op = new CountingOperation(expected);
 
 		RIFCoreRuleCompiler jrc = new RIFCoreRuleCompiler();
 		CompiledProductionSystem comp = jrc.compile(ruleSet);

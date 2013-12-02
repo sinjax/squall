@@ -3,6 +3,7 @@ package org.openimaj.squall.build.storm;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.openimaj.rdf.storm.utils.JenaStormUtils;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.storm.utils.StormUtils;
@@ -40,7 +41,7 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 	public OIStreamSpout(NamedNode<?> namedNode) throws Exception {
 		super(namedNode);
 		if(namedNode.isSource()) {
-			this.serializedStreamSource = StormUtils.serialiseFunction(kryo,namedNode.getSource());
+			this.serializedStreamSource = StormUtils.serialiseFunction(JenaStormUtils.kryo(),namedNode.getSource());
 		}
 		else{
 			throw new Exception("Inappropriate node");
@@ -52,7 +53,7 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 	public void open(@SuppressWarnings("rawtypes") Map conf, TopologyContext context, SpoutOutputCollector collector) {
 		setup(conf,context);
 		this.collector = collector;
-		this.streamSource = StormUtils.deserialiseFunction(kryo,serializedStreamSource);
+		this.streamSource = StormUtils.deserialiseFunction(JenaStormUtils.kryo(),serializedStreamSource);
 		logger.debug("Initialising stream: " + this.streamSource);
 		this.streamSource.setup();
 		this.stream = this.streamSource.apply();

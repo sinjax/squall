@@ -36,7 +36,7 @@ public class StormBuilderMode extends BuilderMode {
 			aliases = "-twork",
 			required = false,
 			usage = "The number of workers running the executors of this topology")
-	public int numberOfWorkers = 2;
+	public int numberOfWorkers = 4;
 	
 	@Option(
 			name = "--topology-max-parallelism",
@@ -64,10 +64,10 @@ public class StormBuilderMode extends BuilderMode {
 	 */
 	public Config prepareConfig() {
 		Config preparedConfig = new Config();
-//		preparedConfig.setMaxSpoutPending(100);
-//		preparedConfig.setNumWorkers(numberOfWorkers);
-//		preparedConfig.setMaxTaskParallelism(maxParallelism);
 		JenaStormUtils.registerSerializers(preparedConfig);
+		preparedConfig.setFallBackOnJavaSerialization(false);
+		preparedConfig.setNumWorkers(numberOfWorkers);
+		preparedConfig.setMaxTaskParallelism(maxParallelism);
 		
 		return preparedConfig;
 	}

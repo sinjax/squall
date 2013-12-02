@@ -30,6 +30,7 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 	private MapRETEQueue leftQueue;
 	private MapRETEQueue rightQueue;
 	private ArrayList<String> vars;
+	private WindowInformation wi;
 	
 	/**
 	 * @param left
@@ -37,7 +38,8 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 	 */
 	public FixedJoinFunction(
 			IVFunction<Context,Context> left,
-			IVFunction<Context,Context> right
+			IVFunction<Context,Context> right,
+			WindowInformation wi
 	) {
 		
 		this.left = left;
@@ -58,6 +60,7 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 		for (String lv : allleftvar) {
 			if(allrightvar.contains(lv)) shared.add(lv);
 		}
+		this.wi = wi;
 	}
 
 	@Override
@@ -106,8 +109,8 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 
 	@Override
 	public void setup() {
-		leftQueue = new MapRETEQueue(shared);
-		rightQueue = new MapRETEQueue(shared);
+		leftQueue = new MapRETEQueue(shared,wi);
+		rightQueue = new MapRETEQueue(shared,wi);
 		
 		leftQueue.pair(rightQueue);
 	}

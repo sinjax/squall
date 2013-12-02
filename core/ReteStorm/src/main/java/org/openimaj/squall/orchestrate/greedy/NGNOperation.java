@@ -11,10 +11,19 @@ import org.openimaj.util.function.Operation;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
-class NGNOperation extends NamedNode<IFunction<Context, Context>>{
+/**
+ * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ *
+ */
+public class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 
 	private IOperation<Context> op;
 
+	/**
+	 * @param parent
+	 * @param name
+	 * @param func
+	 */
 	public NGNOperation(OrchestratedProductionSystem parent, String name, IOperation<Context> func) {
 		super(parent, name);
 		this.op = func;

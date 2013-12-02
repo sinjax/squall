@@ -21,8 +21,8 @@ public class NGNJoin extends NNIVFunction {
 	 * @param left
 	 * @param right
 	 */
-	public NGNJoin(OrchestratedProductionSystem parent, String name, NamedNode<? extends IVFunction<Context, Context>> left,NamedNode<? extends IVFunction<Context, Context>> right) {
-		super(parent, name, new FixedJoinFunction(left.getData(), right.getData()));
+	public NGNJoin(OrchestratedProductionSystem parent, String name, NamedNode<? extends IVFunction<Context, Context>> left,NamedNode<? extends IVFunction<Context, Context>> right, WindowInformation wi) {
+		super(parent, name, new FixedJoinFunction(left.getData(), right.getData(),wi));
 		left.connect(this.leftNamedStream(), this);
 		right.connect(this.rightNamedStream(), this);
 	}

@@ -32,7 +32,8 @@ public class RIFTranslatorMode extends TranslatorMode {
 	}
 
 	private RIFRuleSet createRifRuleSet() {
-		return RifUtils.readRules(rifRuleURI);
+		RIFRuleSet readRules = RifUtils.readRules(rifRuleURI);
+		return readRules;
 	}
 	
 	@Override

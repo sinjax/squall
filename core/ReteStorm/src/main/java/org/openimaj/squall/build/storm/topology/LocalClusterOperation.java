@@ -36,8 +36,6 @@ import backtype.storm.utils.Utils;
 		@Override
 		public void setup() {
 			this.cluster = new LocalCluster();
-//			JenaStormUtils.registerSerializers(conf);
-//			conf.setFallBackOnJavaSerialization(true);
 		}
 
 		@Override

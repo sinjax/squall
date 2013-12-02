@@ -3,7 +3,6 @@ package org.openimaj.squall.compile.jena;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.List;
 
 import org.junit.Before;
@@ -12,6 +11,7 @@ import org.junit.rules.TemporaryFolder;
 import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.squall.build.storm.StormStreamBuilder;
 import org.openimaj.squall.compile.ContextCPS;
+import org.openimaj.squall.compile.CountingOperation;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
@@ -31,22 +31,6 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  */
 public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	
-	private static final class PrintAllOperation implements IOperation<Context>, Serializable {
-		@Override
-		public void setup() {
-			System.out.println("Starting Test");
-		}
-
-		@Override
-		public void cleanup() {
-		}
-
-		@Override
-		public void perform(Context object) {
-			System.out.println(object);
-		}
-	}
-
 	private SourceRulePair nojoinRules;
 	
 	
@@ -144,7 +128,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(nojoinRules);
 		GreedyOrchestrator go = orchestrator();
-		IOperation<Context> op = new PrintAllOperation();
+		IOperation<Context> op = new CountingOperation(2);
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);
@@ -158,7 +142,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(singlejoinRules);
 		GreedyOrchestrator go = orchestrator();
-		IOperation<Context> op = new PrintAllOperation();
+		IOperation<Context> op = new CountingOperation(1);
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);
@@ -172,7 +156,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(singlejoinComplexRules);
 		GreedyOrchestrator go = orchestrator();
-		IOperation<Context> op = new PrintAllOperation();
+		IOperation<Context> op = new CountingOperation(1);
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);
@@ -186,7 +170,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(singlefunctorRules);
 		GreedyOrchestrator go = orchestrator();
-		IOperation<Context> op = new PrintAllOperation();
+		IOperation<Context> op = new CountingOperation(1);
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);
@@ -200,7 +184,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(reentrantRules);
 		GreedyOrchestrator go = orchestrator();
-		IOperation<Context> op = new PrintAllOperation();
+		IOperation<Context> op = new CountingOperation(4);
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);
@@ -214,7 +198,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 		JenaRuleCompiler jrc = compiler();
 		ContextCPS comp = jrc.compile(allRules);
 		GreedyOrchestrator go = orchestrator();
-		IOperation<Context> op = new PrintAllOperation();
+		IOperation<Context> op = new CountingOperation(4);
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		StormStreamBuilder builder = builder();
 		builder.build(orchestrated);

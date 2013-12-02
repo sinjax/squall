@@ -1,0 +1,9 @@
+{"outputRate": 333.3333333333333, "input": 15200, "inputRate": 5066.666666666667, "output": 1000, "time": 3}
+{"outputRate": 600.0, "input": 87099, "inputRate": 8709.9, "output": 6000, "time": 10}
+{"outputRate": 687.5, "input": 160499, "inputRate": 10031.1875, "output": 11000, "time": 16}
+{"outputRate": 739.1304347826087, "input": 230661, "inputRate": 10028.739130434782, "output": 17000, "time": 23}
+{"outputRate": 733.3333333333334, "input": 296411, "inputRate": 9880.366666666667, "output": 22000, "time": 30}
+{"outputRate": 722.2222222222222, "input": 360611, "inputRate": 10016.972222222223, "output": 26000, "time": 36}
+{"outputRate": 720.9302325581396, "input": 429086, "inputRate": 9978.744186046511, "output": 31000, "time": 43}
+{"outputRate": 740.0, "input": 487342, "inputRate": 9746.84, "output": 37000, "time": 50}
+{"outputRate": 714.2857142857143, "input": 531242, "inputRate": 9486.464285714286, "output": 40000, "time": 56}

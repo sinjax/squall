@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rdf.storm.topology.ReteTopologyTest;
 import org.openimaj.rif.RIFRuleSet;
 import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.rif.utils.RifUtils;
@@ -22,7 +21,6 @@ import org.openimaj.squall.compile.data.source.URIProfileISourceFactory;
 import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
 import org.openimaj.squall.compile.jena.JenaRuleCompiler;
 import org.openimaj.squall.compile.jena.SourceRulePair;
-import org.openimaj.squall.compile.jena.TestJenaRuleCompilerGreedyOrchestratorStormBuilder;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
@@ -69,7 +67,7 @@ public class RunLSBenchJenaQuery {
 	
 	
 	private static List<Rule> loadRules(String stream) {
-		InputStream ruleStream = TestJenaRuleCompilerGreedyOrchestratorStormBuilder.class.getResourceAsStream(stream);
+		InputStream ruleStream = RunLSBenchJenaQuery.class.getResourceAsStream(stream);
 		List<Rule> rules = JenaUtils.readRules(ruleStream);
 		return rules;
 	}

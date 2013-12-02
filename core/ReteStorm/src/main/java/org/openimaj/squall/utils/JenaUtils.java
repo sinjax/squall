@@ -15,9 +15,17 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.lang.PipedRDFIterator;
 import org.apache.jena.riot.lang.PipedRDFStream;
 import org.apache.jena.riot.lang.PipedTriplesStream;
+import org.openimaj.rdf.storm.utils.JenaStormUtils;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.hp.hpl.jena.graph.Graph;
+import com.hp.hpl.jena.graph.GraphUtil;
 import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.mem.GraphMem;
+import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
+import com.hp.hpl.jena.sparql.graph.GraphFactory;
+import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -41,7 +49,19 @@ public class JenaUtils {
 	 * @return read all the triples from an inputstream
 	 */
 	public static Collection<Triple> readNTriples(InputStream inputStream) {
-		return readTriples(inputStream, Lang.NTRIPLES);
+		Graph graph = GraphFactory.createGraphMem();;
+		RDFDataMgr.read(graph, inputStream, Lang.NTRIPLES);
+		return allTriples(graph);
+	}
+
+
+	private static Collection<Triple> allTriples(Graph graph) {
+		List<Triple> ret = new ArrayList<Triple>();
+		ExtendedIterator<Triple> git = GraphUtil.findAll(graph);
+		while(git.hasNext()){
+			ret.add(git.next());
+		}
+		return ret ;
 	}
 	
 	/**
@@ -49,7 +69,9 @@ public class JenaUtils {
 	 * @return read all the triples from an inputstream
 	 */
 	public static Collection<Triple> readTurtle(InputStream inputStream) {
-		return readTriples(inputStream, Lang.TURTLE);
+		Graph graph = GraphFactory.createGraphMem();;
+		RDFDataMgr.read(graph, inputStream, Lang.TURTLE);
+		return allTriples(graph);
 	}
 
 
@@ -99,4 +121,6 @@ public class JenaUtils {
 	        
 	        return iter;
 	}
+	
+	
 }
