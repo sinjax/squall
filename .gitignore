@@ -8,6 +8,9 @@ target
 *.log.*
 log.*
 *.log
+*.out.*
+out.*
+*.out
 
 gpsStream*.nt
 mr0_sibdataset*.nt
@@ -15,3 +18,5 @@ rdfPhotoLikeStream*.nt
 rdfPhotoStream*.nt
 rdfPostLikeStream*.nt
 rdfPostStream*.nt
+
+Davids*
