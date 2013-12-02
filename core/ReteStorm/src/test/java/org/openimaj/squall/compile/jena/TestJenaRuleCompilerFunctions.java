@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.greedy.FixedJoinFunction;
+import org.openimaj.squall.orchestrate.greedy.WindowInformation;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.JoinStream;
 import org.openimaj.util.function.Function;
@@ -66,7 +67,7 @@ public class TestJenaRuleCompilerFunctions {
 		TripleFilterFunction tf2 = new TripleFilterFunction(p2);
 		
 		// Join the two filters
-		FixedJoinFunction j = new FixedJoinFunction(tf1, tf2);
+		FixedJoinFunction j = new FixedJoinFunction(tf1, tf2, new WindowInformation());
 		
 		// The data (joines once)
 		List<Context> data = new ArrayList<Context>();
