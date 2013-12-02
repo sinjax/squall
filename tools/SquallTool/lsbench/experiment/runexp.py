@@ -56,8 +56,8 @@ def monitor(monitorfile, inputs,output,monitorTime,waitTime):
 		inputStart,outputStart = inoutitems()
 
 		mfile.write("")
+		print "Capturing state!"
 		while int(time.time()) < endTime:
-			print "Capturing state!"
 			inputCount,outputCount = inoutitems()
 			inputsRead = inputStart-inputCount
 			outputsWritten = outputCount-outputStart
@@ -75,7 +75,13 @@ def monitor(monitorfile, inputs,output,monitorTime,waitTime):
 			time.sleep(waitTime)
 
 def experiment(**xargs):
-	xargs["monitordir"] = os.sep.join([xargs["monitorroot"],"wcap=%d"%xargs["wcap"],"wtime=%d"%xargs["wtime"]])
+	xargs["monitordir"] = os.sep.join([
+		xargs["monitorroot"],
+		"monitorTime=%d"%xargs["monitorTime"],
+		"wcap=%d"%xargs["wcap"],
+		"wtime=%d"%xargs["wtime"]
+	])
+	print "Performing experiment: %s"%xargs["monitordir"]
 	if not os.path.exists(xargs["monitordir"]): os.makedirs(xargs["monitordir"])
 	xargs["monitorfile"] = os.sep.join([xargs["monitordir"],"monitor.out"])
 
@@ -122,7 +128,7 @@ def experiment(**xargs):
 
 	print "Got first output (Took: %ds), monitoring output..."%(waitend - waitstart)
 
-	monitor(xargs["monitorfile"],inputQueues,outputQueue,xargs.get("monitorTime",60),xargs.get("waitTime",5))
+	monitor(xargs["monitorfile"],inputQueues,outputQueue,xargs.get("monitorTime",60),xargs.get("sample",5))
 
 def runExperiment(**xargs):
 	killandwait(xargs["topname"])
@@ -144,9 +150,10 @@ if __name__ == '__main__':
 	runExperiment(
 		topname="kestrel-test", 
 		wcap=100, 
-		wtime=60, 
-		wait=10, 
-		rifrule="file:///home/ss/Development/java/squall/tools/SquallTool/lsbench/query/kestrelqueries.rif",
+		wtime=10, 
+		sample=5,
+		monitorTime=60*5,
+		rifrule="file:///home/ss/Development/java/squall/tools/SquallTool/lsbench/query/kestrelqueriespre.rif",
 		outputQueue="output-two",
 		monitorroot="monitor"
 	)
