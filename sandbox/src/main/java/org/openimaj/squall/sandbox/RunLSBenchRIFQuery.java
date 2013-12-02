@@ -1,14 +1,10 @@
 package org.openimaj.squall.sandbox;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.rif.utils.RifUtils;
 import org.openimaj.squall.build.Builder;
 import org.openimaj.squall.build.storm.StormStreamBuilder;
@@ -20,9 +16,6 @@ import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.CombinedSourceGreedyOrchestrator;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.util.data.Context;
-import org.xml.sax.SAXException;
-
-import com.sun.media.jai.opimage.RIFUtil;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -64,7 +57,7 @@ public class RunLSBenchRIFQuery {
 		RIFCoreRuleCompiler jrc = new RIFCoreRuleCompiler();
 		CompiledProductionSystem comp = jrc.compile(lsbenchRules);
 		
-		GreedyOrchestrator go = new CombinedSourceGreedyOrchestrator();
+		GreedyOrchestrator go = new CombinedSourceGreedyOrchestrator(1000,Long.MAX_VALUE, TimeUnit.DAYS);
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		
 		Builder builder = StormStreamBuilder.localClusterBuilder(-1);
