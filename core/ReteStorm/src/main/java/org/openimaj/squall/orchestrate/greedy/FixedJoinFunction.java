@@ -35,6 +35,7 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 	/**
 	 * @param left
 	 * @param right
+	 * @param wi 
 	 */
 	public FixedJoinFunction(
 			IVFunction<Context,Context> left,

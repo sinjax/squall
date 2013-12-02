@@ -33,14 +33,12 @@ public class MapRETEQueue{
 	
 	/**
 	 * @param sharedVariables
-	 * @param capacity 
-	 * @param duration 
-	 * @param unit 
+	 * @param wi 
 	 */
 	public MapRETEQueue(List<String> sharedVariables, WindowInformation wi) {
 		this.sharedVariables = sharedVariables;
 		
-		window = new HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>>(null, wi.capacity, wi.duration, wi.unit);
+		window = new HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>>(null, wi.getCapacity(), wi.getDuration(), wi.getGranularity());
 	}
 	
 	/**

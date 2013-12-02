@@ -72,12 +72,12 @@ public class GreedyOrchestrator implements Orchestrator{
 	 * @param time the time unit
 	 */
 	public GreedyOrchestrator(int capacity, long duration, TimeUnit time) {
-		this.wi = new WindowInformation();
-		this.wi.capacity = capacity;
-		this.wi.duration= duration;
-		this.wi.unit = time;
+		this.wi = new WindowInformation(capacity, duration, time);
 	}
 	
+	/**
+	 * 
+	 */
 	public GreedyOrchestrator() {
 		this(1000,1,TimeUnit.MINUTES);
 	}
