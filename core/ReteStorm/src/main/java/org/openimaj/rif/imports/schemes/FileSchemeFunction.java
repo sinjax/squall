@@ -16,7 +16,8 @@ public class FileSchemeFunction implements Function<URI, InputStream> {
 
 	@Override
 	public InputStream apply(URI in) {
-		File f = new File(in.getPath());
+		String path = in.getHost() == null ? in.getPath() : in.getHost() + in.getPath();
+		File f = new File(path);
 		try {
 			return new FileInputStream(f);
 		} catch (IOException e) {
