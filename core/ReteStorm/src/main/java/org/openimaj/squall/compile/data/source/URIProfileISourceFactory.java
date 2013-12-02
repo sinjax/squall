@@ -108,10 +108,12 @@ public class URIProfileISourceFactory {
 	
 	public static URI NTRIPLES_URI;
 	public static URI TURTLE_URI;
+	private static URI CACHED_TURTLE_URI;
 	static{
 		try {
 			NTRIPLES_URI = new URI("http://www.w3.org/ns/stream/NTriples");
 			TURTLE_URI = new URI("http://www.w3.org/ns/stream/Turtle");
+			CACHED_TURTLE_URI = new URI("http://www.w3.org/ns/stream/Turtle#Cached");
 		} catch (URISyntaxException e) { throw new RuntimeException(e);}
 		// Register the default scheme functions
 		schemeFunctions.put("http", new HTTPSchemeFunction());
@@ -125,6 +127,7 @@ public class URIProfileISourceFactory {
 		// Register the default profile functions
 		profileFunctions.put(NTRIPLES_URI, new NTriplesProfileFunction());
 		profileFunctions.put(TURTLE_URI, new TurtleProfileFunction());
+		profileFunctions.put(CACHED_TURTLE_URI, new CachedTurtleProfileFunction());
 	}
 	
 	

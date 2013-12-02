@@ -21,37 +21,37 @@
   <directive>
     <Import>
     	<location>file://lsbench/data/rdfPostStream1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    	<profile>http://www.w3.org/ns/stream/Turtle#Cached</profile>
     </Import>
   </directive>
   <directive>
     <Import>
     	<location>file://lsbench/data/rdfPhotoStream1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    	<profile>http://www.w3.org/ns/stream/Turtle#Cached</profile>
     </Import>
   </directive>
   <directive>
     <Import>
     	<location>file://lsbench/data/rdfPhotoLikeStream1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    	<profile>http://www.w3.org/ns/stream/Turtle#Cached</profile>
     </Import>
   </directive>
   <directive>
     <Import>
     	<location>file://lsbench/data/gpsStream1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    	<profile>http://www.w3.org/ns/stream/Turtle#Cached</profile>
     </Import>
   </directive>
   <directive>
     <Import>
     	<location>file://lsbench/data/mr0_sibdataset1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    	<profile>http://www.w3.org/ns/stream/Turtle#Cached</profile>
     </Import>
   </directive>
   <directive>
     <Import>
     	<location>file://lsbench/data/rdfPostLikeStream1000.nt</location>
-    	<profile>http://www.w3.org/ns/stream/Turtle</profile>
+    	<profile>http://www.w3.org/ns/stream/Turtle#Cached</profile>
     </Import>
   </directive>
   <payload>
