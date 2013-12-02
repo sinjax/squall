@@ -94,7 +94,6 @@ def experiment(**xargs):
 		] 
 		if "lsbench-" in y
 	]
-	outputQueue = "output-two"
 
 	toolrun = ["../../stormtool.sh",
 		"-bm", "STORM", 
@@ -128,7 +127,7 @@ def experiment(**xargs):
 
 	print "Got first output (Took: %ds), monitoring output..."%(waitend - waitstart)
 
-	monitor(xargs["monitorfile"],inputQueues,outputQueue,xargs.get("monitorTime",60),xargs.get("sample",5))
+	monitor(xargs["monitorfile"],inputQueues,xargs["outputQueue"],xargs.get("monitorTime",60),xargs.get("sample",5))
 
 def runExperiment(**xargs):
 	killandwait(xargs["topname"])
