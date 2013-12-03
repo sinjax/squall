@@ -3,6 +3,7 @@ package org.openimaj.squall.compile.jena;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
@@ -67,7 +68,8 @@ public class TestJenaRuleCompilerFunctions {
 		TripleFilterFunction tf2 = new TripleFilterFunction(p2);
 		
 		// Join the two filters
-		FixedJoinFunction j = new FixedJoinFunction(tf1, tf2, new WindowInformation());
+		WindowInformation wi = new WindowInformation(1000,30, TimeUnit.SECONDS);
+		FixedJoinFunction j = new FixedJoinFunction(tf1, tf2, wi);
 		
 		// The data (joines once)
 		List<Context> data = new ArrayList<Context>();
