@@ -139,8 +139,8 @@ public class GreedyOrchestrator implements Orchestrator{
 	protected void orchestrateSources(
 			CompiledProductionSystem sys,
 			OrchestratedProductionSystem root) {
-		if(sys.getSources().size()>0){
-			for (ISource<Stream<Context>> sourceS: sys.getSources()) {				
+		if(sys.getStreamSources().size()>0){
+			for (ISource<Stream<Context>> sourceS: sys.getStreamSources()) {				
 				root.root.add(new NamedSourceNode(root,nextSourceName(root), sourceS));
 			}
 		}

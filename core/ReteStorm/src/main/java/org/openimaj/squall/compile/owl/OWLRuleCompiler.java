@@ -33,7 +33,7 @@ public class OWLRuleCompiler implements Compiler<SourceModelRulesetTrio> {
 		List<ISource<Stream<Context>>> sources = type.firstObject();
 		ContextCPS ret = new ContextCPS();
 		for (ISource<Stream<Context>> source : sources) {
-			ret.addSource(source);
+			ret.addStreamSource(source);
 		}
 		
 		// Fetch Ontology and load into Jena Model performing the greatest available amount of in memory static reasoning.

@@ -21,14 +21,15 @@ import com.hp.hpl.jena.graph.Triple;
  * A {@link CompiledProductionSystem} may also suggest groupings of the "AND" parts in the form 
  * of a list of {@link CompiledProductionSystem}
  * 
- * @author Sina Samangooei (ss@ecs.soton.ac.uk), David Monks <dm11g08@ecs.soton.ac.uk>
+ * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  */
 public abstract class CompiledProductionSystem {
 	
 	/**
 	 * A stream of triples is the source of our production systems
 	 */
-	List<ISource<Stream<Context>>> sources;
+	List<ISource<Stream<Context>>> streamSources;
 	
 	/**
 	 * List of production systems that this compilation is made from
@@ -64,7 +65,7 @@ public abstract class CompiledProductionSystem {
 	 * Initialise all system parts as empty, a fairly boring production system
 	 */
 	public CompiledProductionSystem() {
-		sources = new ArrayList<ISource<Stream<Context>>>();
+		streamSources = new ArrayList<ISource<Stream<Context>>>();
 		systems = new ArrayList<OptionalProductionSystems>();
 		joinlist = new ArrayList<JoinComponent<?>>();
 		predicates = new ArrayList<IVFunction<Context, Context>>();
@@ -77,8 +78,8 @@ public abstract class CompiledProductionSystem {
 	 * @param stream
 	 * @return a {@link Stream} of input 
 	 */
-	public CompiledProductionSystem addSource(ISource<Stream<Context>> stream) {
-		this.sources.add(stream);
+	public CompiledProductionSystem addStreamSource(ISource<Stream<Context>> stream) {
+		this.streamSources.add(stream);
 		return this;
 	}
 	
@@ -183,8 +184,8 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @return the sources
 	 */
-	public List<ISource<Stream<Context>>> getSources() {
-		return this.sources;
+	public List<ISource<Stream<Context>>> getStreamSources() {
+		return this.streamSources;
 	}
 
 	/**

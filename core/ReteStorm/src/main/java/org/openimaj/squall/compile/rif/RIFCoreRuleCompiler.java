@@ -70,7 +70,7 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 		// Add sources to compiled production system from Rule Set
 		for (URI uri : ruleSet.getImportKeySet()){
 			ISource<Stream<Context>> source = URIProfileISourceFactory.instance().createSource(uri, ruleSet.getImport(uri));
-			ret.addSource(source);
+			ret.addStreamSource(source);
 		}
 		
 		for (RIFGroup g : ruleSet)

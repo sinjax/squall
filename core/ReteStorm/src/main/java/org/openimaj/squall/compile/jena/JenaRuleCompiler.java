@@ -50,7 +50,7 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 		OptionalProductionSystems options = new OptionalProductionSystems();
 		ret.addOption(options);
 		for (ISource<Stream<Context>> stream : sources) {
-			ret.addSource(stream);
+			ret.addStreamSource(stream);
 		}
 		for (Rule rule : rules) {
 			if (rule.isAxiom()) {

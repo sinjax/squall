@@ -41,8 +41,8 @@ public class CombinedSourceGreedyOrchestrator extends GreedyOrchestrator {
 	}
 	
 	private void orchestrateCombinedSources(CompiledProductionSystem sys, CombinedISource cis){
-		if(sys.getSources().size()>0){
-			for (ISource<Stream<Context>> sourceS: sys.getSources()) {				
+		if(sys.getStreamSources().size()>0){
+			for (ISource<Stream<Context>> sourceS: sys.getStreamSources()) {				
 				cis.add(sourceS);
 			}
 		}
