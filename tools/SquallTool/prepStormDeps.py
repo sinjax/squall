@@ -13,8 +13,11 @@ parser.add_option("-o", "--overwrite", action="store_true", dest="overwrite",
 (options, args) = parser.parse_args()
 
 squaldepscmd = ["mvn","-o","-q","dependency:build-classpath","-Dmdep.outputFile=/dev/stdout"]
-stormdepscmd = ["/usr/local/storm/bin/storm","classpath"]
-stormlib = "/usr/local/storm/lib"
+stormdepscmd = ["storm","classpath"]
+if not "STORM_HOME" in os.environ:
+	print "Please defined STORM_HOME"
+	exit()
+stormlib = os.sep.join((os.environ["STORM_HOME"],"lib"))
 
 squaldepsstr = subprocess.Popen(squaldepscmd, stdout=PIPE).communicate()[0]
 stormdepsstr = subprocess.Popen(stormdepscmd, stdout=PIPE).communicate()[0]
