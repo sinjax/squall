@@ -67,6 +67,7 @@ public class KestrelUtils {
 	}
 	
 	/**
+	 *
 	 * @param in
 	 * @return turn {@link URI} into a list of hosts and a queue
 	 */
