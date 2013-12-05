@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE Document [
+  <!ENTITY rif  	"http://www.w3.org/2007/rif#">
+  <!ENTITY xs   	"http://www.w3.org/2001/XMLSchema#">
+  <!ENTITY rdf  	"http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <!ENTITY rdfs		"http://www.w3.org/2000/01/rdf-schema#">
+  <!ENTITY sib  	"http://www.ins.cwi.nl/sib/vocabulary/">
+  <!ENTITY sibpred  "http://www.ins.cwi.nl/sib/rif-builtin-predicate/">
+  <!ENTITY foaf 	"http://xmlns.com/foaf/0.1/">
+  <!ENTITY sioc 	"http://rdfs.org/sioc/ns#">
+  <!ENTITY dbpprop	"http://dbpedia.org/property/">
+]>
+
+<Document>
+  <payload>
+  	<Group>
+	  <sentence>
+  	    <Forall>
+  	      <id>
+  	      	<Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/lsbench-query-4</Const>
+  	      </id>
+  	      <declare>
+  	      	<Var>post1</Var>
+  	      </declare>
+		  <declare>
+  	      	<Var>post2</Var>
+  	      </declare>
+  	      <declare>
+  	      	<Var>tag</Var>
+  	      </declare>
+  	      <formula>
+  	      	<Implies>
+  	      	  <if>
+  	      	  	<And>
+  	      	  	  <formula>
+  	      	  	    <Frame>
+      	              <object>
+      	                <Var>post1</Var>
+      	              </object>
+      	              <slot ordered="yes">
+      	                <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/hashtag</Const>
+      	                <Var>tag</Var>
+      	              </slot>
+      	            </Frame>
+  	      	  	  </formula>
+  	      	  	  <formula>
+  	      	  	    <Frame>
+      	              <object>
+      	                <Var>post2</Var>
+      	              </object>
+      	              <slot ordered="yes">
+      	                <Const type="&rif;iri">http://www.ins.cwi.nl/sib/vocabulary/hashtag</Const>
+      	                <Var>tag</Var>
+      	              </slot>
+      	            </Frame>
+  	      	  	  </formula>
+  	      	  	  <formula>
+  	      	  	    <External>
+  	      	  	      <content>
+  	      	  	        <Atom>
+  	      	  	          <op>
+  	      	  	            <Const type="&rif;iri">http://www.w3.org/2007/rif-builtin-predicate#literal-not-equal</Const>
+  	      	  	          </op>
+  	      	  	          <args ordered="yes">
+  	      	  	            <Var>post1</Var>
+  	      	  	            <Var>post2</Var>
+  	      	  	          </args>
+  	      	  	        </Atom>
+  	      	  	      </content>
+  	      	  	    </External>
+  	      	  	  </formula>
+  	      	  	  <formula>
+  	      	  	    <Exists>
+  	      	  	      <declare>
+  	      	  	        <Var>user</Var>
+  	      	  	      </declare>
+  	      	  	      <formula>
+  	      	  	        <Frame>
+  	      	              <object>
+  	      	                <Var>user</Var>
+  	      	              </object>
+  	      	              <slot ordered="yes">
+  	      	                <Const type="&rif;iri">http://rdfs.org/sioc/ns#creator_of</Const>
+  	      	                <Var>post1</Var>
+  	      	              </slot>
+  	      	              <slot ordered="yes">
+  	      	                <Const type="&rif;iri">http://rdfs.org/sioc/ns#creator_of</Const>
+  	      	                <Var>post2</Var>
+  	      	              </slot>
+  	      	            </Frame>
+  	      	  	      </formula>
+  	      	  	    </Exists>
+  	      	  	  </formula>
+  	      	  	</And>
+  	      	  </if>
+  	      	  <then>
+  	      	    <Atom>
+  	      	      <op>
+  	      	        <Const type="&rif;local">bindings</Const>
+  	      	      </op>
+  	      	      <args ordered="yes">
+  	      	        <Var>post1</Var>
+  	      	      	<Var>post2</Var>
+  	      	      	<Var>tag</Var>
+  	      	      </args>
+  	      	    </Atom>
+  	      	  </then>
+  	      	</Implies>
+  	      </formula>
+  	    </Forall>
+  	  </sentence>
+  	</Group>
+  </payload>
+</Document>

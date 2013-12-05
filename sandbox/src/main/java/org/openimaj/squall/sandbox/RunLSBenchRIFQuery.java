@@ -51,7 +51,7 @@ public class RunLSBenchRIFQuery {
 	 */
 	public static void main(String[] args) {
 		ExternalLoader.loadExternals();
-		RIFRuleSet lsbenchRules = RifUtils.readRules("java:///lsbench/queries/queries.rif");
+		RIFRuleSet lsbenchRules = RifUtils.readRules("java:///lsbench/queries/query-7.5-with-small-test-data.rif");
 		IOperation<Context> op = new PrintAllOperation();
 
 		RIFCoreRuleCompiler jrc = new RIFCoreRuleCompiler();
