@@ -8,11 +8,11 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Node_Variable;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.reasoner.TriplePattern;
@@ -23,19 +23,18 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
  *
  */
 @SuppressWarnings("serial")
-public class BaseTripleFilterFunction implements IVFunction<Context,Context>{
+public class BaseAtomFilterFunction implements IVFunction<Context, Context> {
 
-	private final static Logger logger = Logger.getLogger(BaseTripleFilterFunction.class);
-	private TriplePattern clause;
-	private Triple extended;
+	private final static Logger logger = Logger.getLogger(BaseAtomFilterFunction.class);
+	private Functor clause;
+	private TripleMatch extended;
 	private List<String> variables;
 
 	/**
 	 * @param clause construct using a {@link TriplePattern}
 	 */
-	public BaseTripleFilterFunction(TriplePattern clause) {
+	public BaseAtomFilterFunction(Functor clause) {
 		this.clause = clause;
-		this.extended = asExtendedTripleMatch(clause).asTriple();
 	}
 	private TripleMatch asExtendedTripleMatch(TriplePattern tp){
 		this.variables = new ArrayList<String>();
@@ -68,20 +67,21 @@ public class BaseTripleFilterFunction implements IVFunction<Context,Context>{
 	@Override
 	public List<Context> apply(Context inc) {
 		List<Context> ctxs = new ArrayList<Context>();
-		Triple in = inc.getTyped("triple");
+		logger.debug(String.format("Context(%s) sent to Filter(%s)" , inc, this.clause));
+		Functor in = inc.getTyped("atom");
 		
 		Map<String,Node> binds = BindingsUtils.extractVars(this.clause, in);
-//		logger.debug(String.format("Testing at Filter(%s): %s", this.clause, inc));
 		if (binds == null) return ctxs;
+		
 		logger.debug(String.format("Match at Filter(%s): %s", this.clause, inc));
 		
 		// We have a match!
 		Context out = new Context();
 		out.put("bindings", binds);
 		ctxs.add(out);
-		return ctxs ;
+		return ctxs;
 	}
-
+	
 	@Override
 	public List<String> variables() {
 		return this.variables;

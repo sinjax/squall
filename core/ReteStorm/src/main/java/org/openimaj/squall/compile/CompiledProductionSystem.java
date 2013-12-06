@@ -1,15 +1,22 @@
 package org.openimaj.squall.compile;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.stream.AbstractStream;
 import org.openimaj.util.stream.Stream;
 
 import com.hp.hpl.jena.graph.Triple;
+import com.hp.hpl.jena.reasoner.TriplePattern;
+import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
+import com.hp.hpl.jena.reasoner.rulesys.Functor;
 
 
 /**
@@ -27,7 +34,12 @@ import com.hp.hpl.jena.graph.Triple;
 public abstract class CompiledProductionSystem {
 	
 	/**
-	 * A stream of triples is the source of our production systems
+	 * A list of triples provides the axioms of our production systems
+	 */
+	List<ClauseEntry> axioms;
+	
+	/**
+	 * Streams of triples are the source of our production systems
 	 */
 	List<ISource<Stream<Context>>> streamSources;
 	
@@ -65,6 +77,7 @@ public abstract class CompiledProductionSystem {
 	 * Initialise all system parts as empty, a fairly boring production system
 	 */
 	public CompiledProductionSystem() {
+		axioms = new ArrayList<ClauseEntry>();
 		streamSources = new ArrayList<ISource<Stream<Context>>>();
 		systems = new ArrayList<OptionalProductionSystems>();
 		joinlist = new ArrayList<JoinComponent<?>>();
@@ -74,9 +87,29 @@ public abstract class CompiledProductionSystem {
 	}
 	
 	/**
+	 * a statement of truth about the system
+	 * @param axiom
+	 * @return return this system (useful for chaining)
+	 */
+	public CompiledProductionSystem addAxiom(ClauseEntry axiom){
+		this.axioms.add(axiom);
+		return this;
+	}
+	
+	/**
+	 * some statements of truth about the system
+	 * @param axioms
+	 * @return return this system (useful for chaining)
+	 */
+	public CompiledProductionSystem addAxioms(Collection<ClauseEntry> axioms){
+		this.axioms.addAll(axioms);
+		return this;
+	}
+	
+	/**
 	 * a source of INPUT
 	 * @param stream
-	 * @return a {@link Stream} of input 
+	 * @return return this system (useful for chaining) 
 	 */
 	public CompiledProductionSystem addStreamSource(ISource<Stream<Context>> stream) {
 		this.streamSources.add(stream);
@@ -186,6 +219,73 @@ public abstract class CompiledProductionSystem {
 	 */
 	public List<ISource<Stream<Context>>> getStreamSources() {
 		return this.streamSources;
+	}
+	
+	/**
+	 * Creates a new ISource, which takes the list of Axioms and produces a list of Contexts representing those Axioms.
+	 * The ISource then takes the iterator over those Axiom Contexts as its Stream. 
+	 * @return a source of Axioms
+	 */
+	public ISource<Stream<Context>> getAxiomSource() {
+		return new ISource<Stream<Context>>(){
+
+			private Context[] axioms;
+			
+			@Override
+			public void setup() {}
+			@Override
+			public void cleanup() {}
+
+			@Override
+			public Stream<Context> apply() {
+				return new AbstractStream<Context>(){
+
+					private Iterator<Context> axiomIter;
+					
+					@Override
+					public boolean hasNext() {
+						return axiomIter.hasNext();
+					}
+
+					@Override
+					public Context next() {
+						return axiomIter.next();
+					}
+					
+					public Stream<Context> setAxiomIter (Context[] axioms){
+						this.axiomIter = Arrays.asList(axioms).iterator();
+						return this;
+					}
+					
+				}.setAxiomIter(this.axioms);
+			}
+
+			@Override
+			public Stream<Context> apply(Stream<Context> in) {
+				return this.apply();
+			}
+			
+			public ISource<Stream<Context>> setAxiomList(List<ClauseEntry> as){
+				this.axioms = new Context[as.size()];
+				
+				int i;
+				for (ClauseEntry axiom = as.get(i = 0); i < as.size(); axiom = as.get(++i)){
+					Context ac = new Context();
+					if (axiom instanceof TriplePattern){
+						ac.put("triple", ((TriplePattern) axiom).asTriple());
+					} else if (axiom instanceof Functor){
+						ac.put("atom", (Functor) axiom);
+					} else {
+						continue;
+					}
+					// Add meta data to context
+					this.axioms[i] = ac;
+				}
+				
+				return this;
+			}
+			
+		}.setAxiomList(this.axioms);
 	}
 
 	/**
