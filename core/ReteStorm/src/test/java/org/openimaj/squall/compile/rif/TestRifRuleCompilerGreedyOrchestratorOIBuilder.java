@@ -56,7 +56,6 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 
 
 
-	private RIFRuleSet lsbenchRules;
 	private RIFRuleSet simpleRules;
 	private RIFRuleSet simplejoinRules;
 	private RIFRuleSet complexjoinRules;
@@ -91,7 +90,6 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 		this.simplejoinRules = readRules("/test.simplejoin.rule.rif");
 		this.complexjoinRules = readRules("/test.complexjoin.rule.rif");
 		this.multiunionRules = readRules("/test.multiunion.rule.rif");
-		this.lsbenchRules = readRules("/lsbench/queries.rif");
 	}
 	
 	/**
@@ -124,15 +122,6 @@ public class TestRifRuleCompilerGreedyOrchestratorOIBuilder {
 	@Test
 	public void testMultiUnionRules(){
 		testRuleSet(multiunionRules);
-	}
-	
-	/**
-	 * 
-	 */
-	@Test
-	public void testLSBenchRulesBuilder(){
-		ExternalLoader.loadExternals();
-		testRuleSet(lsbenchRules);
 	}
 	
 	
