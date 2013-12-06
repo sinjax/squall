@@ -59,6 +59,7 @@ import com.hp.hpl.jena.graph.impl.LiteralLabel;
 import com.hp.hpl.jena.mem.GraphMem;
 import com.hp.hpl.jena.rdf.model.AnonId;
 import com.hp.hpl.jena.reasoner.TriplePattern;
+import com.hp.hpl.jena.reasoner.rulesys.Functor;
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 import com.hp.hpl.jena.shared.AddDeniedException;
@@ -236,6 +237,29 @@ public class JenaStormUtils {
 			final Node p = (Node) kryo.readClassAndObject(input);
 			final Node o = (Node) kryo.readClassAndObject(input);
 			return new Triple(s, p, o);
+		}
+
+	}
+	
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 * 
+	 */
+	public static class FunctorSerialiser extends Serializer<Functor> {
+
+		@Override
+		public void write(Kryo kryo, Output output, Functor object) {
+			final String name = object.getName();
+			final Node[] args = object.getArgs();
+			kryo.writeClassAndObject(output, name);
+			kryo.writeClassAndObject(output, args);
+		}
+
+		@Override
+		public Functor read(Kryo kryo, Input input, Class<Functor> type) {
+			final String s = (String) kryo.readClassAndObject(input);
+			final Node[] args = (Node[]) kryo.readClassAndObject(input);
+			return new Functor(s, args);
 		}
 
 	}
@@ -463,6 +487,7 @@ public class JenaStormUtils {
 		conf.registerSerialization(Node_Variable.class, NodeSerialiser_Variable.class);
 		conf.registerSerialization(TriplePattern.class, TriplePatternSerialiser.class);
 		conf.registerSerialization(Triple.class, TripleSerialiser.class);
+		conf.registerSerialization(Functor.class, FunctorSerialiser.class);
 		conf.registerSerialization(ArrayList.class);
 		conf.registerSerialization(KestrelServerSpec.class, KestrelServerSpec_Serializer.class);
 		conf.registerSerialization(Rule.class, RuleSerializer.class);
@@ -490,6 +515,7 @@ public class JenaStormUtils {
 		conf.addDefaultSerializer(Node_Variable.class, NodeSerialiser_Variable.class);
 		conf.addDefaultSerializer(TriplePattern.class, TriplePatternSerialiser.class);
 		conf.addDefaultSerializer(Triple.class, TripleSerialiser.class);
+		conf.addDefaultSerializer(Functor.class, FunctorSerialiser.class);
 		conf.register(ArrayList.class);
 		conf.addDefaultSerializer(KestrelServerSpec.class, KestrelServerSpec_Serializer.class);
 		conf.addDefaultSerializer(Rule.class, RuleSerializer.class);
