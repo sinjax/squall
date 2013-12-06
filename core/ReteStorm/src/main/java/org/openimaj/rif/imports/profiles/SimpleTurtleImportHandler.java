@@ -26,7 +26,7 @@ import com.hp.hpl.jena.util.iterator.ExtendedIterator;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
+public class SimpleTurtleImportHandler implements RIFEntailmentImportHandler {
 
 	@Override
 	public RIFRuleSet importToRuleSet(InputSource loc, RIFRuleSet ruleSet)
@@ -35,7 +35,7 @@ public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
 	    Model model = ModelFactory.createDefaultModel();
 	    InputStream is = FileManager.get().open(fileNameOrUri);
 	    if (is != null) {
-	        model.read(is, "N-TRIPLE");
+	        model.read(is, "TURTLE");
 	        
 	        ruleSet.addRootGroup(new RIFGroup());
 	        
@@ -66,7 +66,7 @@ public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
 	        	} else if (sub.isBlank()) {
 	        		subject = new RIFStringConst();
 					((RIFStringConst) subject).setData(sub.getBlankNodeLabel());
-	        	} else throw new UnsupportedOperationException("NTriples translation: All nodes and predicates must be concrete values.");
+	        	} else throw new UnsupportedOperationException("Turtle translation: All nodes and predicates must be concrete values.");
 	        	frame.setSubject(subject);
 	        	
 	        	if (pred.isURI()){
@@ -88,7 +88,7 @@ public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
 	        	} else if (pred.isBlank()) {
 	        		predicate = new RIFStringConst();
 					((RIFStringConst) predicate).setData(pred.getBlankNodeLabel());
-	        	} else throw new UnsupportedOperationException("NTriples translation: All nodes and predicates must be concrete values.");
+	        	} else throw new UnsupportedOperationException("Turtle translation: All nodes and predicates must be concrete values.");
 	        	frame.setPredicate(predicate);
 	        	
 	        	if (ob.isURI()){
@@ -110,7 +110,7 @@ public class SimpleNTriplesImportHandler implements RIFEntailmentImportHandler {
 	        	} else if (ob.isBlank()) {
 	        		object = new RIFStringConst();
 					((RIFStringConst) object).setData(ob.getBlankNodeLabel());
-	        	} else throw new UnsupportedOperationException("NTriples translation: All nodes and predicates must be concrete values.");
+	        	} else throw new UnsupportedOperationException("Turtle translation: All nodes and predicates must be concrete values.");
 	        	frame.setObject(object);
 	        	
 	        	ruleSet.getRootGroup().addSentence(frame);
