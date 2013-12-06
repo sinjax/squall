@@ -10,13 +10,17 @@ import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.rif.imports.schemes.RIFImportSchemes;
 import org.xml.sax.SAXException;
 
+
 /**
- * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- * Some helper functions for jena
- *
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
+ * Some helper functions for RIF
  */
 public class RifUtils {
 	
+	/**
+	 * @param ruleSource
+	 * @return
+	 */
 	public static RIFRuleSet readRules(String ruleSource) {
 		try {
 			return readRules(new URI(ruleSource));
@@ -24,7 +28,38 @@ public class RifUtils {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	/**
+	 * @param ruleSource
+	 * @return
+	 */
 	public static RIFRuleSet readRules(URI ruleSource) {
+		try {
+			return readRules(ruleSource, new URI("http://www.w3.org/ns/entailment/Core"));
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * @param ruleSource
+	 * @param profile 
+	 * @return
+	 */
+	public static RIFRuleSet readRules(String ruleSource, URI profile) {
+		try {
+			return readRules(new URI(ruleSource), profile);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * @param ruleSource
+	 * @param profile
+	 * @return
+	 */
+	public static RIFRuleSet readRules(URI ruleSource, URI profile) {
 		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
 		RIFImportSchemes ris = new RIFImportSchemes();
 		InputStream is = ris.get(ruleSource.getScheme()).apply(ruleSource);
@@ -32,9 +67,9 @@ public class RifUtils {
 		try {
 			rules = profs.parse(
 					is,
-					new URI("http://www.w3.org/ns/entailment/Core")
+					profile
 				);
-		} catch (IOException | SAXException | URISyntaxException e) {
+		} catch (IOException | SAXException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.openimaj.rif.RIFRuleSet;
 import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
+import org.openimaj.rif.utils.RifUtils;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
@@ -77,24 +78,9 @@ public class VisRIFGreedyRule {
 	public static void main(String[] args) {
 		ExternalLoader.loadExternals();
 		
-		String ruleSource = "/lsbench/queries.rif";
+		String ruleSource = "file:///Users/david.monks/squall/tools/SquallTool/lsbench/query/DavidsKestrelQuery2.rif";
 		
-		RIFRuleSet rules = null;
-		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
-		try {
-			InputStream resourceAsStream = VisRIFGreedyRule.class.getResourceAsStream(ruleSource);
-//			System.out.println(FileUtils.readall(resourceAsStream));
-			rules = profs.parse(
-					resourceAsStream,
-					new URI("http://www.w3.org/ns/entailment/Core")
-				);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
+		RIFRuleSet rules = RifUtils.readRules(ruleSource);
 		
 		RIFCoreRuleCompiler jrc = new RIFCoreRuleCompiler();
 		CompiledProductionSystem comp = jrc.compile(rules);
