@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 
@@ -58,7 +59,7 @@ public class BindingsUtils {
 		if(subject.isVariable()){
 			s = bindings.get(subject.getName());
 			if(s == null){
-				s = Node.createAnon();
+				s = NodeFactory.createAnon();
 			}
 		}
 		else{

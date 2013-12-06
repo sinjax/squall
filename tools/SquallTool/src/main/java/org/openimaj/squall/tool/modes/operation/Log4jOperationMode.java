@@ -30,9 +30,10 @@ public class Log4jOperationMode implements OperationMode {
 
 		@Override
 		public void perform(Context object) {
-			if(object.get("rule").equals("http://www.ins.cwi.nl/sib/vocabulary/lsbench-query-7.5"))
+			String prefix = "http://www.ins.cwi.nl/sib/vocabulary/lsbench-query-";
+			if(object.get("rule").toString().startsWith(prefix))
 			{
-				logger.info("Final output from lsbench-query-7.5:" + object);
+				logger.info(String.format("Final output from lsbench query %s: %s", object.get("rule").toString().substring(prefix.length()), object));
 			}
 		}
 	}

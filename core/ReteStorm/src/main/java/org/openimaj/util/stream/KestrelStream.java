@@ -163,6 +163,7 @@ public class KestrelStream<T> extends AbstractStream<T>{
 			return null;
 		}
 		final EmitItem poll = this.tuples.poll();
+		logger.debug(String.format("Emitting: %s", poll.tuple));
 		return poll.tuple;
 	}
 

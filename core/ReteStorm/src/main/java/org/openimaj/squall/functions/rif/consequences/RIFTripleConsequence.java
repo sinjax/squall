@@ -13,7 +13,6 @@ import org.openimaj.util.data.Context;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
-import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -44,7 +43,7 @@ public class RIFTripleConsequence implements IVFunction<Context,Context> {
 		
 		List<Context> ctxs = new ArrayList<Context>();
 		for (Triple triple : ret) {
-			logger.debug(this.toString());
+			logger.debug(String.format("completed: [%s] -> %s",this.toString(), bindings));
 			
 			Context out = new Context();
 			out.put("triple", triple);

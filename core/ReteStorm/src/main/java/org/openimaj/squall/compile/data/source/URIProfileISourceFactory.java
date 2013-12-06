@@ -187,13 +187,13 @@ public class URIProfileISourceFactory {
 		if(reader == null){
 			Function<URI,Stream<Context>> pureReader = pureSchemeFunctions.get(location.getScheme());
 			if(pureReader == null){
-				throw new RuntimeException(String.format("No handler was found for the URI %s with scheme %s",location,location.getScheme()));
+				throw new UnsupportedOperationException(String.format("No handler was found for the URI %s with scheme %s",location,location.getScheme()));
 			}
 			return new LocationISource(location, pureReader);
 		}
 		Function<InputStream,Stream<Context>> creator = profileFunctions.get(profile);
 		if(creator == null){
-			throw new RuntimeException(String.format("No handler was found for the profile URI %s",profile));
+			throw new UnsupportedOperationException(String.format("No handler was found for the profile URI %s",profile));
 		}
 		return new LocationProfileISource(location, reader,creator);
 	}

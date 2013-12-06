@@ -3,6 +3,7 @@ package org.openimaj.util.data;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.openimaj.util.stream.AbstractStream;
 import org.openimaj.util.stream.Stream;
 
@@ -12,6 +13,7 @@ import org.openimaj.util.stream.Stream;
  */
 public class JoinStream<O> extends AbstractStream<O>{
 
+	private static final Logger logger = Logger.getLogger(JoinStream.class);
 	private List<Stream<O>> streams;
 	private int current;
 
@@ -57,6 +59,7 @@ public class JoinStream<O> extends AbstractStream<O>{
 			if(ret != null)
 			{
 				current = (check + 1) % streams.size();
+				logger.debug(String.format("Emitting: %s", ret));
 				return ret;
 			}
 		}

@@ -33,7 +33,7 @@ public class CombinedSourceGreedyPlannerMode extends PlannerMode {
 			aliases = "-wtime",
 			required = false,
 			usage = "The time for which each window holds bindings")
-	public long time = 1;
+	public long time = 60;
 	
 	/**
 	 * number of topology workers selected
@@ -43,7 +43,7 @@ public class CombinedSourceGreedyPlannerMode extends PlannerMode {
 			aliases = "-wtimeu",
 			required = false,
 			usage = "The time unit for the window time")
-	public TimeUnit tu = TimeUnit.MINUTES;
+	public TimeUnit tu = TimeUnit.SECONDS;
 	
 	
 	@Override

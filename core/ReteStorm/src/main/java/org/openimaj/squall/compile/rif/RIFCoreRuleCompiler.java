@@ -51,6 +51,7 @@ import org.openrdf.query.algebra.evaluation.function.hash.MD5;
 import org.springframework.util.DigestUtils;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 
 /**
@@ -222,7 +223,7 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 				switch (atom.getArgsSize()){
 					case 1:
 						object = translate(atom.getOp(), ccps);
-						predicate = Node.createURI(RIFMemberFilterFunction.RDF_TYPE_URI);
+						predicate = NodeFactory.createURI(RIFMemberFilterFunction.RDF_TYPE_URI);
 						break;
 					case 2:
 						object = translate(atom.getArg(1), ccps);
