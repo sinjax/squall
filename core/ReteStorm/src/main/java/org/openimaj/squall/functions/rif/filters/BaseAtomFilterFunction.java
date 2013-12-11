@@ -27,7 +27,6 @@ public class BaseAtomFilterFunction implements IVFunction<Context, Context> {
 
 	private final static Logger logger = Logger.getLogger(BaseAtomFilterFunction.class);
 	private Functor clause;
-	private TripleMatch extended;
 	private List<String> variables;
 
 	/**
@@ -35,20 +34,18 @@ public class BaseAtomFilterFunction implements IVFunction<Context, Context> {
 	 */
 	public BaseAtomFilterFunction(Functor clause) {
 		this.clause = clause;
+		this.variables = enumerateVariables(clause);
 	}
-	private TripleMatch asExtendedTripleMatch(TriplePattern tp){
-		this.variables = new ArrayList<String>();
-		Triple created = new Triple(
-			registerVariable(tp.getSubject()),
-			registerVariable(tp.getPredicate()),
-			registerVariable(tp.getObject())
-		);
-		return created;
+	private static List<String> enumerateVariables(Functor clause){
+		List<String> variables = new ArrayList<String>();
+		for (Node n : clause.getArgs())
+			registerVariable(n, variables);
+		return variables;
 	}
 
-	private Node registerVariable(Node n) {
+	private static Node registerVariable(Node n, List<String> variables) {
 		if(n.isVariable()){
-			this.variables.add(n.getName());
+			variables.add(n.getName());
 			return Node.ANY ;
 		}
 		else if(Functor.isFunctor(n)){
@@ -57,7 +54,7 @@ public class BaseAtomFilterFunction implements IVFunction<Context, Context> {
 				Node fnode = f.getArgs()[i];
 				if (fnode.isVariable())
 				{
-					this.variables.add(fnode.getName());
+					variables.add(fnode.getName());
 //					f.getArgs()[i] = Node.ANY;
 				}
 			}
