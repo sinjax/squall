@@ -76,7 +76,7 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 				ISource<Stream<Context>> source = URIProfileISourceFactory.instance().createSource(uri, ruleSet.getImport(uri));
 				ret.addStreamSource(source);
 			} catch (UnsupportedOperationException e) {
-				logger.debug(String.format("Could not process import at uri <%s> with profile <%s>.", uri.toString(), ruleSet.getImport(uri).toString()), e);
+				logger.debug(String.format("Could not process import at uri <%s> with profile <%s>.", uri, ruleSet.getImport(uri)), e);
 			}
 		}
 		
