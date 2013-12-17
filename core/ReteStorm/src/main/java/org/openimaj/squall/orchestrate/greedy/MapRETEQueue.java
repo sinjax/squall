@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.openimaj.rdf.storm.utils.CircularPriorityWindow;
 import org.openimaj.rdf.storm.utils.HashedCircularPriorityWindow;
+import org.openimaj.rdf.storm.utils.OverflowHandler;
 
 import scala.actors.threadpool.Arrays;
 
@@ -39,6 +40,17 @@ public class MapRETEQueue{
 		this.sharedVariables = sharedVariables;
 		
 		window = new HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>>(null, wi.getCapacity(), wi.getDuration(), wi.getGranularity());
+	}
+	
+	/**
+	 * @param handler 
+	 * @param sharedVariables
+	 * @param wi 
+	 */
+	public MapRETEQueue(OverflowHandler<Map<String, Node>> handler, List<String> sharedVariables, WindowInformation wi) {
+		this.sharedVariables = sharedVariables;
+		
+		window = new HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>>(handler, wi.getCapacity(), wi.getDuration(), wi.getGranularity());
 	}
 	
 	/**
