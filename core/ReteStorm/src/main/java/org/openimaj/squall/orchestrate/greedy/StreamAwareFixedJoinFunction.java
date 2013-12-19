@@ -33,17 +33,16 @@ public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Contex
 	private List<String> baseVars;
 	private Map<String,String> ruleToBaseVarMap;
 	private List<VariableHolder> contributors;
-	
+	// Valid at all stages
 	private List<String> sharedOutVars;
 	private Map<String,String> leftVarsToOutVars;
 	private Map<String,String> rightVarsToOutVars;
-	
 	private BindingsOverflowHandler leftOverflow;
 	private BindingsOverflowHandler rightOverflow;
+	private String anonimisedDefaultStreamName;
+	// Valid at query time, but not needed before
 	private FixedHashSteM leftQueue;
 	private FixedHashSteM rightQueue;
-	
-	private String anonimisedDefaultStreamName;
 	private Map<String, List<Context>> outputStreamBuffers;
 	
 	/**
@@ -248,7 +247,6 @@ public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Contex
 		
 		this.leftQueue = null;
 		this.rightQueue = null;
-		
 		this.outputStreamBuffers = null;
 	}
 	
