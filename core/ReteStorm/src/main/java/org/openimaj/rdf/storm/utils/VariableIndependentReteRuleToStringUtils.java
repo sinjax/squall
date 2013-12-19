@@ -32,6 +32,7 @@ package org.openimaj.rdf.storm.utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -136,7 +137,7 @@ public class VariableIndependentReteRuleToStringUtils {
 		} else if (ce instanceof Rule) {
 			Rule r = (Rule) ce;
 
-			List<String> v = Arrays.asList(CompilationStormRuleReteBoltHolder.extractFields(Arrays.asList(r.getBody())));
+			List<String> v = Arrays.asList(extractFields(Arrays.asList(r.getBody())));
 			int[] m = new int[v.size()];
 			for (int i = 0; i < m.length; i++ )
 				m[i] = -1;
@@ -224,6 +225,104 @@ public class VariableIndependentReteRuleToStringUtils {
 			matches[i++] = ent.getValue();
 		}
 		return clauseEntryToString(clause, values, matches, new Count(0));
+	}
+	
+	/**
+	 * @param fieldsTemplate
+	 * @return String[]
+	 */
+	public static String[] extractFields(List<ClauseEntry> fieldsTemplate) {
+		Map<String, Integer> fields = new HashMap<String, Integer>();
+		int current = 0;
+		for (ClauseEntry ce : fieldsTemplate)
+		{
+			if (ce instanceof TriplePattern) {
+				Node s = ((TriplePattern) ce).getSubject();
+				Node p = ((TriplePattern) ce).getPredicate();
+				Node o = ((TriplePattern) ce).getObject();
+
+				current = checkAddNode(s, fields, current);
+				current = checkAddNode(p, fields, current);
+				current = checkAddNode(o, fields, current);
+				if (o.isLiteral() && o.getLiteralValue() instanceof Functor) {
+					Functor functor = (Functor) o.getLiteralValue();
+					for (Node n : functor.getArgs())
+					{
+						current = checkAddNode(n, fields, current);
+					}
+				}
+			}
+		}
+
+		String[] orderedNames = new String[current];
+		for (Entry<String, Integer> name : fields.entrySet()) {
+			orderedNames[name.getValue()] = name.getKey();
+		}
+		return orderedNames;
+	}
+
+	private static int checkAddNode(Node s, Map<String, Integer> fields, int current) {
+		if (s.isVariable() && !fields.containsKey(s.getName())) {
+			fields.put(s.getName(), current++);
+		}
+		return current;
+	}
+	
+	/**
+	 * @param fieldsTemplate
+	 * @return String[]
+	 */
+	public static String[] extractJoinFields(List<ClauseEntry> fieldsTemplate) {
+		ArrayList<String> fields = new ArrayList<String>();
+		List<String> seen = new ArrayList<String>();
+		String var;
+		for (ClauseEntry ce : fieldsTemplate)
+			if (ce instanceof TriplePattern) {
+				TriplePattern tp = (TriplePattern) ce;
+				if (tp.getSubject().isVariable()) {
+					var = tp.getSubject().getName();
+					if (!seen.contains(var))
+						seen.add(var);
+					else if (!fields.contains(var))
+						fields.add(var);
+				}
+				if (tp.getPredicate().isVariable()) {
+					var = tp.getPredicate().getName();
+					if (!seen.contains(var))
+						seen.add(var);
+					else if (!fields.contains(var))
+						fields.add(var);
+				}
+				if (tp.getObject().isVariable()) {
+					var = tp.getObject().getName();
+					if (!seen.contains(var))
+						seen.add(var);
+					else if (!fields.contains(var))
+						fields.add(var);
+				} else if (tp.getObject().isLiteral() && tp.getObject().getLiteralValue() instanceof Functor)
+					for (Node n : ((Functor) tp.getObject().getLiteralValue()).getArgs())
+						if (n.isVariable()) {
+							var = n.getName();
+							if (!seen.contains(var))
+								seen.add(var);
+							else if (!fields.contains(var))
+								fields.add(var);
+						}
+			}else if (ce instanceof Functor) {
+				Functor f = (Functor) ce;
+				for (Node n : f.getArgs()){
+					if (n.isVariable()) {
+						var = n.getName();
+						if (!seen.contains(var))
+							seen.add(var);
+						else if (!fields.contains(var))
+							fields.add(var);
+					}
+				}
+			}
+
+		fields.trimToSize();
+		return fields.toArray(new String[fields.size()]);
 	}
 
 }
