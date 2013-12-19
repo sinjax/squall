@@ -1,6 +1,7 @@
 package org.openimaj.squall.orchestrate.greedy;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,8 +48,8 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 		this.right = right;
 		
 		// Find the join variables 
-		List<String> allleftvar = left.variables();
-		List<String> allrightvar = right.variables();
+		Collection<String> allleftvar = left.variables();
+		Collection<String> allrightvar = right.variables();
 		
 		Set<String> allvarset = new HashSet<>();
 		allvarset.addAll(allleftvar);
