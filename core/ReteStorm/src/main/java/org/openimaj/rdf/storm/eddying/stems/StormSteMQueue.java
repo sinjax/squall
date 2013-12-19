@@ -29,7 +29,6 @@
  */
 package org.openimaj.rdf.storm.eddying.stems;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -38,11 +37,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter;
 import org.openimaj.rdf.storm.eddying.routing.StormGraphRouter.Action;
-import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt;
 import org.openimaj.rdf.storm.eddying.stems.StormSteMBolt.Component;
 import org.openimaj.rdf.storm.topology.bolt.StormReteBolt;
 import org.openimaj.rdf.storm.topology.logging.LoggerBolt.*;
 import org.openimaj.rdf.storm.utils.CircularPriorityWindow;
+import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
+import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
 
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
@@ -62,7 +62,7 @@ import com.hp.hpl.jena.graph.compose.Polyadic;
  *         implementation by <a href="mailto:der@hplb.hpl.hp.com">Dave
  *         Reynolds</a>
  */
-public class StormSteMQueue implements CircularPriorityWindow.DurationOverflowHandler<StormSteMQueue.Environment>, CircularPriorityWindow.CapacityOverflowHandler<StormSteMQueue.Environment> {
+public class StormSteMQueue implements DurationOverflowHandler<StormSteMQueue.Environment>, CapacityOverflowHandler<StormSteMQueue.Environment> {
 
 	protected final static Logger logger = Logger.getLogger(StormSteMQueue.class);
 	private static final boolean logging = false;
