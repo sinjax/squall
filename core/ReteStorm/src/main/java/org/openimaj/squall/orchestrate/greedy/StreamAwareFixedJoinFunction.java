@@ -1,6 +1,7 @@
 package org.openimaj.squall.orchestrate.greedy;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -8,12 +9,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rdf.storm.utils.OverflowHandler;
 import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
 import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
-import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.data.SIVFunction;
-import org.openimaj.squall.compile.data.VariableHolder;
+import org.openimaj.squall.compile.data.revised.*;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -27,31 +25,29 @@ import com.hp.hpl.jena.graph.Node;
  * This is not a suitable join function for node sharing
  * 
  */
-public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Context>, CapacityOverflowHandler<Map<String, Node>>, DurationOverflowHandler<Map<String,Node>> {
+public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Context> {
 	private static final Logger logger = Logger.getLogger(FixedJoinFunction.class);
-	private static final String DEFAULT_STREAM_SUFFIX= "";
-	private static final String CAPACITY_OVERFLOW_STREAM_SUFFIX= "_capacity-overflow";
-	private static final String DURATION_OVERFLOW_STREAM_SUFFIX= "_duration-overflow";
 	
-	private VariableHolder left;
-	private VariableHolder right;
-	private String leftStream;
-	private String rightStream;
+	// Valid during planning, not needed after
+	private List<String> ruleVars;
+	private List<String> baseVars;
+	private Map<String,String> ruleToBaseVarMap;
+	private List<VariableHolder> contributors;
+	
+	private List<String> sharedOutVars;
+	private Map<String,String> leftVarsToOutVars;
+	private Map<String,String> rightVarsToOutVars;
+	
+	private BindingsOverflowHandler leftOverflow;
+	private BindingsOverflowHandler rightOverflow;
 	private FixedHashSteM leftQueue;
 	private FixedHashSteM rightQueue;
-	private WindowInformation leftWI;
-	private WindowInformation rightWI;
-	private List<String> shared;
-	private List<String> vars;
 	
-	private Set<String> streamNames;
-	private Map<String, List<Context>> streamBuffers;
-	private String defaultStream = DEFAULT_STREAM_SUFFIX;
-	private String capacityOverflowStream = CAPACITY_OVERFLOW_STREAM_SUFFIX;
-	private String durationOverflowStream = DURATION_OVERFLOW_STREAM_SUFFIX;
+	private String anonimisedDefaultStreamName;
+	private Map<String, List<Context>> outputStreamBuffers;
 	
 	/**
-	 * @param left
+	 * @param left 
 	 * @param leftStream 
 	 * @param leftwi 
 	 * @param right
@@ -66,182 +62,342 @@ public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Contex
 			String rightStream,
 			WindowInformation rightwi
 	) {
+		// Construct the ordered list of contibuting atomic VariableHolders
+		this.contributors = new ArrayList<VariableHolder>();
+		this.contributors.addAll(left.contributors());
+		this.contributors.addAll(right.contributors());
+		this.contributors = VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors);
 		
-		this.left = left;
-		this.right = right;
+		// Find the mapping from current rule variables to underlying output variables.
+		this.ruleVars = new ArrayList<String>();
+		this.baseVars = new ArrayList<String>();
+		this.ruleToBaseVarMap = new HashMap<String, String>();
+		VariableHolderAnonimisationUtils.extractSaneRuleAndAnonVarsAndMapping(this.contributors,
+																			  this.ruleVars,
+																			  this.baseVars,
+																			  this.ruleToBaseVarMap);
 		
-		this.leftStream = leftStream;
-		this.rightStream = rightStream;
-		
-		// Find the join variables 
-		List<String> allleftvar = left.variables();
-		List<String> allrightvar = right.variables();
-		
-		Set<String> allvarset = new HashSet<>();
-		allvarset.addAll(allleftvar);
-		allvarset.addAll(allrightvar);
-		
-		this.vars = new ArrayList<String>();
-		this.vars.addAll(allvarset);
-		// The shared variables must match
-		shared = new ArrayList<String>();
-		for (String lv : allleftvar) {
-			if(allrightvar.contains(lv)) shared.add(lv);
+		// Construct the anonimised representation of the function.
+		StringBuilder anon = new StringBuilder();
+		for (VariableHolder atomicVH : VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors)){
+			Map<String, String> varmap = new HashMap<String, String>();
+			for (String ruleVar : atomicVH.ruleVariables()){
+				varmap.put(atomicVH.ruleToBaseVarMap().get(ruleVar), this.ruleToBaseVarMap.get(ruleVar));
+			}
+			anon.append(atomicVH.anonimised(varmap));
 		}
-		this.leftWI = leftwi;
-		this.rightWI = rightwi;
+		this.anonimisedDefaultStreamName = anon.toString();
 		
-		this.streamNames = new HashSet<String>();
-		this.streamNames.add(defaultStream);
-		this.streamNames.add(capacityOverflowStream);
-		this.streamNames.add(durationOverflowStream);
-		this.streamBuffers = null;
-	}
-	
-	@Override
-	public List<String> variables() {
-		return this.vars;
+		// Find joined underlying output variables from rule variables and their mapping to underlying variables.
+		List<String> joinedRuleVars = VariableHolderAnonimisationUtils.extractJoinFields(this.contributors);
+		this.sharedOutVars = new ArrayList<String>();
+		for (String ruleVar : joinedRuleVars){
+			this.sharedOutVars.add(this.ruleToBaseVarMap.get(ruleVar));
+		}
+		
+		// Find the mapping from underlying input variables to underlying output variables. 
+		this.leftVarsToOutVars = new HashMap<String, String>();
+		this.rightVarsToOutVars = new HashMap<String, String>();
+		for (String ruleVar : this.ruleVars){
+			String leftInputVar = left.ruleToBaseVarMap().get(ruleVar);
+			String rightInputVar = right.ruleToBaseVarMap().get(ruleVar);
+			if (leftInputVar != null){
+				this.leftVarsToOutVars.put(leftInputVar, this.ruleToBaseVarMap.get(ruleVar));
+			}
+			if (rightInputVar != null){
+				this.rightVarsToOutVars.put(rightInputVar, this.ruleToBaseVarMap.get(ruleVar));
+			}
+		}
+		
+		// Set the OverflowHandlers for the left and right queues, as well as explicitly setting the queues to null
+		// (queues are created in setup).
+		this.leftOverflow = new BindingsOverflowHandler(leftStream, leftwi);
+		this.rightOverflow = new BindingsOverflowHandler(rightStream, rightwi);
+		this.leftQueue = null;
+		this.rightQueue = null;
+		
+		// Set the output stream buffers to null (created in setup)
+		this.outputStreamBuffers = null;
 	}
 	
 	/**
-	 * @return the shared variables of this join
+	 * @return
+	 * 		The underlying variables received from the left hand source on which this function relies, in specific order.
 	 */
-	public List<String> sharedVars() {
-		return this.shared;
+	public List<String> leftSharedVars() {
+		Map<String, String> outVarsToLeftVars = new HashMap<String, String>();
+		for (String leftVar : this.leftVarsToOutVars.keySet()){
+			outVarsToLeftVars.put(this.leftVarsToOutVars.get(leftVar), leftVar);
+		}
+		
+		List<String> leftSharedVars = new ArrayList<String>();
+		for (String var : this.sharedOutVars){
+			leftSharedVars.add(outVarsToLeftVars.get(var));
+		}
+		return leftSharedVars;
+	}
+	
+	/**
+	 * @return
+	 * 		The underlying variables received from the left hand source on which this function relies, in specific order.
+	 */
+	public List<String> rightSharedVars() {
+		Map<String, String> outVarsToRightVars = new HashMap<String, String>();
+		for (String rightVar : this.rightVarsToOutVars.keySet()){
+			outVarsToRightVars.put(this.rightVarsToOutVars.get(rightVar), rightVar);
+		}
+		
+		List<String> rightSharedVars = new ArrayList<String>();
+		for (String var : this.sharedOutVars){
+			rightSharedVars.add(outVarsToRightVars.get(var));
+		}
+		return rightSharedVars;
+	}
+	
+	// VARIABLEHOLDER
+	
+	@Override
+	public List<String> baseVariables() {
+		if (this.baseVars != null) return this.baseVars;
+		
+		List<String> baseVars = new ArrayList<String>();
+		baseVars.addAll(this.leftVarsToOutVars.values());
+		for (String baseVar : this.rightVarsToOutVars.values()){
+			if (!baseVars.contains(baseVar)) baseVars.add(baseVar);
+		}
+		
+		return baseVars;
 	}
 	
 	@Override
-	public Set<String> getOutputStreamNames() {
-		Set<String> names = new HashSet<String>();
-		names.addAll(this.streamNames);
-		return names;
+	public List<String> ruleVariables() {
+		return this.ruleVars;
 	}
 
 	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		return left.anonimised(varmap) + " " + right.anonimised(varmap);
+	public Map<String, String> ruleToBaseVarMap() {
+		return this.ruleToBaseVarMap;
 	}
-
+	
 	@Override
 	public String anonimised() {
-		return left.anonimised() + " " + right.anonimised();
-	}
-
-	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		for (int i = 0; i < this.shared.size(); i++){
-			String newVar = varmap.get(this.shared.get(i));
-			if (newVar != null) this.shared.set(i, newVar);
-		}
-		for (int i = 0; i < this.vars.size(); i++){
-			String newVar = varmap.get(this.vars.get(i));
-			if (newVar != null) this.vars.set(i, newVar);
-		}
+		return this.anonimisedDefaultStreamName;
 	}
 	
 	@Override
-	public void mapInputStreams(Map<String, String> newNamesMap) {
-		String newLeft = newNamesMap.get(leftStream);
-		String newRight = newNamesMap.get(rightStream);
-		if (newLeft != null) this.leftStream = newLeft;
-		if (newRight != null) this.rightStream = newRight;
+	public Collection<VariableHolder> contributors() {
+		return this.contributors;
 	}
 	
 	@Override
-	public void mapOutputStreams(Map<String, String> newNamesMap) {
-		Set<String> newStreamNames = new HashSet<String>();
-		for (String name : this.streamNames){
-			String newName = newNamesMap.get(name);
-			if (name == null) newStreamNames.add(name);
-			else newStreamNames.add(newName);
-			
-			if (name.equals(this.defaultStream)) this.defaultStream = newName;
-			if (name.equals(this.capacityOverflowStream)) this.capacityOverflowStream = newName;
-			if (name.equals(this.durationOverflowStream)) this.durationOverflowStream = newName;
+	public boolean mirrorInRule(VariableHolder toMirror) {
+		if (toMirror.anonimised() != this.anonimised()) return false;
+		
+		Map<String,String> mirroredBaseToRuleVarMap = new HashMap<String,String>();
+		for (String ruleVar : toMirror.ruleToBaseVarMap().keySet()){
+			mirroredBaseToRuleVarMap.put(toMirror.ruleToBaseVarMap().get(ruleVar), ruleVar);
 		}
-		this.streamNames = newStreamNames;
+		List<String> newRuleVars = new ArrayList<String>();
+		for (String baseVar : this.baseVars){
+			String newRuleVar = mirroredBaseToRuleVarMap.get(baseVar);
+			if (newRuleVar == null) return false;
+			newRuleVars.add(newRuleVar);
+		}
+		
+		this.ruleVars = newRuleVars;
+		this.ruleToBaseVarMap = toMirror.ruleToBaseVarMap();
+		
+		return true;
 	}
+	
+	@Override
+	public String anonimised(Map<String, String> varmap) {
+		StringBuilder anon = new StringBuilder();
+		for (VariableHolder atomicVH : VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors())){
+			Map<String, String> subvarmap = new HashMap<String, String>();
+			for (String ruleVar : atomicVH.ruleVariables()){
+				String aVHBaseVar = atomicVH.ruleToBaseVarMap().get(ruleVar);
+				String thisBaseVar = this.ruleToBaseVarMap.get(ruleVar);
+				String desiredBaseVar = varmap.get(thisBaseVar);
+				subvarmap.put(aVHBaseVar, desiredBaseVar);
+			}
+			anon.append(atomicVH.anonimised(subvarmap));
+		}
+		return anon.toString();
+	}
+	
+	// INITIALISABLE
 	
 	@Override
 	public void setup() {
-		leftQueue = new FixedHashSteM(this, shared,leftWI);
-		rightQueue = new FixedHashSteM(this, shared,rightWI);
+		leftQueue = new FixedHashSteM(this.leftOverflow, this.sharedOutVars, this.leftOverflow.getWindowInformation());
+		rightQueue = new FixedHashSteM(this.rightOverflow, this.sharedOutVars, this.rightOverflow.getWindowInformation());
 		
-		this.streamBuffers = new HashMap<String, List<Context>>();
-		for (String name : this.streamNames){
-			this.streamBuffers.put(name, new ArrayList<Context>());
+		this.outputStreamBuffers = new HashMap<String, List<Context>>();
+		for (String name : this.getOutputStreamNames()){
+			this.outputStreamBuffers.put(name, new ArrayList<Context>());
 		}
 	}
 
 	@Override
 	public void cleanup() {
-		this.left = null;
-		this.right = null;
+		this.ruleVars = null;
+		this.baseVars = null;
+		this.ruleToBaseVarMap = null;
+		this.contributors = null;
 		
 		this.leftQueue = null;
 		this.rightQueue = null;
 		
-		this.streamBuffers = null;
+		this.outputStreamBuffers = null;
 	}
 	
+	// MULTIFUNCTION
+	
 	@Override
-	public List<Context> apply(String stream, Context in) {
-		Map<String, Node> typed = in.getTyped("bindings");
-		logger.debug(String.format("Joining: %s with %s", this, typed));
+	public List<Context> apply(Context in) {
+		this.flushStreamBuffers();
+		
+		String stream = in.getTyped("stream");
 		List<Context> ret = new ArrayList<Context>();
-		if(stream.equals(this.leftStream)){
-			if (leftQueue.build(typed)){
+		
+		Map<String, Node> typed;
+		if(stream.equals(this.leftOverflow.getSource())){
+			typed = in.getTyped("bindings");
+			logger.debug(String.format("Joining: %s with %s", this, typed));
+			
+			Map<String, Node> leftbinds = new HashMap<String, Node>();
+			for (String var : typed.keySet()){
+				leftbinds.put(this.leftVarsToOutVars.get(var), typed.get(var));
+			}
+			if (leftQueue.build(leftbinds)){
 				logger.debug("Joining Left Stream");
-				for (Map<String, Node> bindings : rightQueue.probe(typed)) {
-					logger.debug(String.format("Joined: %s -> %s", typed, bindings));
+				for (Map<String, Node> fullbindings : rightQueue.probe(leftbinds)) {
+					logger.debug(String.format("Joined: %s -> %s", typed, fullbindings));
 					Context r = new Context();
-					r.put("bindings",bindings);
+					r.put("bindings",fullbindings);
 					ret.add(r);
 				}
 			}
 		}
-		else if(stream.equals(this.rightStream)){
-			if (rightQueue.build(typed)){
+		else if(stream.equals(this.rightOverflow.getSource())){
+			typed = in.getTyped("bindings");
+			logger.debug(String.format("Joining: %s with %s", this, typed));
+			
+			Map<String, Node> rightbinds = new HashMap<String, Node>();
+			for (String var : typed.keySet()){
+				rightbinds.put(this.rightVarsToOutVars.get(var), typed.get(var));
+			}
+			if (rightQueue.build(rightbinds)){
 				logger.debug("Joining Right Stream");
-				for (Map<String, Node> bindings : leftQueue.probe(typed)) {
-					logger.debug(String.format("Joined: %s -> %s", typed, bindings));
+				for (Map<String, Node> fullbindings : leftQueue.probe(rightbinds)) {
+					logger.debug(String.format("Joined: %s -> %s", typed, fullbindings));
 					Context r = new Context();
-					r.put("bindings",bindings);
+					r.put("bindings",fullbindings);
 					ret.add(r);
 				}
 			}
 		}
 		
-		this.streamBuffers.get(this.defaultStream).addAll(ret);
+		this.outputStreamBuffers.get(this.anonimisedDefaultStreamName).addAll(ret);
 		
 		return ret;
 	}
 	
+	// BUFFEREDOUTPUTSTREAMHOLDER
+	
 	@Override
-	public void handleCapacityOverflow(Map<String,Node> overflowedBindings) {
-		Context overflow = new Context();
-		overflow.put("bindings", overflowedBindings);
-		this.streamBuffers.get(this.capacityOverflowStream).add(overflow);
+	public Set<String> getOutputStreamNames() {
+		Set<String> names = new HashSet<String>();
+		names.add(this.anonimisedDefaultStreamName);
+		names.addAll(this.leftOverflow.getStreamNames());
+		names.addAll(this.rightOverflow.getStreamNames());
+		return names;
 	}
 	
 	@Override
-	public void handleDurationOverflow(Map<String,Node> overflowedBindings) {
-		Context overflow = new Context();
-		overflow.put("bindings", overflowedBindings);
-		this.streamBuffers.get(this.durationOverflowStream).add(overflow);
+	public void flushStreamBuffers() {
+		for (String name : this.outputStreamBuffers.keySet()){
+			this.outputStreamBuffers.get(name).clear();
+		}
 	}
 
 	@Override
 	public List<Context> getStreamBuffer(String streamName) {
-		List<Context> buffer = this.streamBuffers.get(streamName);
+		List<Context> buffer = this.outputStreamBuffers.get(streamName);
 		if (buffer == null) return new ArrayList<Context>();
-		this.streamBuffers.put(streamName, new ArrayList<Context>());
+		this.outputStreamBuffers.put(streamName, new ArrayList<Context>());
 		return buffer;
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("JOIN: sharedVariables: %s, outputVariables: %s",this.shared.toString(),this.vars.toString());
+		Set<String> outVars = new HashSet<String>();
+		outVars.addAll(this.leftVarsToOutVars.values());
+		outVars.addAll(this.rightVarsToOutVars.values());
+		return String.format("JOIN: leftVariables: %s, rightVariables %s, outputVariables: %s, sharedOutputVariables %s",
+									this.leftVarsToOutVars.keySet().toString(),
+									this.rightVarsToOutVars.keySet().toString(),
+									outVars.toString(),
+									this.sharedOutVars.toString());
 	}
+	
+	private class BindingsOverflowHandler implements CapacityOverflowHandler<Map<String, Node>>, DurationOverflowHandler<Map<String,Node>> {
+
+		private static final String CAPACITY_OVERFLOW_STREAM_SUFFIX= "-capacity-overflow";
+		private static final String DURATION_OVERFLOW_STREAM_SUFFIX= "-duration-overflow";
+		
+		private String source;
+		private WindowInformation wi;
+		
+		public BindingsOverflowHandler(String s, WindowInformation wi){
+			this.source = s;
+			this.wi = wi;
+		}
+		
+		public void updateSource(String s){
+			this.source = s;
+		}
+		
+		public String getSource(){
+			return this.source;
+		}
+		
+		public WindowInformation getWindowInformation(){
+			return this.wi;
+		}
+		
+		private String getCapacityOverflowStreamName(){
+			return this.source+"[+"+this.wi.getCapacity()+"]";
+		}
+		
+		private String getDurationOverflowStreamName(){
+			return this.source+"[+"+this.wi.getDuration()+this.wi.getGranularity().toString()+"]";
+		}
+		
+		public Set<String> getStreamNames() {
+			Set<String> names = new HashSet<String>();
+			names.add(this.getCapacityOverflowStreamName());
+			names.add(this.getDurationOverflowStreamName());
+			return names;
+		}
+		
+		@Override
+		public void handleDurationOverflow(Map<String, Node> overflowedBindings) {
+			Context overflow = new Context();
+			overflow.put("bindings", overflowedBindings);
+			StreamAwareFixedJoinFunction.this.outputStreamBuffers.get(this.getDurationOverflowStreamName()).add(overflow);
+		}
+
+		@Override
+		public void handleCapacityOverflow(Map<String, Node> overflowedBindings) {
+			Context overflow = new Context();
+			overflow.put("bindings", overflowedBindings);
+			StreamAwareFixedJoinFunction.this.outputStreamBuffers.get(this.getCapacityOverflowStreamName()).add(overflow);
+		}
+		
+	}
+
+	
 	
 }
