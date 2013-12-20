@@ -1,4 +1,4 @@
-package org.openimaj.squall.orchestrate.greedy;
+package org.openimaj.squall.orchestrate.revised.rete;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,18 +12,22 @@ import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
 import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
 import org.openimaj.squall.compile.data.revised.*;
+import org.openimaj.squall.orchestrate.WindowInformation;
+import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
+import org.openimaj.squall.orchestrate.greedy.FixedJoinFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
 
 /**
- * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  * 
  * A Fixed join function expects specific variables to come from one
  * stream and other specific variables to come from another.
  * 
  * This is not a suitable join function for node sharing
  * 
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  */
 public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Context> {
 	private static final Logger logger = Logger.getLogger(FixedJoinFunction.class);
@@ -32,7 +36,7 @@ public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Contex
 	private List<String> ruleVars;
 	private List<String> baseVars;
 	private Map<String,String> ruleToBaseVarMap;
-	private List<VariableHolder> contributors;
+	private List<AnonimisedRuleVariableHolder> contributors;
 	// Valid at all stages
 	private List<String> sharedOutVars;
 	private Map<String,String> leftVarsToOutVars;
@@ -62,7 +66,7 @@ public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Contex
 			WindowInformation rightwi
 	) {
 		// Construct the ordered list of contibuting atomic VariableHolders
-		this.contributors = new ArrayList<VariableHolder>();
+		this.contributors = new ArrayList<AnonimisedRuleVariableHolder>();
 		this.contributors.addAll(left.contributors());
 		this.contributors.addAll(right.contributors());
 		this.contributors = VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors);
@@ -78,7 +82,7 @@ public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Contex
 		
 		// Construct the anonimised representation of the function.
 		StringBuilder anon = new StringBuilder();
-		for (VariableHolder atomicVH : VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors)){
+		for (AnonimisedRuleVariableHolder atomicVH : VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors)){
 			Map<String, String> varmap = new HashMap<String, String>();
 			for (String ruleVar : atomicVH.ruleVariables()){
 				varmap.put(atomicVH.ruleToBaseVarMap().get(ruleVar), this.ruleToBaseVarMap.get(ruleVar));
@@ -156,7 +160,7 @@ public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Contex
 	// VARIABLEHOLDER
 	
 	@Override
-	public List<String> baseVariables() {
+	public List<String> variables() {
 		if (this.baseVars != null) return this.baseVars;
 		
 		List<String> baseVars = new ArrayList<String>();
@@ -184,12 +188,12 @@ public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Contex
 	}
 	
 	@Override
-	public Collection<VariableHolder> contributors() {
+	public Collection<AnonimisedRuleVariableHolder> contributors() {
 		return this.contributors;
 	}
 	
 	@Override
-	public boolean mirrorInRule(VariableHolder toMirror) {
+	public boolean mirrorInRule(AnonimisedRuleVariableHolder toMirror) {
 		if (toMirror.anonimised() != this.anonimised()) return false;
 		
 		Map<String,String> mirroredBaseToRuleVarMap = new HashMap<String,String>();
@@ -212,7 +216,7 @@ public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Contex
 	@Override
 	public String anonimised(Map<String, String> varmap) {
 		StringBuilder anon = new StringBuilder();
-		for (VariableHolder atomicVH : VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors())){
+		for (AnonimisedRuleVariableHolder atomicVH : VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors())){
 			Map<String, String> subvarmap = new HashMap<String, String>();
 			for (String ruleVar : atomicVH.ruleVariables()){
 				String aVHBaseVar = atomicVH.ruleToBaseVarMap().get(ruleVar);
@@ -341,9 +345,6 @@ public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Contex
 	}
 	
 	private class BindingsOverflowHandler implements CapacityOverflowHandler<Map<String, Node>>, DurationOverflowHandler<Map<String,Node>> {
-
-		private static final String CAPACITY_OVERFLOW_STREAM_SUFFIX= "-capacity-overflow";
-		private static final String DURATION_OVERFLOW_STREAM_SUFFIX= "-duration-overflow";
 		
 		private String source;
 		private WindowInformation wi;

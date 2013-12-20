@@ -65,13 +65,13 @@ public class VariableHolderAnonimisationUtils {
 	 * @param t
 	 * @return List<VariableHolder>
 	 */
-	public static List<VariableHolder> sortVariableHolders(Collection<VariableHolder> t) {
-		List<VariableHolder> template = Arrays.asList(t.toArray(new VariableHolder[t.size()]));
+	public static List<AnonimisedRuleVariableHolder> sortVariableHolders(Collection<AnonimisedRuleVariableHolder> t) {
+		List<AnonimisedRuleVariableHolder> template = Arrays.asList(t.toArray(new VariableHolder[t.size()]));
 		
-		Collections.sort(template,new Comparator<VariableHolder>(){
+		Collections.sort(template,new Comparator<AnonimisedRuleVariableHolder>(){
 			@Override
-			public int compare(VariableHolder o1,
-					VariableHolder o2) {
+			public int compare(AnonimisedRuleVariableHolder o1,
+					AnonimisedRuleVariableHolder o2) {
 				return o1.anonimised().compareTo(o2.anonimised());
 			}
 		});
@@ -83,11 +83,11 @@ public class VariableHolderAnonimisationUtils {
 	 * @param fieldsTemplate
 	 * @return String[]
 	 */
-	public static List<String> extractOrderedFields(Collection<VariableHolder> fieldsTemplate) {
-		List<VariableHolder> sortedFT = sortVariableHolders(fieldsTemplate);
+	public static List<String> extractOrderedFields(Collection<AnonimisedRuleVariableHolder> fieldsTemplate) {
+		List<AnonimisedRuleVariableHolder> sortedFT = sortVariableHolders(fieldsTemplate);
 		
 		ArrayList<String> fields = new ArrayList<String>();
-		for (VariableHolder vh : sortedFT){
+		for (AnonimisedRuleVariableHolder vh : sortedFT){
 			for (String var : vh.ruleVariables()){
 				if (!fields.contains(var)) {
 					fields.add(var);
@@ -108,7 +108,7 @@ public class VariableHolderAnonimisationUtils {
 	 * @param ruleToAnonVarMap
 	 * 		Map to be populated with the mapping from rule variables to anonimised variables. Is cleared during method 
 	 */
-	public static void extractSaneRuleAndAnonVarsAndMapping(Collection<VariableHolder> fieldsTemplate,
+	public static void extractSaneRuleAndAnonVarsAndMapping(Collection<AnonimisedRuleVariableHolder> fieldsTemplate,
 															final List<String> ruleVars,
 															final List<String> baseVars,
 															final Map<String,String> ruleToAnonVarMap) {
@@ -128,12 +128,12 @@ public class VariableHolderAnonimisationUtils {
 	 * @param fieldsTemplate
 	 * @return String[]
 	 */
-	public static List<String> extractJoinFields(Collection<VariableHolder> fieldsTemplate) {
-		List<VariableHolder> sortedFT = sortVariableHolders(fieldsTemplate);
+	public static List<String> extractJoinFields(Collection<AnonimisedRuleVariableHolder> fieldsTemplate) {
+		List<AnonimisedRuleVariableHolder> sortedFT = sortVariableHolders(fieldsTemplate);
 		
 		ArrayList<String> fields = new ArrayList<String>();
 		List<String> seen = new ArrayList<String>();
-		for (VariableHolder vh : sortedFT){
+		for (AnonimisedRuleVariableHolder vh : sortedFT){
 			for (String var : vh.ruleVariables()){
 				if (!seen.contains(var))
 					seen.add(var);
