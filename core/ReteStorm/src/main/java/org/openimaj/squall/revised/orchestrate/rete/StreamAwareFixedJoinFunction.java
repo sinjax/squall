@@ -11,7 +11,6 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
 import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
-import org.openimaj.squall.compile.data.revised.*;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
 import org.openimaj.squall.orchestrate.greedy.FixedJoinFunction;
