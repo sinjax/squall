@@ -13,7 +13,6 @@ import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
 import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
-import org.openimaj.squall.orchestrate.greedy.FixedJoinFunction;
 import org.openimaj.squall.revised.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.revised.compile.data.IVFunction;
 import org.openimaj.squall.revised.compile.data.SIVFunction;
@@ -33,7 +32,7 @@ import com.hp.hpl.jena.graph.Node;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  */
 public class StreamAwareFixedJoinFunction implements SIVFunction<Context, Context> {
-	private static final Logger logger = Logger.getLogger(FixedJoinFunction.class);
+	private static final Logger logger = Logger.getLogger(StreamAwareFixedJoinFunction.class);
 	
 	// Valid during planning, not needed after
 	private List<String> ruleVars;

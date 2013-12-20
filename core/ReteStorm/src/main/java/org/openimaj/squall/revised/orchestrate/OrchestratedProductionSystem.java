@@ -5,8 +5,8 @@ import java.util.List;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.orchestrate.DirectedGraph;
-import org.openimaj.squall.orchestrate.NamedSourceNode;
-import org.openimaj.squall.orchestrate.Orchestrator;
+import org.openimaj.squall.revised.orchestrate.NamedSourceNode;
+import org.openimaj.squall.revised.orchestrate.Orchestrator;
 import org.openimaj.squall.orchestrate.ReentrantNNIVFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Operation;
