@@ -10,6 +10,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.VariableHolder;
+import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;

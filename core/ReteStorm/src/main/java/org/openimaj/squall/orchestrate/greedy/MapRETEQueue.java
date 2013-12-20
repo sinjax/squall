@@ -13,6 +13,7 @@ import org.openimaj.rdf.storm.utils.CircularPriorityWindow;
 import org.openimaj.rdf.storm.utils.DeepHashArray;
 import org.openimaj.rdf.storm.utils.HashedCircularPriorityWindow;
 import org.openimaj.rdf.storm.utils.OverflowHandler;
+import org.openimaj.squall.orchestrate.WindowInformation;
 
 import scala.actors.threadpool.Arrays;
 

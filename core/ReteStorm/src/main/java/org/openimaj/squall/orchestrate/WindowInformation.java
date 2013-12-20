@@ -1,4 +1,4 @@
-package org.openimaj.squall.orchestrate.greedy;
+package org.openimaj.squall.orchestrate;
 
 import java.util.concurrent.TimeUnit;
 
