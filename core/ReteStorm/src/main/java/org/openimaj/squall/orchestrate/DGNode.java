@@ -14,9 +14,9 @@ import java.util.List;
  *
  */
 public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> implements Iterable<NODE>{
-	List<NODE> children;
-	List<NODE> parents;
-	List<EDGE> childEdges;
+	protected List<NODE> children;
+	protected List<NODE> parents;
+	protected List<EDGE> childEdges;
 	private DirectedGraph<NODE, EDGE> root;
 	private ArrayList<EDGE> parentEdges;
 	
