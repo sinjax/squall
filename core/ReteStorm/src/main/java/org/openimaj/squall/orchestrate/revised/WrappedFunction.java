@@ -11,21 +11,21 @@ import org.openimaj.util.function.MultiFunction;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  */
-public class RevisedWrappedFunction implements MultiFunction<Context,Context>{
+public class WrappedFunction implements MultiFunction<Context,Context>{
 
 	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -1533515752338530090L;
-	private RevisedNamedNode<MultiFunction<Context, Context>> nn;
+	private NamedNode<MultiFunction<Context, Context>> nn;
 	private MultiFunction<Context,Context> func;
 
 	/**
 	 * @param func
 	 * @param nn
 	 */
-	public RevisedWrappedFunction(MultiFunction<Context,Context> func, RevisedNamedNode<MultiFunction<Context,Context>> nn) {
+	public WrappedFunction(MultiFunction<Context,Context> func, NamedNode<MultiFunction<Context,Context>> nn) {
 		this.nn = nn;
 		this.func = func;
 	}

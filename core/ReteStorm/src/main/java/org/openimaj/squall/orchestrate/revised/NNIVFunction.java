@@ -4,8 +4,6 @@ import org.openimaj.squall.compile.data.revised.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.revised.IOperation;
 import org.openimaj.squall.compile.data.revised.IVFunction;
 import org.openimaj.squall.compile.data.revised.Initialisable;
-import org.openimaj.squall.compile.data.revised.VariableHolder;
-import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
@@ -15,7 +13,7 @@ import org.openimaj.util.stream.Stream;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  */
-public class RevisedNNIVFunction extends RevisedNamedNode<IVFunction<Context, Context>>{
+public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
 
 	private IVFunction<Context, Context> varfunc;
 	private IVFunction<Context, Context> wrapped;
@@ -25,10 +23,10 @@ public class RevisedNNIVFunction extends RevisedNamedNode<IVFunction<Context, Co
 	 * @param name
 	 * @param func
 	 */
-	public RevisedNNIVFunction(RevisedOrchestratedProductionSystem parent, String name, IVFunction<Context, Context> func) {
+	public NNIVFunction(OrchestratedProductionSystem parent, String name, IVFunction<Context, Context> func) {
 		super(parent, name);
 		this.varfunc = func;
-		this.wrapped = new RevisedWrappedIVFunction(func, this);
+		this.wrapped = new WrappedIVFunction(func, this);
 	}
 	
 	public IVFunction<Context, Context> getData(){

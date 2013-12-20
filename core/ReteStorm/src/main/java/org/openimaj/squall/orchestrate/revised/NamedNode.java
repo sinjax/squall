@@ -15,13 +15,13 @@ import org.openimaj.util.stream.Stream;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  * 
- * A {@link RevisedNamedNode} provides a unique name for a component of a production system. 
+ * A {@link NamedNode} provides a unique name for a component of a production system. 
  * This name should be used by builders to guarantee that the output of a node goes to the correct children. 
  * 
  * 
  * @param <DATA> 
  */
-public abstract class RevisedNamedNode<DATA> extends DGNode<RevisedNamedNode<?>,RevisedNamedStream,DATA>{
+public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DATA>{
 	/**
 	 * key used to insert this node's name into the returned context
 	 */
@@ -31,13 +31,13 @@ public abstract class RevisedNamedNode<DATA> extends DGNode<RevisedNamedNode<?>,
 	 * @param parent 
 	 * @param name the name of the node
 	 */
-	public RevisedNamedNode(RevisedOrchestratedProductionSystem parent, String name) {
+	public NamedNode(OrchestratedProductionSystem parent, String name) {
 		super(parent);
 		this.name = name;
 	}
 	
 	void addName(Context c){
-		c.put(NAME_KEY, RevisedNamedNode.this.name);
+		c.put(NAME_KEY, NamedNode.this.name);
 	}
 	
 	/**

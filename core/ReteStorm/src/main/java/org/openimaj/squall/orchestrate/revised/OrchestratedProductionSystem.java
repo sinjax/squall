@@ -5,9 +5,7 @@ import java.util.List;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.orchestrate.DirectedGraph;
-import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedSourceNode;
-import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.Orchestrator;
 import org.openimaj.squall.orchestrate.ReentrantNNIVFunction;
 import org.openimaj.util.data.Context;
@@ -20,7 +18,7 @@ import org.openimaj.util.function.Operation;
  * An orchestrated production system provides a directed graph of {@link NamedNode} instances
  * ending with a single {@link NamedNode} containing an {@link Operation} instance.
  * 
- * {@link RevisedOrchestratedProductionSystem} are returned by {@link Orchestrator}
+ * {@link OrchestratedProductionSystem} are returned by {@link Orchestrator}
  * 
  * These functions and operations encapsulate the behavior of a {@link CompiledProductionSystem} system
  * and provide the final step before a realised production system which can be built by a Builder.
@@ -31,7 +29,7 @@ import org.openimaj.util.function.Operation;
  * 	- Operations, consumeing processed Context instances
  * 
  * Builders must decide how these different operations are called exactly, however the general flow is:
- * Sources -> Functions -> Operations and is dictated by the {@link DirectedGraph} provided in this {@link RevisedOrchestratedProductionSystem}
+ * Sources -> Functions -> Operations and is dictated by the {@link DirectedGraph} provided in this {@link OrchestratedProductionSystem}
  * 
  * {@link NamedNode} are connected by {@link NamedStream} instances. {@link NamedStream}s provide functions which add extra
  * information to {@link Context} instances at run time. In general, Builders should apply the function of a {@link NamedStream}
@@ -46,7 +44,7 @@ import org.openimaj.util.function.Operation;
  *  It is the job of the builder to guarantee consistent instances based on the {@link NamedNode}'s name
  * 
  */
-public class RevisedOrchestratedProductionSystem extends DirectedGraph<RevisedNamedNode<?>,RevisedNamedStream> {
+public class OrchestratedProductionSystem extends DirectedGraph<NamedNode<?>,NamedStream> {
 	/**
 	 * The source nodes which are connected to the children
 	 */
@@ -61,7 +59,7 @@ public class RevisedOrchestratedProductionSystem extends DirectedGraph<RevisedNa
 	/**
 	 * 
 	 */
-	public RevisedOrchestratedProductionSystem() {
+	public OrchestratedProductionSystem() {
 		
 		root = new ArrayList<NamedSourceNode>();
 	}

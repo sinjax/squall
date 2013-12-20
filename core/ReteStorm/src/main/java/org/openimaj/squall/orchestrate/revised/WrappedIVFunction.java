@@ -13,21 +13,21 @@ import org.openimaj.util.data.Context;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *@author David Monks <dm11g08@ecs.soton.ac.uk>
  */
-public class RevisedWrappedIVFunction implements IVFunction<Context,Context>{
+public class WrappedIVFunction implements IVFunction<Context,Context>{
 
 	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -1533515752338530090L;
-	private RevisedNamedNode<IVFunction<Context, Context>> nn;
+	private NamedNode<IVFunction<Context, Context>> nn;
 	private IVFunction<Context,Context> func;
 
 	/**
 	 * @param func
 	 * @param nn
 	 */
-	public RevisedWrappedIVFunction(IVFunction<Context,Context> func, RevisedNamedNode<IVFunction<Context,Context>> nn) {
+	public WrappedIVFunction(IVFunction<Context,Context> func, NamedNode<IVFunction<Context,Context>> nn) {
 		this.nn = nn;
 		this.func = func;
 	}

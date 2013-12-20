@@ -9,12 +9,12 @@ import org.openimaj.util.function.Function;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- * A {@link RevisedNamedStream} has a name, a start node, an end node and an ordered list of variables. 
+ * A {@link NamedStream} has a name, a start node, an end node and an ordered list of variables. 
  * The instances originating from the start which share the same value for the variables in
  * the list must all go to the same instance of the end node.
  *
  */
-public class RevisedNamedStream implements VariableHolder{
+public class NamedStream implements VariableHolder{
 	
 	
 	protected static final String STREAM_KEY = "stream";
@@ -25,7 +25,7 @@ public class RevisedNamedStream implements VariableHolder{
 	 * Simple link, named, with a start and end
 	 * @param name
 	 */
-	public RevisedNamedStream(String name) {
+	public NamedStream(String name) {
 		this.name = name;
 		this.streamVars = null;
 	}
@@ -42,7 +42,7 @@ public class RevisedNamedStream implements VariableHolder{
 	 * @param name the name of this stream
 	 * @param streamVars the variables which are required up stream on this stream
 	 */
-	public RevisedNamedStream(String name, List<String> streamVars) {
+	public NamedStream(String name, List<String> streamVars) {
 		this.name = name + "[";
 		int i = 0;
 		for ( ; i < streamVars.size() - 1; i++){
@@ -61,7 +61,7 @@ public class RevisedNamedStream implements VariableHolder{
 	}
 
 	/**
-	 * @return This function augments a {@link Context} with the name of this {@link RevisedNamedStream}
+	 * @return This function augments a {@link Context} with the name of this {@link NamedStream}
 	 */
 	public Function<Context,Context> getFunction(){
 		return new Function<Context, Context>() {
@@ -88,7 +88,7 @@ public class RevisedNamedStream implements VariableHolder{
 	@Override
 	public boolean equals(Object obj) {
 		try {
-			RevisedNamedStream other = (RevisedNamedStream) obj;
+			NamedStream other = (NamedStream) obj;
 			return this.name.equals(other.getName());
 		} catch (ClassCastException e) {
 			return false;
