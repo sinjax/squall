@@ -1,4 +1,4 @@
-package org.openimaj.squall.orchestrate.revised;
+package org.openimaj.squall.revised.orchestrate;
 
 import java.util.ArrayList;
 import java.util.List;

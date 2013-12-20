@@ -1,12 +1,12 @@
-package org.openimaj.squall.orchestrate.revised;
+package org.openimaj.squall.revised.orchestrate;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.revised.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.revised.IVFunction;
-import org.openimaj.squall.compile.data.revised.VariableHolder;
+import org.openimaj.squall.revised.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.revised.compile.data.IVFunction;
+import org.openimaj.squall.revised.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 
 /**

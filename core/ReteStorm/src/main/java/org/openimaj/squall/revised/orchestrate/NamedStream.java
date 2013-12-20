@@ -1,9 +1,9 @@
-package org.openimaj.squall.orchestrate.revised;
+package org.openimaj.squall.revised.orchestrate;
 
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.revised.VariableHolder;
+import org.openimaj.squall.revised.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 

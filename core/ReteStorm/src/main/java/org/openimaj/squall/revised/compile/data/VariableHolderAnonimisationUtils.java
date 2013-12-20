@@ -27,7 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.openimaj.squall.compile.data.revised;
+package org.openimaj.squall.revised.compile.data;
 
 import java.util.ArrayList;
 import java.util.Collection;

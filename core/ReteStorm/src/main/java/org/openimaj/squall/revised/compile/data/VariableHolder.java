@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.data.revised;
+package org.openimaj.squall.revised.compile.data;
 
 import java.util.List;
 import org.openimaj.util.function.Function;

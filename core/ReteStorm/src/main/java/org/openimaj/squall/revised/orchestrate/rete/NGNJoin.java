@@ -1,13 +1,13 @@
-package org.openimaj.squall.orchestrate.revised.rete;
+package org.openimaj.squall.revised.orchestrate.rete;
 
 
-import org.openimaj.squall.compile.data.revised.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.revised.IVFunction;
 import org.openimaj.squall.orchestrate.WindowInformation;
-import org.openimaj.squall.orchestrate.revised.NNIVFunction;
-import org.openimaj.squall.orchestrate.revised.NamedNode;
-import org.openimaj.squall.orchestrate.revised.NamedStream;
-import org.openimaj.squall.orchestrate.revised.OrchestratedProductionSystem;
+import org.openimaj.squall.revised.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.revised.compile.data.IVFunction;
+import org.openimaj.squall.revised.orchestrate.NNIVFunction;
+import org.openimaj.squall.revised.orchestrate.NamedNode;
+import org.openimaj.squall.revised.orchestrate.NamedStream;
+import org.openimaj.squall.revised.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
 
 /**

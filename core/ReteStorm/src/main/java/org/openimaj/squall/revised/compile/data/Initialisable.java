@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.data.revised;
+package org.openimaj.squall.revised.compile.data;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)

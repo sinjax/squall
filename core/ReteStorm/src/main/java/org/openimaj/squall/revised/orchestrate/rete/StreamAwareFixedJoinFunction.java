@@ -1,4 +1,4 @@
-package org.openimaj.squall.orchestrate.revised.rete;
+package org.openimaj.squall.revised.orchestrate.rete;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +15,10 @@ import org.openimaj.squall.compile.data.revised.*;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
 import org.openimaj.squall.orchestrate.greedy.FixedJoinFunction;
+import org.openimaj.squall.revised.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.revised.compile.data.IVFunction;
+import org.openimaj.squall.revised.compile.data.SIVFunction;
+import org.openimaj.squall.revised.compile.data.VariableHolderAnonimisationUtils;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;

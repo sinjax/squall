@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.data.revised;
+package org.openimaj.squall.revised.compile.data;
 
 import org.openimaj.util.function.MultiFunction;
 

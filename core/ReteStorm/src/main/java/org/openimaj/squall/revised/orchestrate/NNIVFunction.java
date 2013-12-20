@@ -1,9 +1,9 @@
-package org.openimaj.squall.orchestrate.revised;
+package org.openimaj.squall.revised.orchestrate;
 
-import org.openimaj.squall.compile.data.revised.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.revised.IOperation;
-import org.openimaj.squall.compile.data.revised.IVFunction;
-import org.openimaj.squall.compile.data.revised.Initialisable;
+import org.openimaj.squall.revised.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.revised.compile.data.IOperation;
+import org.openimaj.squall.revised.compile.data.IVFunction;
+import org.openimaj.squall.revised.compile.data.Initialisable;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
