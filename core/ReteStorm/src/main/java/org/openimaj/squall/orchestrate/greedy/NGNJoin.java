@@ -6,6 +6,7 @@ import org.openimaj.squall.orchestrate.NNIVFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.util.data.Context;
 
 /**

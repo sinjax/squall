@@ -29,6 +29,7 @@ import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
 import org.openimaj.squall.orchestrate.PartialCPSResult;
 import org.openimaj.squall.orchestrate.ReentrantNNIVFunction;
+import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.exception.CompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.MultiConsequenceSubCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.PlanningException;
