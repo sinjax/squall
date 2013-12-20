@@ -80,6 +80,14 @@ public class NamedStream implements VariableHolder{
 		return this.streamVars;
 	}
 	
+	/**
+	 * @return
+	 * 		A reference to the stream of this name.
+	 */
+	public NamedStream duplicate(){
+		return new NamedStream(this.name, this.streamVars);
+	}
+	
 	@Override
 	public String toString() {
 		return this.name;
