@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import org.openimaj.rdf.storm.utils.DeepHashArray;
 import org.openimaj.rdf.storm.utils.HashedCircularPriorityWindow;
 import org.openimaj.rdf.storm.utils.OverflowHandler;
+import org.openimaj.squall.orchestrate.WindowInformation;
 
 import com.hp.hpl.jena.graph.Node;
 
