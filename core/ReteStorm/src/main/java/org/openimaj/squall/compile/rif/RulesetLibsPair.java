@@ -2,7 +2,7 @@ package org.openimaj.squall.compile.rif;
 
 import java.util.List;
 
-import org.openimaj.rif.RIFRuleSet;
+import org.openimaj.rifcore.RIFRuleSet;
 import org.openimaj.squall.functions.rif.RIFExternalFunctionLibrary;
 import org.openimaj.util.pair.IndependentPair;
 

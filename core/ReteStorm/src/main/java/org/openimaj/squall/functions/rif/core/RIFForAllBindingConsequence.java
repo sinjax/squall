@@ -3,8 +3,8 @@ package org.openimaj.squall.functions.rif.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openimaj.rif.conditions.data.RIFVar;
-import org.openimaj.rif.rules.RIFForAll;
+import org.openimaj.rifcore.conditions.data.RIFVar;
+import org.openimaj.rifcore.rules.RIFForAll;
 import org.openimaj.squall.functions.rif.consequences.BaseBindingConsequence;
 
 import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;

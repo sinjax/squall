@@ -8,9 +8,9 @@ import java.util.HashMap;
 
 import org.apache.jena.riot.Lang;
 import org.apache.log4j.Logger;
-import org.openimaj.rif.imports.schemes.HTTPSchemeFunction;
-import org.openimaj.rif.imports.schemes.JavaSchemeFunction;
-import org.openimaj.rif.imports.schemes.FileSchemeFunction;
+import org.openimaj.rifcore.imports.schemes.HTTPSchemeFunction;
+import org.openimaj.rifcore.imports.schemes.JavaSchemeFunction;
+import org.openimaj.rifcore.imports.schemes.FileSchemeFunction;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.functions.rif.sources.NTriplesISourceFactory;
 import org.openimaj.util.data.Context;
@@ -131,9 +131,27 @@ public class URIProfileISourceFactory {
 		} catch (URISyntaxException e) { throw new RuntimeException(e);}
 		logger.debug("Regsitering basic scheme functions");
 		// Register the default scheme functions
-		schemeFunctions.put("http", new HTTPSchemeFunction());
-		schemeFunctions.put("file", new FileSchemeFunction());
-		schemeFunctions.put("java", new JavaSchemeFunction());
+		schemeFunctions.put("http", new Function<URI, InputStream>(){
+				private HTTPSchemeFunction factory = new HTTPSchemeFunction();
+				@Override
+				public InputStream apply(URI in) {
+					return factory.getInputStream(in);
+				}
+			});
+		schemeFunctions.put("file", new Function<URI, InputStream>(){
+			private FileSchemeFunction factory = new FileSchemeFunction();
+			@Override
+			public InputStream apply(URI in) {
+				return factory.getInputStream(in);
+			}
+		});
+		schemeFunctions.put("java", new Function<URI, InputStream>(){
+			private JavaSchemeFunction factory = new JavaSchemeFunction();
+			@Override
+			public InputStream apply(URI in) {
+				return factory.getInputStream(in);
+			}
+		});
 		
 		logger.debug("Regsitering pure scheme functions");
 		// Register the default pure scheme functions 

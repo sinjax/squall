@@ -1,43 +1,26 @@
 package org.openimaj.squall.sandbox;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
-import org.openimaj.rif.utils.RifUtils;
 import org.openimaj.squall.build.Builder;
 import org.openimaj.squall.build.storm.StormStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;
-import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.source.URIProfileISourceFactory;
-import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
 import org.openimaj.squall.compile.jena.JenaRuleCompiler;
 import org.openimaj.squall.compile.jena.SourceRulePair;
-import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
-import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.CombinedISource;
 import org.openimaj.squall.orchestrate.greedy.CombinedSourceGreedyOrchestrator;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.data.ContextWrapper;
-import org.openimaj.util.data.JoinStream;
-import org.openimaj.util.stream.CollectionStream;
-import org.openimaj.util.stream.Stream;
-import org.xml.sax.SAXException;
-
-import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
-import com.sun.media.jai.opimage.RIFUtil;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)

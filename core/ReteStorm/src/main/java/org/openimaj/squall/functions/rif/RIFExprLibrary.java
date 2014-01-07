@@ -1,6 +1,6 @@
 package org.openimaj.squall.functions.rif;
 
-import org.openimaj.rif.conditions.data.RIFExpr;
+import org.openimaj.rifcore.conditions.data.RIFExpr;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction;
 
 /**

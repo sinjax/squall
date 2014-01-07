@@ -4,8 +4,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.kohsuke.args4j.Option;
-import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.utils.RifUtils;
+import org.openimaj.rifcore.RIFRuleSet;
+import org.openimaj.rifcore.utils.RifUtils;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;

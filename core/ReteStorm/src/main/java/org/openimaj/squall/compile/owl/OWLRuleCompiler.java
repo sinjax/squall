@@ -3,7 +3,7 @@ package org.openimaj.squall.compile.owl;
 import java.util.Iterator;
 import java.util.List;
 
-import org.openimaj.rif.RIFRuleSet;
+import org.openimaj.rifcore.RIFRuleSet;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;

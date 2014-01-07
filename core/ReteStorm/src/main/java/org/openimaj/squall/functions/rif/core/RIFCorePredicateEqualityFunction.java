@@ -1,6 +1,6 @@
 package org.openimaj.squall.functions.rif.core;
 
-import org.openimaj.rif.conditions.formula.RIFEqual;
+import org.openimaj.rifcore.conditions.formula.RIFEqual;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateEqualityFunction;
 
