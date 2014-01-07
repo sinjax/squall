@@ -3,9 +3,9 @@ package org.openimaj.squall.compile.rif.provider;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openimaj.rif.conditions.RIFExternal;
-import org.openimaj.rif.conditions.data.RIFExternalExpr;
-import org.openimaj.rif.conditions.formula.RIFExternalValue;
+import org.openimaj.rifcore.conditions.RIFExternal;
+import org.openimaj.rifcore.conditions.data.RIFExternalExpr;
+import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;

@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.rif.conditions.atomic.RIFAtom;
-import org.openimaj.rif.conditions.data.RIFDatum;
-import org.openimaj.rif.conditions.data.RIFExpr;
-import org.openimaj.rif.conditions.data.RIFList;
+import org.openimaj.rifcore.conditions.atomic.RIFAtom;
+import org.openimaj.rifcore.conditions.data.RIFDatum;
+import org.openimaj.rifcore.conditions.data.RIFExpr;
+import org.openimaj.rifcore.conditions.data.RIFList;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 

@@ -2,7 +2,7 @@ package org.openimaj.squall.compile.owl;
 
 import java.util.List;
 
-import org.openimaj.rif.RIFRuleSet;
+import org.openimaj.rifcore.RIFRuleSet;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;

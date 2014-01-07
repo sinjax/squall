@@ -4,8 +4,8 @@ import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.utils.RifUtils;
+import org.openimaj.rifcore.RIFRuleSet;
+import org.openimaj.rifcore.utils.RifUtils;
 import org.openimaj.squall.build.Builder;
 import org.openimaj.squall.build.storm.StormStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;

@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rif.conditions.atomic.RIFAtom;
-import org.openimaj.rif.conditions.data.RIFExternalExpr;
-import org.openimaj.rif.conditions.formula.RIFExternalValue;
+import org.openimaj.rifcore.conditions.atomic.RIFAtom;
+import org.openimaj.rifcore.conditions.data.RIFExternalExpr;
+import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.functions.rif.predicates.NumericRIFPredicateFunction;
 import org.openimaj.squall.compile.rif.provider.ExternalFunctionProvider;

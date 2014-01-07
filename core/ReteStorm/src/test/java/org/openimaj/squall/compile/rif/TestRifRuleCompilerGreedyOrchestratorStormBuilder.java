@@ -2,14 +2,13 @@ package org.openimaj.squall.compile.rif;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
+import org.openimaj.rifcore.RIFRuleSet;
+import org.openimaj.rifcore.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.squall.build.Builder;
 import org.openimaj.squall.build.storm.StormStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;

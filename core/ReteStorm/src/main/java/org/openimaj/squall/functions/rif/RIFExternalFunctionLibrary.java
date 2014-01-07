@@ -1,8 +1,8 @@
 package org.openimaj.squall.functions.rif;
 
-import org.openimaj.rif.conditions.data.RIFExpr;
-import org.openimaj.rif.conditions.data.RIFExternalExpr;
-import org.openimaj.rif.conditions.formula.RIFExternalValue;
+import org.openimaj.rifcore.conditions.data.RIFExpr;
+import org.openimaj.rifcore.conditions.data.RIFExternalExpr;
+import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 

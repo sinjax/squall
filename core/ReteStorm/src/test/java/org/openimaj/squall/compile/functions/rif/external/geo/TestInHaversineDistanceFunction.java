@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-import org.openimaj.rif.conditions.atomic.RIFAtom;
-import org.openimaj.rif.conditions.data.RIFStringConst;
-import org.openimaj.rif.conditions.data.RIFVar;
-import org.openimaj.rif.conditions.formula.RIFExternalValue;
+import org.openimaj.rifcore.conditions.atomic.RIFAtom;
+import org.openimaj.rifcore.conditions.data.RIFStringConst;
+import org.openimaj.rifcore.conditions.data.RIFVar;
+import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
