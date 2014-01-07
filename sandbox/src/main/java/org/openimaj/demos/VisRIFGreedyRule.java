@@ -1,14 +1,10 @@
 package org.openimaj.demos;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 
-import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
-import org.openimaj.rif.utils.RifUtils;
+import org.openimaj.rifcore.RIFRuleSet;
+import org.openimaj.rifcore.utils.RifUtils;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
@@ -22,8 +18,6 @@ import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
-import org.xml.sax.SAXException;
-
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 

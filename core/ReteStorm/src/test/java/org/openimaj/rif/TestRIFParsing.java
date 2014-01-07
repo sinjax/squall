@@ -8,7 +8,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.junit.Test;
-import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
+import org.openimaj.rifcore.RIFRuleSet;
+import org.openimaj.rifcore.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.squall.compile.rif.TestRifRuleCompilerGreedyOrchestratorStormBuilder;
 import org.xml.sax.SAXException;
 

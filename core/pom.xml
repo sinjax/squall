@@ -16,5 +16,6 @@
   <description>Core Squal projects.</description>
   <modules>
     <module>ReteStorm</module>
+    <module>rif-core-parser</module>
   </modules>
 </project>

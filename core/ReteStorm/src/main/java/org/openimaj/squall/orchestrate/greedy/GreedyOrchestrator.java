@@ -1,23 +1,16 @@
 package org.openimaj.squall.orchestrate.greedy;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.CPSResult;
 import org.openimaj.squall.orchestrate.CompleteCPSResult;
@@ -32,17 +25,10 @@ import org.openimaj.squall.orchestrate.ReentrantNNIVFunction;
 import org.openimaj.squall.orchestrate.exception.CompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.MultiConsequenceSubCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.PlanningException;
-import org.openimaj.squall.utils.JenaUtils;
-import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.pair.IndependentPair;
-import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
-import org.xml.sax.SAXException;
-
-import com.hp.hpl.jena.graph.Triple;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -424,75 +410,75 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("FILTER_%d",filter ++);
 	}
 	
-	/**
-	 * Draws an example {@link GreedyOrchestrator} from RIF rules
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
-			
-			private InputStream nTripleStream;
-
-			@Override
-			public Stream<Context> apply(Stream<Context> in) {
-				return apply();
-			}
-			
-			@Override
-			public Stream<Context> apply() {
-				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
-				.map(new ContextWrapper("triple"));
-//				return null;
-			}
-			
-			@Override
-			public void setup() { 
-				nTripleStream = GreedyOrchestrator.class.getResourceAsStream("/test.rdfs");
-			}
-			
-			@Override
-			public void cleanup() { }
-		};
-		
-		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
-		RIFRuleSet rules = null;
-		try {
-			rules = profs.parse(
-					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RL.rif"),
-//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLSimpleRules.rif"),
-//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLDatatypeRules.rif"),
-//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLListRules.rif"),
-					new URI("http://www.w3.org/ns/entailment/Core")
-				);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-		
-		List<ISource<Stream<Context>>> sources = new ArrayList<ISource<Stream<Context>>>();
-		sources.add(tripleContextStream);
-		
-		GreedyOrchestrator go = new GreedyOrchestrator();
-		IOperation<Context> op = new IOperation<Context>() {
-			
-			@Override
-			public void setup() { }
-			
-			@Override
-			public void cleanup() { }
-			
-			@Override
-			public void perform(Context object) { }
-		};
-		OrchestratedProductionSystem ops = go.orchestrate(
-				new RIFCoreRuleCompiler().compile(rules), op);
-		
-		OPSDisplayUtils.display(ops);
-		
-		
-	}
+//	/**
+//	 * Draws an example {@link GreedyOrchestrator} from RIF rules
+//	 * @param args
+//	 */
+//	public static void main(String[] args) {
+//		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
+//			
+//			private InputStream nTripleStream;
+//
+//			@Override
+//			public Stream<Context> apply(Stream<Context> in) {
+//				return apply();
+//			}
+//			
+//			@Override
+//			public Stream<Context> apply() {
+//				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
+//				.map(new ContextWrapper("triple"));
+////				return null;
+//			}
+//			
+//			@Override
+//			public void setup() { 
+//				nTripleStream = GreedyOrchestrator.class.getResourceAsStream("/test.rdfs");
+//			}
+//			
+//			@Override
+//			public void cleanup() { }
+//		};
+//		
+//		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
+//		RIFRuleSet rules = null;
+//		try {
+//			rules = profs.parse(
+//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RL.rif"),
+////					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLSimpleRules.rif"),
+////					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLDatatypeRules.rif"),
+////					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLListRules.rif"),
+//					new URI("http://www.w3.org/ns/entailment/Core")
+//				);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		} catch (SAXException e) {
+//			e.printStackTrace();
+//		} catch (URISyntaxException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		List<ISource<Stream<Context>>> sources = new ArrayList<ISource<Stream<Context>>>();
+//		sources.add(tripleContextStream);
+//		
+//		GreedyOrchestrator go = new GreedyOrchestrator();
+//		IOperation<Context> op = new IOperation<Context>() {
+//			
+//			@Override
+//			public void setup() { }
+//			
+//			@Override
+//			public void cleanup() { }
+//			
+//			@Override
+//			public void perform(Context object) { }
+//		};
+//		OrchestratedProductionSystem ops = go.orchestrate(
+//				new RIFCoreRuleCompiler().compile(rules), op);
+//		
+//		OPSDisplayUtils.display(ops);
+//		
+//		
+//	}
 
 }
