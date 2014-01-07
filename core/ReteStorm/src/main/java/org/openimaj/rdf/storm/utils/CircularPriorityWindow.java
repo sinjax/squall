@@ -42,6 +42,9 @@ import java.util.PriorityQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
+import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
+import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
+
 import scala.actors.threadpool.Arrays;
 
 /**
@@ -455,46 +458,6 @@ public class CircularPriorityWindow <T> implements TimedQueue <T>, SpaceLimitedC
 	 */
 	public T removeNextToExpire(){
 		return this.queue.remove().getWrapped();
-	}
-
-
-	
-	/**
-	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
-	 * 
-	 * @param <E> 
-	 */
-	public interface OverflowHandler<E> {
-		// This is an empty interface serving as an abstract super-interface for both of the distinct (but not disjoint) forms of Overflow Handler.
-	}
-
-	
-	/**
-	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
-	 *
-	 * @param <E>
-	 */
-	public interface CapacityOverflowHandler<E> extends OverflowHandler<E> {
-		
-		/**
-		 * @param overflow
-		 */
-		public void handleCapacityOverflow(E overflow);
-		
-	}
-	
-	/**
-	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
-	 *
-	 * @param <E>
-	 */
-	public interface DurationOverflowHandler<E> extends OverflowHandler<E> {
-		
-		/**
-		 * @param overflow
-		 */
-		public void handleDurationOverflow(E overflow);
-		
 	}
 
 	/**

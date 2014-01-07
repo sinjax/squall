@@ -10,7 +10,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.openimaj.rdf.storm.utils.CircularPriorityWindow;
+import org.openimaj.rdf.storm.utils.DeepHashArray;
 import org.openimaj.rdf.storm.utils.HashedCircularPriorityWindow;
+import org.openimaj.rdf.storm.utils.OverflowHandler;
 
 import scala.actors.threadpool.Arrays;
 
@@ -39,6 +41,17 @@ public class MapRETEQueue{
 		this.sharedVariables = sharedVariables;
 		
 		window = new HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>>(null, wi.getCapacity(), wi.getDuration(), wi.getGranularity());
+	}
+	
+	/**
+	 * @param handler 
+	 * @param sharedVariables
+	 * @param wi 
+	 */
+	public MapRETEQueue(OverflowHandler<Map<String, Node>> handler, List<String> sharedVariables, WindowInformation wi) {
+		this.sharedVariables = sharedVariables;
+		
+		window = new HashedCircularPriorityWindow<DeepHashArray<Node>,Map<String,Node>>(handler, wi.getCapacity(), wi.getDuration(), wi.getGranularity());
 	}
 	
 	/**
@@ -126,37 +139,4 @@ public class MapRETEQueue{
 		return ret ;
 	}
 	
-	
-	private static final class DeepHashArray <T> {
-		
-		private final T[] arr;
-		
-		public DeepHashArray(T[] a){
-			this.arr = a;
-		}
-		
-		public void set(int index, T item){
-			this.arr[index] = item;
-		}
-		
-		public T get(int index){
-			return this.arr[index];
-		}
-		
-		@Override
-		public int hashCode() {
-			return Arrays.deepHashCode(this.arr);
-		}
-		
-		@Override
-		public boolean equals(Object obj) {
-			return (obj instanceof DeepHashArray) && obj.hashCode() == this.hashCode();
-		}
-		
-		@Override
-		public String toString() {
-			return Arrays.toString(this.arr);
-		}
-		
-	}
 }

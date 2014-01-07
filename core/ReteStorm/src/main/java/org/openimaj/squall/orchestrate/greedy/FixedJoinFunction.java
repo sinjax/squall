@@ -1,6 +1,7 @@
 package org.openimaj.squall.orchestrate.greedy;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +27,10 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 	private static final Logger logger = Logger.getLogger(FixedJoinFunction.class);
 	private VariableHolder left;
 	private VariableHolder right;
-	private ArrayList<String> shared;
+	private List<String> shared;
 	private MapRETEQueue leftQueue;
 	private MapRETEQueue rightQueue;
-	private ArrayList<String> vars;
+	private List<String> vars;
 	private WindowInformation wi;
 	
 	/**
@@ -47,8 +48,8 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 		this.right = right;
 		
 		// Find the join variables 
-		List<String> allleftvar = left.variables();
-		List<String> allrightvar = right.variables();
+		Collection<String> allleftvar = left.variables();
+		Collection<String> allrightvar = right.variables();
 		
 		Set<String> allvarset = new HashSet<>();
 		allvarset.addAll(allleftvar);
@@ -63,29 +64,7 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 		}
 		this.wi = wi;
 	}
-
-	@Override
-	public List<Context> apply(Context in) {
-		Map<String, Node> typed = in.getTyped("bindings");
-		logger.debug(String.format("Joining: [%s] <-> [%s] -> %s with %s", left, right, this, typed));
-		List<Context> ret = new ArrayList<Context>();
-		if(in.getTyped("stream").equals("left")){
-			logger.debug("Joining Left Stream");
-			for (Map<String, Node> bindings : leftQueue.offer(typed)) {
-				logger.debug(String.format("Joined: %s -> %s", typed, bindings));
-				ret.add(new Context("bindings",bindings));
-			}
-		}
-		else if(in.getTyped("stream").equals("right")){
-			logger.debug("Joining Right Stream");
-			for (Map<String, Node> bindings : rightQueue.offer(typed)) {
-				logger.debug(String.format("Joined: %s -> %s", typed, bindings));
-				ret.add(new Context("bindings",bindings));
-			}
-		}
-		return ret;
-	}
-
+	
 	@Override
 	public List<String> variables() {
 		return this.vars;
@@ -109,6 +88,12 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 	}
 
 	@Override
+	public void mapVariables(Map<String, String> varmap) {
+		// TODO Implement Variable Mapping
+		
+	}
+	
+	@Override
 	public void setup() {
 		leftQueue = new MapRETEQueue(shared,wi);
 		rightQueue = new MapRETEQueue(shared,wi);
@@ -118,13 +103,33 @@ public class FixedJoinFunction implements IVFunction<Context, Context>{
 
 	@Override
 	public void cleanup() {
+		this.left = null;
+		this.right = null;
 		
+		this.leftQueue = null;
+		this.rightQueue = null;
 	}
 
 	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		// TODO Implement Variable Mapping
-		
+	public List<Context> apply(Context in) {
+		Map<String, Node> typed = in.getTyped("bindings");
+		logger.debug(String.format("Joining: %s with %s", this, typed));
+		List<Context> ret = new ArrayList<Context>();
+		if(in.getTyped("stream").equals("left")){
+			logger.debug("Joining Left Stream");
+			for (Map<String, Node> bindings : leftQueue.offer(typed)) {
+				logger.debug(String.format("Joined: %s -> %s", typed, bindings));
+				ret.add(new Context("bindings",bindings));
+			}
+		}
+		else if(in.getTyped("stream").equals("right")){
+			logger.debug("Joining Right Stream");
+			for (Map<String, Node> bindings : rightQueue.offer(typed)) {
+				logger.debug(String.format("Joined: %s -> %s", typed, bindings));
+				ret.add(new Context("bindings",bindings));
+			}
+		}
+		return ret;
 	}
 	
 	@Override

@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -14,9 +13,8 @@ import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rdf.storm.utils.CircularPriorityWindow.CapacityOverflowHandler;
-import org.openimaj.rdf.storm.utils.CircularPriorityWindow.DurationOverflowHandler;
-import org.openimaj.rdf.storm.utils.CircularPriorityWindow.OverflowHandler;
+import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
+import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
