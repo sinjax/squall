@@ -61,7 +61,7 @@ public class OPSDisplayUtils {
 				edgeTargetCell = null;
 			}
 			mxgraph.insertEdge(
-				mxgraph.getDefaultParent(), null, e.getName(), 
+				mxgraph.getDefaultParent(), null, e.identifier(), 
 				edgeSourceCell, 
 				edgeTargetCell
 			);

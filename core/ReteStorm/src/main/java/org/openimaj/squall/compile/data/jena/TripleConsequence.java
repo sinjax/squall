@@ -20,18 +20,14 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class TripleConsequence implements IVFunction<Context,Context> {
-
-	private TriplePattern clause;
-	private Node_RuleVariable[] ruleVariables;
+public class TripleConsequence extends AbstractTripleFunction {
 
 	/**
 	 * @param r 
 	 * @param clause
 	 */
 	public TripleConsequence(Rule r,TriplePattern clause) {
-		this.clause = clause;
-		this.ruleVariables = BindingsUtils.extractRuleVariables(r);
+		super(r, clause);
 	}
 
 	@Override
@@ -52,40 +48,10 @@ public class TripleConsequence implements IVFunction<Context,Context> {
 		}
 		return ctxs;
 	}
-
-	@Override
-	public void setup() { }
-
-	@Override
-	public void cleanup() { }
-
-	@Override
-	public List<String> variables() {
-		// TODO
-		return new ArrayList<String>();
-	}
-
-	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		// TODO correct behaviour
-		return anonimised();
-	}
-
-	@Override
-	public String anonimised() {
-		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
-	}
-
-	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		// TODO Implement Variable Mapping
-		
-	}
 	
 	@Override
 	public String toString() {
 		return this.clause.toString();
 	}
-
 
 }

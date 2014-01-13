@@ -1,25 +1,22 @@
 package org.openimaj.squall.functions.rif.predicates;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.util.data.Context;
-
+import org.openimaj.rdf.storm.utils.Count;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.compile.data.IPredicate;
+import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Node_Concrete;
-import com.hp.hpl.jena.graph.Node_Literal;
-import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
 @SuppressWarnings("serial")
-public abstract class BaseRIFPredicateFunction implements IVFunction<Context, Context> {
+public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction implements IPredicate {
 
 	/**
 	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -52,37 +49,8 @@ public abstract class BaseRIFPredicateFunction implements IVFunction<Context, Co
 		
 	}
 	
-	protected String[] vars;
-	protected String anonimisedName;
-	
-	@Override
-	public List<String> variables() {
-		return Arrays.asList(this.vars);
-	}
-	
-	@Override
-	public void mapVariables(Map<String,String> map){
-		String[] newVars = new String[this.vars.length];
-		for (int i = 0; i < newVars.length; i++)
-			newVars[i] = map.get(this.vars[i]);
-		this.vars = newVars;
-	}
-	
-	@Override
-	public String anonimised() {
-		return this.anonimisedName;
-	}
-
-	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		return null;
-	}
-
-	@Override
-	public void setup() {}
-
-	@Override
-	public void cleanup() {}
+	protected AnonimisedRuleVariableHolder varHolder;
+	protected Node[] nodes;
 	
 	/**
 	 * Constructs a new predicate function that filters bindings predicated on some function of the
@@ -92,17 +60,55 @@ public abstract class BaseRIFPredicateFunction implements IVFunction<Context, Co
 	 * @throws RIFPredicateException 
 	 */
 	public BaseRIFPredicateFunction(Node[] ns) throws RIFPredicateException {
-		List<String> variables = new ArrayList<String>();
-		for (Node n : ns){
-			if (n.isVariable()){
-				variables.add(((Node_RuleVariable) n).getName());
+		super();
+		this.varHolder = null;
+		
+		Count count = new Count();
+		for (int i = 0; i < ns.length; i++){
+			if (registerVariable(ns[i], count) == Node.ANY){
+				ns[i] = NodeFactory.createVariable(Integer.toString(count.getCount()));
 			}
 		}
-		if (variables.size() < 1){
+		if (this.varCount() < 1){
 			throw new RIFPredicateException("RIF translator: Must compare some variable(s).");
 		}
-		this.vars = new String[0];
-		this.vars = variables.toArray(this.vars);
+		
+		this.nodes = ns;
+	}
+	
+	@Override
+	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
+		this.varHolder = arvh;
+		Map<String, String> thisVarMap = this.ruleToBaseVarMap();
+		Map<String, String> arvhVarMap = this.varHolder.ruleToBaseVarMap();
+		
+		Map<String, String> directVarMap = new HashMap<String, String>();
+		for (int i = 0; i < this.varCount(); i++){
+			directVarMap.put(thisVarMap.get(this.getVariable(i)), arvhVarMap.get(this.getVariable(i)));
+		}
+		
+		for (int i = 0; i < nodes.length; i++){
+			if (nodes[i].isVariable()) {
+				nodes[i] = NodeFactory.createVariable(
+								directVarMap.get(
+									nodes[i].getName()
+								)
+							);
+			}
+		}
+	}
+	
+	@Override
+	public String[] variables() {
+		if (this.varHolder != null){
+			return this.varHolder.variables();
+		}
+		return super.variables();
+	}
+	
+	@Override
+	public String getVariable(int index) {
+		return this.varHolder == null ? super.getVariable(index) : this.varHolder.getVariable(index);
 	}
 	
 	protected Object extractBinding(Map<String, Node> binds, Node node) {

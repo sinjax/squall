@@ -3,18 +3,26 @@ package org.openimaj.squall.orchestrate.rete;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.Initialisable;
-import org.openimaj.squall.compile.data.VariableHolder;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.function.Operation;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
-class NGNOperation extends NamedNode<IFunction<Context, Context>>{
+/**
+ * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ *
+ */
+public class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 
 	private IOperation<Context> op;
 
+	/**
+	 * @param parent
+	 * @param name
+	 * @param func
+	 */
 	public NGNOperation(OrchestratedProductionSystem parent, String name, IOperation<Context> func) {
 		super(parent, name);
 		this.op = func;
@@ -60,7 +68,7 @@ class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 	}
 
 	@Override
-	public VariableHolder getVariableHolder() {
+	public AnonimisedRuleVariableHolder getVariableHolder() {
 		throw new UnsupportedOperationException();
 	}
 

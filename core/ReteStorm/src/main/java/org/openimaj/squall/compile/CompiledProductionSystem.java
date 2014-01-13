@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;

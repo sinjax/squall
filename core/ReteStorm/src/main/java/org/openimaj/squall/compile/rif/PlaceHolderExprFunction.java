@@ -8,25 +8,21 @@ import org.openimaj.rifcore.conditions.atomic.RIFAtom;
 import org.openimaj.rifcore.conditions.data.RIFDatum;
 import org.openimaj.rifcore.conditions.data.RIFExpr;
 import org.openimaj.rifcore.conditions.data.RIFList;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Node_Concrete;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
 @SuppressWarnings("serial")
-public class PlaceHolderExprFunction implements IVFunction<Context, Context> {
-
-	private Node[] variables;
-
-	/**
-	 * @param expr 
-	 */
-	public PlaceHolderExprFunction(RIFExpr expr) {
-		this.variables = new Node[0];
+public class PlaceHolderExprFunction extends BaseRIFPredicateFunction {
+	
+	private static Node[] extractArguments(RIFExpr expr) {
 		List<Node> vars = new ArrayList<Node>();
 		RIFAtom command = expr.getCommand();
 		for (int i = 0; i < command.getArgsSize(); i++){
@@ -45,52 +41,58 @@ public class PlaceHolderExprFunction implements IVFunction<Context, Context> {
 					vars.add(datum.getNode());
 			}
 		}
-		this.variables = vars.toArray(this.variables);
+		return vars.toArray(new Node[vars.size()]);
+	}
+	
+	private String name;
+	
+	/**
+	 * @param expr 
+	 * @throws RIFPredicateException 
+	 */
+	public PlaceHolderExprFunction(RIFExpr expr) throws RIFPredicateException {
+		super(extractArguments(expr));
+		Node_Concrete op = expr.getCommand().getOp().getNode();
+		this.name = op.isLiteral()
+						? op.getLiteralValue().toString()
+						: op.isURI()
+							? op.getURI()
+							: "_:";
 	}
 
 	@Override
 	public List<Context> apply(Context in) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<String> variables() {
-		List<String> ret = new ArrayList<String>();
-		for (Node n : this.variables){
-			ret.add(n.getName());
+	public String identifier() {
+		StringBuilder anon = new StringBuilder();
+		if (super.varHolder != null){
+			anon.append(super.varHolder.identifier());
 		}
-		return ret;
+		anon.append("PlaceHolder:").append(this.name).append("(");
+		int i = 0;
+		anon.append(super.stringifyNode(super.nodes[i]));
+		for (i++; i < this.varCount(); i++){
+			anon.append(",").append(super.stringifyNode(super.nodes[i]));
+		}
+		return anon.append(")").toString();
 	}
 
 	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		// TODO Auto-generated method stub
-		return "";
-	}
-
-	@Override
-	public String anonimised() {
-		// TODO Auto-generated method stub
-		return "";
-	}
-
-	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setup() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void cleanup() {
-		// TODO Auto-generated method stub
-
+	public String identifier(Map<String, String> varmap) {
+		StringBuilder anon = new StringBuilder();
+		if (super.varHolder != null){
+			anon.append(super.varHolder.identifier(varmap));
+		}
+		anon.append("PlaceHolder:").append(this.name).append("(");
+		int i = 0;
+		anon.append(super.mapNode(varmap, super.nodes[i]));
+		for (i++; i < this.varCount(); i++){
+			anon.append(",").append(super.mapNode(varmap, super.nodes[i]));
+		}
+		return anon.append(")").toString();
 	}
 
 }

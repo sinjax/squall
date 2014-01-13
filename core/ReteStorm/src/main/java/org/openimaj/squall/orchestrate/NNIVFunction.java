@@ -1,18 +1,17 @@
 package org.openimaj.squall.orchestrate;
 
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.Initialisable;
-import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.function.Operation;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
 /**
  * A {@link NamedNode} that holds an {@link IVFunction}
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- *
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  */
 public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
 
@@ -30,8 +29,9 @@ public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
 		this.wrapped = new WrappedIVFunction(func, this);
 	}
 	
-	public IVFunction<Context, Context> getData(){
-		return varfunc;
+	@Override
+	public IVFunction<Context, Context> getData() {
+		return this.varfunc;
 	}
 
 	@Override
@@ -70,7 +70,7 @@ public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
 	}
 
 	@Override
-	public VariableHolder getVariableHolder() {
+	public AnonimisedRuleVariableHolder getVariableHolder() {
 		return this.wrapped;
 	}
 

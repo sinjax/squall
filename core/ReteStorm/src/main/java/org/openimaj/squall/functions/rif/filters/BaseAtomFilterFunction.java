@@ -3,14 +3,15 @@ package org.openimaj.squall.functions.rif.filters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.log4j.Logger;
-import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
+import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
 
@@ -19,44 +20,24 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
  *
  */
 @SuppressWarnings("serial")
-public class BaseAtomFilterFunction implements IVFunction<Context, Context> {
+public class BaseAtomFilterFunction extends AbstractRIFFunction {
 
 	private final static Logger logger = Logger.getLogger(BaseAtomFilterFunction.class);
 	private Functor clause;
-	private List<String> variables;
 
 	/**
 	 * @param clause construct using a {@link TriplePattern}
 	 */
 	public BaseAtomFilterFunction(Functor clause) {
-		this.clause = clause;
-		this.variables = enumerateVariables(clause);
-	}
-	private static List<String> enumerateVariables(Functor clause){
-		List<String> variables = new ArrayList<String>();
-		for (Node n : clause.getArgs())
-			registerVariable(n, variables);
-		return variables;
+		super();
+		Count count = new Count();
+		Node[] newArgs = new Node[clause.getArgLength()];
+		for (int i = 0; i < clause.getArgs().length; i++){
+			newArgs[i] = registerVariable(clause.getArgs()[i], count);
+		}
+		this.clause = new Functor(clause.getName(), newArgs);
 	}
 
-	private static Node registerVariable(Node n, List<String> variables) {
-		if(n.isVariable()){
-			variables.add(n.getName());
-			return Node.ANY ;
-		}
-		else if(Functor.isFunctor(n)){
-			Functor f = (Functor)n.getLiteralValue();
-			for (int i = 0; i < f.getArgs().length; i++){
-				Node fnode = f.getArgs()[i];
-				if (fnode.isVariable())
-				{
-					variables.add(fnode.getName());
-//					f.getArgs()[i] = Node.ANY;
-				}
-			}
-		}
-		return n;
-	}
 	@Override
 	public List<Context> apply(Context inc) {
 		List<Context> ctxs = new ArrayList<Context>();
@@ -76,32 +57,32 @@ public class BaseAtomFilterFunction implements IVFunction<Context, Context> {
 	}
 	
 	@Override
-	public List<String> variables() {
-		return this.variables;
-	}
-
-	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause,varmap);
-	}
-
-	@Override
-	public String anonimised() {
-		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
-	}
-	@Override
-	public void setup() { }
-	@Override
-	public void cleanup() { }
-	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		// TODO Implement Variable Mapping
-		
+	public String toString() {
+		return String.format("FILTER: %s, variables: %s",this.clause,this.variables().toString());
 	}
 	
 	@Override
-	public String toString() {
-		return String.format("FILTER: %s, variables: %s",this.clause,this.variables.toString());
+	public String identifier() {
+		StringBuilder obj = new StringBuilder();
+		obj.append(this.clause.getName()).append("(")
+		   .append(super.stringifyNode(this.clause.getArgs()[0]));
+		for (int i = 1; i < this.clause.getArgLength(); i++){
+			obj.append(",").append(super.stringifyNode(this.clause.getArgs()[i]));
+		}
+		obj.append(")");
+		return obj.toString();
+	}
+	
+	@Override
+	public String identifier(Map<String, String> varmap) {
+		StringBuilder obj = new StringBuilder();
+		obj.append(this.clause.getName()).append("(")
+		   .append(super.mapNode(varmap, this.clause.getArgs()[0]));
+		for (int i = 1; i < this.clause.getArgLength(); i++){
+			obj.append(",").append(super.mapNode(varmap, this.clause.getArgs()[i]));
+		}
+		obj.append(")");
+		return obj.toString();
 	}
 
 }

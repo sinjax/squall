@@ -4,91 +4,86 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.openimaj.rifcore.conditions.atomic.RIFAtom;
 import org.openimaj.rifcore.conditions.data.RIFDatum;
 import org.openimaj.rifcore.conditions.data.RIFList;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.Node_Concrete;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
 @SuppressWarnings("serial")
-public class PlaceHolderExternalValueFunction implements IVFunction<Context, Context> {
-
-	private Node[] variables;
-
-	/**
-	 * @param val
-	 */
-	public PlaceHolderExternalValueFunction(RIFExternalValue val) {
-		this.variables = new Node[0];
+public class PlaceHolderExternalValueFunction extends BaseRIFPredicateFunction {
+	
+	private static Node[] extractArguments(RIFExternalValue expr) {
 		List<Node> vars = new ArrayList<Node>();
-		for (int i = 0; i < val.getVal().getArgsSize(); i++){
-			if (val.getVal().getArg(i) instanceof RIFList){
-				RIFList list = (RIFList) val.getVal().getArg(i);
+		RIFAtom command = expr.getVal();
+		for (int i = 0; i < command.getArgsSize(); i++){
+			if (command.getArg(i) instanceof RIFList){
+				RIFList list = (RIFList) command.getArg(i);
 				for (int j = 0; j < list.size(); j ++){
-					if (val.getVal().getArg(i) instanceof RIFDatum){
-						RIFDatum datum = (RIFDatum)val.getVal().getArg(i);
+					if (command.getArg(i) instanceof RIFDatum){
+						RIFDatum datum = (RIFDatum)command.getArg(i);
 						if (datum.getNode().isVariable())
 							vars.add(datum.getNode());
 					}
 				}
-			} else if (val.getVal().getArg(i) instanceof RIFDatum){
-				RIFDatum datum = (RIFDatum)val.getVal().getArg(i);
+			} else if (command.getArg(i) instanceof RIFDatum){
+				RIFDatum datum = (RIFDatum)command.getArg(i);
 				if (datum.getNode().isVariable())
 					vars.add(datum.getNode());
 			}
 		}
-		this.variables = vars.toArray(this.variables);
+		return vars.toArray(new Node[vars.size()]);
+	}
+	
+	private String name;
+	
+	/**
+	 * @param expr 
+	 * @throws RIFPredicateException 
+	 */
+	public PlaceHolderExternalValueFunction(RIFExternalValue expr) throws RIFPredicateException {
+		super(extractArguments(expr));
+		Node_Concrete op = expr.getVal().getOp().getNode();
+		this.name = op.isLiteral()
+						? op.getLiteralValue().toString()
+						: op.isURI()
+							? op.getURI()
+							: "_:";
 	}
 
 	@Override
 	public List<Context> apply(Context in) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<String> variables() {
-		List<String> ret = new ArrayList<String>();
-		for (Node n : this.variables){
-			ret.add(n.getName());
+	public String identifier() {
+		StringBuilder anon = new StringBuilder("External(PlaceHolder:").append(this.name).append("(");
+		int i = 0;
+		anon.append(this.getVariable(i));
+		for (i++; i < this.varCount(); i++){
+			anon.append(",").append(this.getVariable(i));
 		}
-		return ret;
+		return anon.append("))").toString();
 	}
 
 	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		// TODO Auto-generated method stub
-		return "";
-	}
-
-	@Override
-	public String anonimised() {
-		// TODO Auto-generated method stub
-		return "";
-	}
-
-	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void setup() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void cleanup() {
-		// TODO Auto-generated method stub
-
+	public String identifier(Map<String, String> varmap) {
+		StringBuilder anon = new StringBuilder("External(PlaceHolder:").append(this.name).append("(");
+		int i = 0;
+		anon.append(varmap.get(this.getVariable(i)));
+		for (i++; i < this.varCount(); i++){
+			anon.append(",").append(varmap.get(this.getVariable(i)));
+		}
+		return anon.append("))").toString();
 	}
 
 }

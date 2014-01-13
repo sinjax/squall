@@ -1,53 +1,70 @@
 package org.openimaj.squall.compile.data;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import org.openimaj.util.function.Function;
 
 /**
- * Apply a function to some input, producing an appropriate result.
- * Also provide a method to become anonymised (i.e. present the underlying {@link Function} as a variable independant string)
- * and become annonimised with certained variables set by a {@link Map}
- * 
+ * Allows access to the variables utilised by the {@link VariableHolder}, both the underlying variables used during processing,
+ * and their equivalent variables in last rule to make use of it during orchestration.
+ * Also provide a method to access an anonimised representation of the {@Link VariableHolder} (e.g. present an underlying {@link Function} as
+ * an implementation and rule independent string), as well as a method to access the list of contributing atomic {@link VariableHolder}s.
  */
-public interface VariableHolder{
-	/**
-	 * @return the variables used in this function
-	 */
-	public List<String> variables();
+public abstract class VariableHolder{
 	
+	private List<String> variables;
 	
 	/**
-	 * Given a varmap, produce an anonimised name for this function such that
-	 * all variables this function contains in the map are replaces with the 
-	 * integer specified, and all other variables are replaced with the string
-	 * "<VAR>".
-	 * @param varmap
-	 * 			The map of translation-time variable name keys to anonimised
-	 * 			variable number.
-	 * @return anonimised name
+	 * 
 	 */
-	public String anonimised(Map<String,Integer> varmap);
+	public VariableHolder(){
+		this.variables = new ArrayList<String>();
+	}
 	
 	/**
-	 * Using this function as the root, produce an anonimised name for this
-	 * function such that all variables joined before or in this function are
-	 * replaced with the integer dictated by the order in which they first appear
-	 * in the function. All other variables are replaced with the string "<VAR>".
-	 * @return anonimised name
+	 * @return the underlying variables used in this function, ordered by appearance in the function output.
 	 */
-	public String anonimised();
-
-
-	/**
-	 * Informs the function of the mapping between the runtime variable names it
-	 * will receive and the translation-time variables it was created with.  
-	 * @param varmap -
-	 * 			The map of translation-time variable name keys to runtime
-	 * 			variable name values.
-	 */
-	public void mapVariables(Map<String, String> varmap);
+	public String[] variables(){
+		String[] bvars = new String[this.variables.size()];
+		bvars = this.variables.toArray(bvars);
+		return bvars;
+	}
 	
+	protected boolean addVariable(String name){
+		return this.variables.add(name);
+	}
+	
+	/**
+	 * @param index
+	 * @return
+	 */
+	public String getVariable(int index){
+		return this.variables.get(index);
+	}
+	
+	/**
+	 * @return
+	 */
+	public int varCount(){
+		return this.variables.size();
+	}
+	
+	protected int indexOfVar(String name){
+		return this.variables.indexOf(name);
+	}
+	
+	/**
+	 * Produces a representative identifier of this function.
+	 * @return representative identifier
+	 */
+	public abstract String identifier();
+	
+	/**
+	 * @return
+	 */
+	public boolean wipeVars(){
+		this.variables = null;
+		return true;
+	}
 	
 }

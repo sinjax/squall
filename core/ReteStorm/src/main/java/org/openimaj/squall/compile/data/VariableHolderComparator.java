@@ -7,11 +7,11 @@ import java.util.Comparator;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class VariableHolderComparator implements Comparator<VariableHolder>{
+public class VariableHolderComparator implements Comparator<AnonimisedRuleVariableHolder>{
 
 	@Override
-	public int compare(VariableHolder o1, VariableHolder o2) {
-		return o1.anonimised().compareTo(o2.anonimised());
+	public int compare(AnonimisedRuleVariableHolder o1, AnonimisedRuleVariableHolder o2) {
+		return o1.identifier().compareTo(o2.identifier());
 	}
 
 }

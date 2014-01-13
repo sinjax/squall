@@ -45,7 +45,14 @@ public class Count {
         this.count = count;
     }
     
-    /** Access count value 
+    /**
+     * 
+     */
+    public Count() {
+		this(0);
+	}
+
+	/** Access count value 
      * @return int */
     public int getCount() {
         return count;

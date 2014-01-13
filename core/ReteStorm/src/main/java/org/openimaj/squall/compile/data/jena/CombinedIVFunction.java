@@ -18,13 +18,14 @@ import org.openimaj.squall.compile.data.IVFunction;
  *
  */
 @SuppressWarnings("serial")
-public abstract class CombinedIVFunction<A,B> implements IVFunction<A,B> {
+public abstract class CombinedIVFunction<A,B> extends IVFunction<A,B> {
 
 	private List<IVFunction<A, B>> functions;
 
 	/**
 	 */
 	public CombinedIVFunction() {
+		super();
 		this.functions = new ArrayList<IVFunction<A,B>>();
 	}
 	
@@ -59,27 +60,27 @@ public abstract class CombinedIVFunction<A,B> implements IVFunction<A,B> {
 	protected abstract List<B> initial() ;
 	
 	@Override
-	public List<String> variables() {
-		// TODO Auto-generated method stub
-		return null;
+	public String identifier() {
+		StringBuilder out = new StringBuilder();
+		int i = 0;
+		out.append(this.functions.get(i).identifier());
+		for (i++; i < this.functions.size(); i++) {
+			out.append("\n")
+			   .append(this.functions.get(i).identifier());
+		}
+		return out.toString();
 	}
 	
 	@Override
-	public String anonimised() {
-		String out = "";
-		for (IVFunction<A, B> func : this.functions) {
-			out += func.anonimised() + " ";
+	public String identifier(Map<String, String> varmap) {
+		StringBuilder out = new StringBuilder();
+		int i = 0;
+		out.append(this.functions.get(i).identifier(varmap));
+		for (i++; i < this.functions.size(); i++) {
+			out.append("\n")
+			   .append(this.functions.get(i).identifier(varmap));
 		}
-		return out.trim();
-	}
-	
-	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		String out = "";
-		for (IVFunction<A, B> func : this.functions) {
-			out += func.anonimised(varmap) + " ";
-		}
-		return out;
+		return out.toString();
 	}
 	
 	@Override
@@ -94,12 +95,6 @@ public abstract class CombinedIVFunction<A,B> implements IVFunction<A,B> {
 		for (IVFunction<A, B> func : this.functions) {
 			func.cleanup();
 		}
-	}
-	
-	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		// TODO Implement Variable Mapping
-		
 	}
 	
 	@Override

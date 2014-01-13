@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction;
 import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.Node_Literal;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -21,6 +20,7 @@ public abstract class NumericRIFPredicateFunction extends BaseRIFPredicateFuncti
 		super(ns);
 	}
 	
+	@Override
 	protected Double extractBinding(Map<String, Node> binds, Node node) {
 		try{
 			return ((Number) super.extractBinding(binds, node)).doubleValue();

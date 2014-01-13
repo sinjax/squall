@@ -1,5 +1,7 @@
 package org.openimaj.squall.compile.data;
 
+import java.io.Serializable;
+
 import org.openimaj.util.function.MultiFunction;
 
 /**
@@ -9,6 +11,6 @@ import org.openimaj.util.function.MultiFunction;
  * @param <I>
  * @param <O>
  */
-public interface IFunction<I,O> extends MultiFunction<I,O>, Initialisable{
+public interface IFunction<I,O> extends MultiFunction<I,O>, Initialisable, Serializable{
 	
 }

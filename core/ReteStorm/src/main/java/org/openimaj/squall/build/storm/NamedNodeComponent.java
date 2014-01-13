@@ -50,7 +50,7 @@ public abstract class NamedNodeComponent implements IComponent{
 		this.correctedStreamName = new HashMap<String,String>();
 		for (NamedStream edge : nn.parentEdges()) {
 			String stormName = constructStreamName(nn.getRoot().getEdgeSource(edge),edge,nn);
-			this.correctedStreamName.put(stormName, edge.getName());
+			this.correctedStreamName.put(stormName, edge.identifier());
 		}
 	}
 	
@@ -140,7 +140,7 @@ public abstract class NamedNodeComponent implements IComponent{
 	 */
 	public static String constructStreamName(NamedNode<?> parent,NamedStream strm, NamedNode<?> namedNode) {
 		
-		return parent.getName() + "_" + strm.getName() + "_" + namedNode.getName();
+		return parent.getName() + "_" + strm.identifier() + "_" + namedNode.getName();
 	}
 
 }

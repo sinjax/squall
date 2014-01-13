@@ -1,15 +1,12 @@
 package org.openimaj.squall.orchestrate;
 
 import java.util.List;
-import java.util.Map;
-
-import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.MultiFunction;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- *
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  */
 public class WrappedFunction implements MultiFunction<Context,Context>{
 

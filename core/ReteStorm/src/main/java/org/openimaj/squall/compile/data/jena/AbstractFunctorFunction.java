@@ -1,10 +1,7 @@
 package org.openimaj.squall.compile.data.jena;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
-import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 import org.openimaj.squall.compile.data.IVFunction;
 
 import com.hp.hpl.jena.graph.Node;
@@ -21,10 +18,9 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
  * @param <T1>
  * @param <T2>
  */
-public abstract class AbstractFunctorFunction<T1, T2>  implements IVFunction<T1, T2> {
+public abstract class AbstractFunctorFunction<T1, T2> extends IVFunction<T1, T2> {
+	
 	protected Functor clause;
-	private ArrayList<String> variables;
-	protected Rule rule;
 	private Node_RuleVariable[] ruleVariables;
 
 	/**
@@ -32,39 +28,58 @@ public abstract class AbstractFunctorFunction<T1, T2>  implements IVFunction<T1,
 	 * @param clause construct using a {@link TriplePattern}
 	 */
 	public AbstractFunctorFunction(Rule r, Functor clause) {
+		super();
 		this.clause = clause;
-		this.rule = r;
 		this.ruleVariables = BindingsUtils.extractRuleVariables(r);
-		this.variables = new ArrayList<String>();
 		for (Node iterable_element : clause.getArgs()) {
 			if(iterable_element.isVariable()){
-				this.variables.add(iterable_element.getName());
+				this.addVariable(iterable_element.getName());
+				this.putRuleToBaseVarMapEntry(iterable_element.getName(), iterable_element.getName());
 			}
 		}
 	}
-
+	
+	private String mapNode(Map<String,String> varmap, Node node){
+		String nodeString = this.stringifyNode(node);
+		String mappedString;
+		return node.isVariable()
+				? (mappedString = varmap.get(nodeString)) == null
+					? "VAR"
+					: mappedString
+				: nodeString;
+	}
 	@Override
-	public List<String> variables() {
-		return this.variables;
+	public String identifier(Map<String, String> varmap) {
+		StringBuilder obj = new StringBuilder();
+		obj.append(this.clause.getName()).append("(")
+		   .append(this.mapNode(varmap, this.clause.getArgs()[0]));
+		for (int i = 1; i < this.clause.getArgLength(); i++){
+			obj.append(",").append(this.mapNode(varmap, this.clause.getArgs()[i]));
+		}
+		obj.append(")");
+		return obj.toString();
 	}
 	
-	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause,varmap);
+	private String stringifyNode(Node node){
+		return node.isVariable() ? "?"+this.indexOfVar(node.getName()) : node.toString();
 	}
-
 	@Override
-	public String anonimised() {
-		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
+	public String identifier() {
+		StringBuilder obj = new StringBuilder();
+		obj.append(this.clause.getName()).append("(")
+		   .append(this.stringifyNode(this.clause.getArgs()[0]));
+		for (int i = 1; i < this.clause.getArgLength(); i++){
+			obj.append(",").append(this.stringifyNode(this.clause.getArgs()[i]));
+		}
+		obj.append(")");
+		return obj.toString();
 	}
 	
 	protected Map<String, Node> bToMap(BindingVector be) {
-		
 		return BindingsUtils.bindingsToMap(be, ruleVariables);
 	}
 
 	protected BindingVector mapToB(Map<String, Node> in) { 
-		
 		return BindingsUtils.mapToBindings(in, ruleVariables);
 	}
 	
@@ -74,8 +89,4 @@ public abstract class AbstractFunctorFunction<T1, T2>  implements IVFunction<T1,
 	@Override
 	public void cleanup() { }
 	
-	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		//TODO implement variable mapping
-	}
 }

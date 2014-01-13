@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.compile.data.IConsequence;
+import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
@@ -18,11 +20,10 @@ import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
  *
  */
 @SuppressWarnings("serial")
-public class BaseBindingConsequence implements IVFunction<Context,Context> {
+public class BaseBindingConsequence extends AbstractRIFFunction implements IConsequence {
 
 	private static final Logger logger = Logger.getLogger(BaseBindingConsequence.class);
-	private String[] inVariables;
-	private String[] outVariables;
+	private String[] inVars;
 	private String id;
 	
 	/**
@@ -30,13 +31,22 @@ public class BaseBindingConsequence implements IVFunction<Context,Context> {
 	 * @param ruleID 
 	 */
 	public BaseBindingConsequence(List<Node_RuleVariable> vars, String ruleID){
-		this.inVariables = new String[vars.size()];
-		this.outVariables = new String[this.inVariables.length];
-		for (int i = 0; i < this.inVariables.length; i ++){
-			this.inVariables[i] = vars.get(i).getName();
-			this.outVariables[i] = vars.get(i).getName();
+		super();
+		for (int i = 0; i < vars.size(); i ++){
+			this.addVariable(vars.get(i).getName());
 		}
 		this.id = ruleID;
+	}
+	
+	@Override
+	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
+		this.inVars = new String[this.varCount()];
+		
+		Map<String, String> subRuleToBaseVarMap = arvh.ruleToBaseVarMap();
+		for (int i = 0; i < this.varCount(); i++){
+			this.putRuleToBaseVarMapEntry(this.getVariable(i), subRuleToBaseVarMap.get(this.getVariable(i)));
+			this.inVars[i] = subRuleToBaseVarMap.get(this.getVariable(i));
+		}
 	}
 	
 	@Override
@@ -45,9 +55,9 @@ public class BaseBindingConsequence implements IVFunction<Context,Context> {
 		Map<String,Node> ret = BindingsUtils.arrayToMap(
 									BindingsUtils.mapToArray(
 										bindings,
-										this.inVariables
+										this.inVars
 									),
-									this.outVariables
+									this.variables()
 								);
 		
 		Context out = new Context();
@@ -60,41 +70,20 @@ public class BaseBindingConsequence implements IVFunction<Context,Context> {
 	}
 
 	@Override
-	public void setup() { }
-
-	@Override
-	public void cleanup() { }
-
-	@Override
-	public List<String> variables() {
-		List<String> vars = new ArrayList<String>();
-		for (String v : this.outVariables)
-			vars.add(v);
-		return vars;
-	}
-
-	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		// TODO use chain of "[string]".replaceFirst("%s","[replacement]").replaceFirst(...,...)... instead of String.format("[string]","[replacement]",...)
-		return anonimised();
-	}
-
-	@Override
-	public String anonimised() {
+	public String identifier() {
 		// TODO
 		return "";//VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
 	}
-
+	
 	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		String[] newInVars = new String[this.inVariables.length];
-		for (int i = 0; i < newInVars.length; i++)
-			newInVars[i] = varmap.get(this.inVariables[i]);
+	public String identifier(Map<String, String> varmap) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("CONSEQUENCE: inVariables %s -> outVariables %s", Arrays.toString(this.inVariables), Arrays.toString(this.outVariables));
+		return String.format("CONSEQUENCE: inVariables %s -> outVariables %s", Arrays.toString(this.inVars), Arrays.toString(this.variables()));
 	}
 
 }

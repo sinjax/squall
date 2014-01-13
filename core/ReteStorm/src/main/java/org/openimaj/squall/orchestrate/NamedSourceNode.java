@@ -3,12 +3,10 @@ package org.openimaj.squall.orchestrate;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.Initialisable;
-import org.openimaj.squall.compile.data.VariableHolder;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
-import org.openimaj.util.function.Operation;
-import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
 /**
@@ -85,7 +83,7 @@ public class NamedSourceNode extends NamedNode<ISource<Stream<Context>>> {
 
 
 	@Override
-	public VariableHolder getVariableHolder() {
+	public AnonimisedRuleVariableHolder getVariableHolder() {
 		throw new UnsupportedOperationException();
 	}
 

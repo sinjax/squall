@@ -23,13 +23,13 @@ public class ContextVariableGrouping implements CustomStreamGrouping {
 	 * 
 	 */
 	private static final long serialVersionUID = -7032811266489361619L;
-	private List<String> bindingVars;
+	private String[] bindingVars;
 	private List<Integer> tasks;
 
 	/**
 	 * @param variables
 	 */
-	public ContextVariableGrouping(List<String> variables) {
+	public ContextVariableGrouping(String[] variables) {
 		bindingVars = variables;
 	}
 

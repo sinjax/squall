@@ -21,12 +21,15 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
  */
 public class FunctorConsequence extends AbstractFunctorFunction<Context,Context> {
 
+	private Rule rule;
+	
 	/**
 	 * @param r
 	 * @param clause
 	 */
 	public FunctorConsequence(Rule r, Functor clause) {
 		super(r, clause);
+		this.rule = r;
 	}
 	
 	@Override

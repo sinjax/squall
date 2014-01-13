@@ -1,5 +1,6 @@
 package org.openimaj.squall.orchestrate.greedy;
 
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.Initialisable;
@@ -69,7 +70,7 @@ public class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 	}
 
 	@Override
-	public VariableHolder getVariableHolder() {
+	public AnonimisedRuleVariableHolder getVariableHolder() {
 		throw new UnsupportedOperationException();
 	}
 

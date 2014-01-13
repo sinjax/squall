@@ -4,12 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openimaj.squall.compile.CompiledProductionSystem;
+import org.openimaj.squall.orchestrate.DirectedGraph;
+import org.openimaj.squall.orchestrate.NamedSourceNode;
+import org.openimaj.squall.orchestrate.Orchestrator;
+import org.openimaj.squall.orchestrate.ReentrantNNIFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Operation;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- *  
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
+ * 
  * An orchestrated production system provides a directed graph of {@link NamedNode} instances
  * ending with a single {@link NamedNode} containing an {@link Operation} instance.
  * 
@@ -48,7 +53,7 @@ public class OrchestratedProductionSystem extends DirectedGraph<NamedNode<?>,Nam
 	/**
 	 * The source nodes which are connected to the children
 	 */
-	public ReentrantNNIVFunction reentrant;
+	public ReentrantNNIFunction reentrant;
 	
 	
 	/**

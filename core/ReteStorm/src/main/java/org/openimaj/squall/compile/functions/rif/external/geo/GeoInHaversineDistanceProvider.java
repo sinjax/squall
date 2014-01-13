@@ -1,7 +1,6 @@
 package org.openimaj.squall.compile.functions.rif.external.geo;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -30,13 +29,11 @@ public class GeoInHaversineDistanceProvider extends ExternalFunctionProvider {
 		 */
 		private static final long serialVersionUID = -7445044998530563542L;
 		private static final long earthRadius = 6371;//kilometres
-		private Node[] nodes;
 		private static final Logger logger = Logger.getLogger(GeoInHaversineDistanceFunction.class);
 		
 		public GeoInHaversineDistanceFunction(Node[] ns)
 				throws RIFPredicateException {
 			super(ns);
-			this.nodes = ns;
 		}
 		
 		private double haversin(double pheta){
@@ -45,15 +42,15 @@ public class GeoInHaversineDistanceProvider extends ExternalFunctionProvider {
 
 		@Override
 		public List<Context> apply(Context in) {
-			logger  .debug(String.format("Context(%s) sent to Predicate(haversine(%s,%s,%s,%s) < %s)" , in, this.nodes[1], this.nodes[2], this.nodes[3], this.nodes[4], this.nodes[0]));
+			logger  .debug(String.format("Context(%s) sent to Predicate(haversine(%s,%s,%s,%s) < %s)" , in, super.nodes[1], super.nodes[2], super.nodes[3], super.nodes[4], super.nodes[0]));
 			List<Context> ret = new ArrayList<Context>();
 			Map<String,Node> binds = in.getTyped("bindings");
 			
-			Double maxDist = extractBinding(binds, nodes[0]);//kilometres
-			Double lat1 = Math.PI * extractBinding(binds, nodes[1]) / 180d;
-			Double long1 = Math.PI * extractBinding(binds, nodes[2]) / 180d;
-			Double lat2 = Math.PI * extractBinding(binds, nodes[3]) / 180d;
-			Double long2 = Math.PI * extractBinding(binds, nodes[4]) / 180d;
+			Double maxDist = super.extractBinding(binds, super.nodes[0]);//kilometres
+			Double lat1 = Math.PI * super.extractBinding(binds, super.nodes[1]) / 180d;
+			Double long1 = Math.PI * super.extractBinding(binds, super.nodes[2]) / 180d;
+			Double lat2 = Math.PI * super.extractBinding(binds, super.nodes[3]) / 180d;
+			Double long2 = Math.PI * super.extractBinding(binds, super.nodes[4]) / 180d;
 			
 			Double distance = 2 * earthRadius * Math.asin(
 													Math.sqrt(
@@ -67,6 +64,30 @@ public class GeoInHaversineDistanceProvider extends ExternalFunctionProvider {
 			}
 			
 			return ret;
+		}
+
+		@Override
+		public String identifier(Map<String, String> varmap) {
+			StringBuilder anon = new StringBuilder("GeoInHaversineDistance(");
+			anon.append(super.mapNode(varmap, super.nodes[0])).append(",")
+				.append(super.mapNode(varmap, super.nodes[1])).append(",")
+				.append(super.mapNode(varmap, super.nodes[2])).append(",")
+				.append(super.mapNode(varmap, super.nodes[3])).append(",")
+				.append(super.mapNode(varmap, super.nodes[4]));
+			anon.append(")");
+			return anon.toString();
+		}
+
+		@Override
+		public String identifier() {
+			StringBuilder anon = new StringBuilder("GeoInHaversineDistance(");
+			anon.append(super.stringifyNode(super.nodes[0])).append(",")
+				.append(super.stringifyNode(super.nodes[1])).append(",")
+				.append(super.stringifyNode(super.nodes[2])).append(",")
+				.append(super.stringifyNode(super.nodes[3])).append(",")
+				.append(super.stringifyNode(super.nodes[4]));
+			anon.append(")");
+			return anon.toString();
 		}
 		
 	}

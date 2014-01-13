@@ -1,17 +1,19 @@
 package org.openimaj.squall.orchestrate;
 
+import org.openimaj.squall.orchestrate.DGNode;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.function.MultiFunction;
-import org.openimaj.util.function.Operation;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  * 
  * A {@link NamedNode} provides a unique name for a component of a production system. 
  * This name should be used by builders to guarantee that the output of a node goes to the correct children. 
@@ -69,7 +71,7 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	/**
 	 * @return return the {@link VariableHolder} held otherwise fail horibbly
 	 */
-	public abstract VariableHolder getVariableHolder();
+	public abstract AnonimisedRuleVariableHolder getVariableHolder();
 	
 	/**
 	 * @return {@link Stream} returned if this node is a Source, {@link UnsupportedOperationException} otherwise

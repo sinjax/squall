@@ -1,9 +1,6 @@
 package org.openimaj.squall.orchestrate;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
@@ -15,20 +12,19 @@ import org.openimaj.util.function.Function;
  * the list must all go to the same instance of the end node.
  *
  */
-public class NamedStream implements VariableHolder{
+public class NamedStream extends VariableHolder{
 	
 	
 	protected static final String STREAM_KEY = "stream";
 	String name;
-	private List<String> streamVars;
 	
 	/**
 	 * Simple link, named, with a start and end
 	 * @param name
 	 */
 	public NamedStream(String name) {
+		super();
 		this.name = name;
-		this.streamVars = null;
 	}
 	
 	/**
@@ -43,16 +39,17 @@ public class NamedStream implements VariableHolder{
 	 * @param name the name of this stream
 	 * @param streamVars the variables which are required up stream on this stream
 	 */
-	public NamedStream(String name, List<String> streamVars) {
-		this.name = name;
-		this.streamVars = streamVars;
-	}
-
-	/**
-	 * @return its name
-	 */
-	public String getName() {
-		return this.name;
+	public NamedStream(String name, String[] streamVars) {
+		StringBuilder n = new StringBuilder(name).append("[");
+		int i = 0;
+		n.append(streamVars[i]);
+		this.addVariable(streamVars[i]);
+		for (i++; i < streamVars.length - 1; i++){
+			n.append(",").append(streamVars[i]);
+			this.addVariable(streamVars[i]);
+		}
+		n.append("]");
+		this.name = n.toString();
 	}
 
 	/**
@@ -69,29 +66,37 @@ public class NamedStream implements VariableHolder{
 			}
 		};
 	}
-
-	@Override
-	public List<String> variables() {
-		return this.streamVars;
-	}
-
-	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String anonimised() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		// TODO Implement Variable Mapping
+	
+	/**
+	 * @return
+	 * 		A reference to the stream of this name.
+	 */
+	public NamedStream duplicate(){
+		return new NamedStream(this.name, this.variables());
 	}
 	
 	@Override
 	public String toString() {
+		return this.name;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		try {
+			NamedStream other = (NamedStream) obj;
+			return this.name.equals(other.identifier());
+		} catch (ClassCastException e) {
+			return false;
+		}
+	}
+	
+	@Override
+	public int hashCode() {
+		return this.name.hashCode();
+	}
+
+	@Override
+	public String identifier() {
 		return this.name;
 	}
 }

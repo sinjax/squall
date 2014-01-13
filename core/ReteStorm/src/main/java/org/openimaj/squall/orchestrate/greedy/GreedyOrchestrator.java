@@ -21,11 +21,12 @@ import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
 import org.openimaj.squall.orchestrate.PartialCPSResult;
-import org.openimaj.squall.orchestrate.ReentrantNNIVFunction;
+import org.openimaj.squall.orchestrate.ReentrantNNIFunction;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.exception.CompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.MultiConsequenceSubCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.PlanningException;
+import org.openimaj.squall.orchestrate.rete.NGNJoin;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.pair.IndependentPair;
@@ -260,7 +261,7 @@ public class GreedyOrchestrator implements Orchestrator{
 	private void orchestrateReentrantConsequences(OrchestratedProductionSystem root, CompleteCPSResult consequences) {
 		for (NamedNode<? extends IVFunction<Context, Context>> namedNode : consequences) {
 			if(root.reentrant == null){				
-				ReentrantNNIVFunction reentrantNode = new ReentrantNNIVFunction(root, "reentrant");
+				ReentrantNNIFunction reentrantNode = new ReentrantNNIFunction(root, "reentrant");
 				root.reentrant = reentrantNode;
 			}
 			namedNode.connect(

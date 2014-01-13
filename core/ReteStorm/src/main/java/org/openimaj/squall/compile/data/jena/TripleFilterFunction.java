@@ -6,66 +6,30 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
-import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
-import com.hp.hpl.jena.graph.TripleMatch;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
+import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * Filter a triple, return bindings against variables
  *
  */
-public class TripleFilterFunction implements IVFunction<Context, Context> {
+public class TripleFilterFunction extends AbstractTripleFunction {
 	private final static Logger logger = Logger.getLogger(TripleFilterFunction.class);
-	private TriplePattern clause;
-	private Triple extended;
-	private List<String> variables;
 
 	/**
-	 * 
-	 */
-	public TripleFilterFunction() {
-	}
-	/**
+	 * @param r 
 	 * @param clause construct using a {@link TriplePattern}
 	 */
-	public TripleFilterFunction(TriplePattern clause) {
-		this.clause = clause;
-		this.extended = asExtendedTripleMatch(clause).asTriple();
+	public TripleFilterFunction(Rule r, TriplePattern clause) {
+		super(r, clause);
 	}
-	private TripleMatch asExtendedTripleMatch(TriplePattern tp){
-		this.variables = new ArrayList<String>();
-		Triple created = new Triple(
-			registerVariable(tp.getSubject()),
-			registerVariable(tp.getPredicate()),
-			registerVariable(tp.getObject())
-		);
-		return created;
-	}
-
-	private Node registerVariable(Node n) {
-		if(n.isVariable()){
-			this.variables.add(n.getName());
-			return Node.ANY ;
-		}
-		else if(Functor.isFunctor(n)){
-			Functor f = (Functor)n.getLiteralValue();
-			for (int i = 0; i < f.getArgs().length; i++){
-				Node fnode = f.getArgs()[i];
-				if (fnode.isVariable())
-				{
-					this.variables.add(fnode.getName());
-				}
-			}
-		}
-		return n;
-	}
+	
 	@Override
 	public List<Context> apply(Context inc) {
 		List<Context> ctxs = new ArrayList<Context>();
@@ -158,29 +122,11 @@ public class TripleFilterFunction implements IVFunction<Context, Context> {
 		}
 		return vars;
 	}
-	@Override
-	public List<String> variables() {
-		return this.variables;
-	}
 
-	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause,varmap);
-	}
-
-	@Override
-	public String anonimised() {
-		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
-	}
 	@Override
 	public void setup() { }
 	@Override
 	public void cleanup() { }
-	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		// TODO Implement Variable Mapping
-		
-	}
 	@Override
 	public String toString() {
 		return this.clause.toString();

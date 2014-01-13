@@ -1,9 +1,5 @@
 package org.openimaj.squall.compile.data;
 
-import java.io.Serializable;
-
-import org.openimaj.util.function.MultiFunction;
-
 /**
  * 
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -12,6 +8,6 @@ import org.openimaj.util.function.MultiFunction;
  * @param <I>
  * @param <O>
  */
-public interface IVFunction<I,O>  extends MultiFunction<I, O>, VariableHolder, Initialisable, Serializable{
+public abstract class IVFunction<I,O> extends AnonimisedRuleVariableHolder implements IFunction<I,O>{
 
 }

@@ -1,16 +1,21 @@
 package org.openimaj.squall.functions.rif.consequences;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.compile.data.IConsequence;
+import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
 
 /**
@@ -18,7 +23,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
  *
  */
 @SuppressWarnings("serial")
-public class RIFAtomConsequence implements IVFunction<Context, Context> {
+public class RIFAtomConsequence extends AbstractRIFFunction implements IConsequence {
 	
 	private static final Logger logger = Logger.getLogger(RIFAtomConsequence.class);
 	private Functor clause;
@@ -29,8 +34,41 @@ public class RIFAtomConsequence implements IVFunction<Context, Context> {
 	 * @param ruleID
 	 */
 	public RIFAtomConsequence(Functor tp, String ruleID) {
-		this.clause = tp;
+		super();
+		Count count = new Count();
+		Node[] newArgs = new Node[clause.getArgLength()];
+		for (int i = 0; i < clause.getArgs().length; i++){
+			newArgs[i] = registerVariable(clause.getArgs()[i], count);
+		}
+		this.clause = new Functor(clause.getName(), newArgs);
 		id = ruleID;
+	}
+	
+	@Override
+	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
+		Map<String, String> ruleToBaseVarMap = this.ruleToBaseVarMap();
+		Map<String, String> subRuleToBaseVarMap = arvh.ruleToBaseVarMap();
+		Map<String, String> baseToRuleVarMap = new HashMap<String, String>();
+		for (String rVar : ruleToBaseVarMap().keySet()){
+			baseToRuleVarMap.put(ruleToBaseVarMap.get(rVar), rVar);
+		}
+		
+		Node[] args = new Node[this.clause.getArgLength()];
+		for (int i = 0; i < args.length; i++){
+			if (this.clause.getArgs()[i].isVariable()){
+				args[i] = NodeFactory.createVariable(
+								subRuleToBaseVarMap.get(
+									baseToRuleVarMap.get(
+										this.clause.getArgs()[i].getName()
+									)
+								)
+							);
+			} else {
+				args[i] = this.clause.getArgs()[i];
+			}
+		}
+		
+		this.clause = new Functor(this.clause.getName(), args);
 	}
 
 	@Override
@@ -53,32 +91,14 @@ public class RIFAtomConsequence implements IVFunction<Context, Context> {
 	}
 
 	@Override
-	public void setup() { }
-
-	@Override
-	public void cleanup() { }
-
-	@Override
-	public List<String> variables() {
-		// TODO
-		return new ArrayList<String>();
-	}
-
-	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		// TODO correct behaviour
-		return anonimised();
-	}
-
-	@Override
-	public String anonimised() {
+	public String identifier() {
 		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
 	}
-
+	
 	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		// TODO Implement Variable Mapping
-		
+	public String identifier(Map<String, String> varmap) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override

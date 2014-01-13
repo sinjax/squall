@@ -148,7 +148,7 @@ public class StormStreamBuilder implements Builder{
 						if(strm.variables() == null){
 							dec.shuffleGrouping(parent.getName(), streamName);
 						}
-						else if(strm.variables().size() == 0){
+						else if(strm.varCount() == 0){
 							dec.allGrouping(parent.getName(), streamName);
 						}
 						else{							

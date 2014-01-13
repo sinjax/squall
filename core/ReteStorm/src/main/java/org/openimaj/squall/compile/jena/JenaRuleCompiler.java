@@ -66,7 +66,7 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 				for (int i = 0; i < rule.bodyLength(); i++) {
 					ClauseEntry clause = rule.getBodyElement(i);
 					if (clause instanceof TriplePattern) {
-						ruleret.addJoinComponent(new TripleFilterFunction((TriplePattern)clause));
+						ruleret.addJoinComponent(new TripleFilterFunction(rule, (TriplePattern)clause));
 					} 
 					else if (clause instanceof Functor){
 						ruleret.addPredicate(new FunctorFunction(rule,(Functor) clause));

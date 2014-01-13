@@ -1,4 +1,4 @@
-package org.openimaj.squall.revised.orchestrate.rete;
+package org.openimaj.squall.orchestrate.rete;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,25 +10,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.openimaj.rif.RIFRuleSet;
-import org.openimaj.rif.imports.profiles.RIFEntailmentImportProfiles;
-import org.openimaj.squall.revised.compile.CompiledProductionSystem;
-import org.openimaj.squall.revised.compile.JoinComponent;
-import org.openimaj.squall.revised.compile.OptionalProductionSystems;
-import org.openimaj.squall.revised.compile.data.IOperation;
-import org.openimaj.squall.revised.compile.data.IVFunction;
+import org.openimaj.rifcore.RIFRuleSet;
+import org.openimaj.rifcore.imports.profiles.RIFEntailmentImportProfiles;
+import org.openimaj.squall.compile.CompiledProductionSystem;
+import org.openimaj.squall.compile.JoinComponent;
+import org.openimaj.squall.compile.OptionalProductionSystems;
+import org.openimaj.squall.compile.data.IOperation;
+import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
-import org.openimaj.squall.revised.data.ISource;
-import org.openimaj.squall.revised.orchestrate.CPSResult;
-import org.openimaj.squall.revised.orchestrate.CompleteCPSResult;
-import org.openimaj.squall.revised.orchestrate.NNIVFunction;
-import org.openimaj.squall.revised.orchestrate.NamedNode;
-import org.openimaj.squall.revised.orchestrate.NamedSourceNode;
-import org.openimaj.squall.revised.orchestrate.NamedStream;
-import org.openimaj.squall.revised.orchestrate.OrchestratedProductionSystem;
-import org.openimaj.squall.revised.orchestrate.Orchestrator;
-import org.openimaj.squall.revised.orchestrate.PartialCPSResult;
-import org.openimaj.squall.orchestrate.ReentrantNNIVFunction;
+import org.openimaj.squall.data.ISource;
+import org.openimaj.squall.orchestrate.CPSResult;
+import org.openimaj.squall.orchestrate.CompleteCPSResult;
+import org.openimaj.squall.orchestrate.NNIVFunction;
+import org.openimaj.squall.orchestrate.NamedNode;
+import org.openimaj.squall.orchestrate.NamedSourceNode;
+import org.openimaj.squall.orchestrate.NamedStream;
+import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.squall.orchestrate.Orchestrator;
+import org.openimaj.squall.orchestrate.PartialCPSResult;
+import org.openimaj.squall.orchestrate.ReentrantNNIFunction;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.exception.CompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.MultiConsequenceSubCPSPlanningException;
@@ -274,7 +274,7 @@ public class GreedyOrchestrator implements Orchestrator{
 	private void orchestrateReentrantConsequences(OrchestratedProductionSystem root, CompleteCPSResult consequences) {
 		for (NamedNode<? extends IVFunction<Context, Context>> namedNode : consequences) {
 			Set<NamedNode<?>> filters = new HashSet<NamedNode<?>>();
-			for (NamedSourceNode source : ret.root) {
+			for (NamedSourceNode source : root.root) {
 				for (NamedNode<?> filterNN : source.children()) {
 					filters.add(filterNN);
 				}

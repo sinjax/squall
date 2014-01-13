@@ -9,21 +9,23 @@ import org.junit.Test;
 import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.WindowInformation;
-import org.openimaj.squall.orchestrate.greedy.FixedJoinFunction;
+import org.openimaj.squall.orchestrate.rete.StreamAwareFixedJoinFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.JoinStream;
-import org.openimaj.util.function.Function;
 import org.openimaj.util.function.Operation;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.SplitStream;
 import org.openimaj.util.stream.Stream;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
+import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
+import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
 /**
- * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
 public class TestJenaRuleCompilerFunctions {
@@ -33,17 +35,20 @@ public class TestJenaRuleCompilerFunctions {
 	 */
 	@Test
 	public void testTripleFilter(){
+		List<ClauseEntry> clause = new ArrayList<ClauseEntry>();
 		TriplePattern pattern = new TriplePattern(
-				Node.createVariable("d"), 
-				Node.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), 
-				Node.createURI("http://example.com/Driver"));
-		TripleFilterFunction tff = new TripleFilterFunction(pattern );
+				NodeFactory.createVariable("d"), 
+				NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), 
+				NodeFactory.createURI("http://example.com/Driver"));
+		clause.add(pattern);
+		Rule rule = new Rule(clause, clause);
+		TripleFilterFunction tff = new TripleFilterFunction(rule, pattern);
 		
 		Context ctx = new Context();
 		Triple trp = new Triple(
-			Node.createURI("http://example.com/Steve"), 
-			Node.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), 
-			Node.createURI("http://example.com/Driver")
+				NodeFactory.createURI("http://example.com/Steve"), 
+				NodeFactory.createURI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), 
+				NodeFactory.createURI("http://example.com/Driver")
 		);
 		ctx.put("triple", trp);
 		List<Context> ret = tff.apply(ctx );
@@ -54,47 +59,52 @@ public class TestJenaRuleCompilerFunctions {
 	
 	@Test
 	public void testTripleJoin(){
+		List<ClauseEntry> clause = new ArrayList<ClauseEntry>();
 		// Two simple triple patterns
 		TriplePattern p1 = new TriplePattern(
-				Node.createVariable("d"), 
-				Node.createURI("p1"), 
-				Node.createURI("o1"));
-		TripleFilterFunction tf1 = new TripleFilterFunction(p1);
+				NodeFactory.createVariable("d"), 
+				NodeFactory.createURI("p1"), 
+				NodeFactory.createURI("o1"));
+		clause.add(p1);
 		
 		TriplePattern p2 = new TriplePattern(
-				Node.createVariable("d"), 
-				Node.createURI("p2"), 
-				Node.createURI("o2"));
-		TripleFilterFunction tf2 = new TripleFilterFunction(p2);
+				NodeFactory.createVariable("d"), 
+				NodeFactory.createURI("p2"), 
+				NodeFactory.createURI("o2"));
+		clause.add(p2);
+		
+		Rule rule = new Rule(clause, clause);
+		TripleFilterFunction tf1 = new TripleFilterFunction(rule, p1);
+		TripleFilterFunction tf2 = new TripleFilterFunction(rule, p2);
 		
 		// Join the two filters
 		WindowInformation wi = new WindowInformation(1000,30, TimeUnit.SECONDS);
-		FixedJoinFunction j = new FixedJoinFunction(tf1, tf2, wi);
+		StreamAwareFixedJoinFunction j = new StreamAwareFixedJoinFunction(tf1, "left", wi, tf2, "right", wi);
 		
 		// The data (joines once)
 		List<Context> data = new ArrayList<Context>();
 		Triple trp = new Triple(
-			Node.createURI("A"), 
-			Node.createURI("p1"), 
-			Node.createURI("o1")
+				NodeFactory.createURI("A"), 
+				NodeFactory.createURI("p1"), 
+				NodeFactory.createURI("o1")
 		);
 		data.add(new Context("triple", trp));
 		trp = new Triple(
-			Node.createURI("B"), 
-			Node.createURI("p1"), 
-			Node.createURI("o1")
+				NodeFactory.createURI("B"), 
+				NodeFactory.createURI("p1"), 
+				NodeFactory.createURI("o1")
 		);
 		data.add(new Context("triple", trp));
 		trp = new Triple(
-			Node.createURI("B"), 
-			Node.createURI("p1"), 
-			Node.createURI("o1")
+				NodeFactory.createURI("B"), 
+				NodeFactory.createURI("p1"), 
+				NodeFactory.createURI("o1")
 		);
 		data.add(new Context("triple", trp));
 		trp = new Triple(
-			Node.createURI("B"), 
-			Node.createURI("p2"), 
-			Node.createURI("o2")
+				NodeFactory.createURI("B"), 
+				NodeFactory.createURI("p2"), 
+				NodeFactory.createURI("o2")
 		);
 		data.add(new Context("triple", trp));
 		

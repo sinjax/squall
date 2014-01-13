@@ -30,7 +30,6 @@
 package org.openimaj.squall.compile.data;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -61,9 +60,5 @@ public interface BufferedOutputStreamHolder<OUT>{
 	 * Empties the stream buffers.
 	 */
 	void flushStreamBuffers();
-	/**
-	 * @param newNamesMap
-	 */
-	void mapOutputStreams(Map<String, String> newNamesMap);
 	
 }

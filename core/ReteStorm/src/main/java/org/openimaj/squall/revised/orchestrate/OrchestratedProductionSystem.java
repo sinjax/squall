@@ -7,7 +7,7 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.orchestrate.DirectedGraph;
 import org.openimaj.squall.revised.orchestrate.NamedSourceNode;
 import org.openimaj.squall.revised.orchestrate.Orchestrator;
-import org.openimaj.squall.orchestrate.ReentrantNNIVFunction;
+import org.openimaj.squall.orchestrate.ReentrantNNIFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Operation;
 
@@ -53,7 +53,7 @@ public class OrchestratedProductionSystem extends DirectedGraph<NamedNode<?>,Nam
 	/**
 	 * The source nodes which are connected to the children
 	 */
-	public ReentrantNNIVFunction reentrant;
+	public ReentrantNNIFunction reentrant;
 	
 	
 	/**

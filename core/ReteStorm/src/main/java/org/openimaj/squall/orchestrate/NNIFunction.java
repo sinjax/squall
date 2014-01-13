@@ -1,35 +1,35 @@
-package org.openimaj.squall.revised.orchestrate.rete;
+package org.openimaj.squall.orchestrate;
 
-import org.openimaj.squall.revised.compile.data.IFunction;
-import org.openimaj.squall.revised.compile.data.IOperation;
-import org.openimaj.squall.revised.compile.data.Initialisable;
-import org.openimaj.squall.revised.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.revised.orchestrate.NamedNode;
-import org.openimaj.squall.revised.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.IOperation;
+import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
 /**
- * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class NGNOperation extends NamedNode<IFunction<Context, Context>>{
+public class NNIFunction extends NamedNode<IFunction<Context, Context>> {
 
-	private IOperation<Context> op;
+	private IFunction<Context, Context> varfunc;
+	private IFunction<Context, Context> wrapped;
 
 	/**
 	 * @param parent
 	 * @param name
 	 * @param func
 	 */
-	public NGNOperation(OrchestratedProductionSystem parent, String name, IOperation<Context> func) {
+	public NNIFunction(OrchestratedProductionSystem parent, String name, IFunction<Context, Context> func) {
 		super(parent, name);
-		this.op = func;
+		this.varfunc = func;
+		this.wrapped = new WrappedIFunction(func, this);
 	}
 	
 	public IFunction<Context, Context> getData(){
-		throw new UnsupportedOperationException();
+		return this.varfunc;
 	}
 
 	@Override
@@ -39,7 +39,7 @@ public class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 
 	@Override
 	public boolean isFunction() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -49,12 +49,12 @@ public class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 
 	@Override
 	public IFunction<Context, Context> getFunction() {
-		throw new UnsupportedOperationException();
+		return this.wrapped;
 	}
 
 	@Override
 	public Initialisable getInit() {
-		return this.op;
+		return this.varfunc;
 	}
 
 	@Override
@@ -74,12 +74,12 @@ public class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 
 	@Override
 	public boolean isOperation() {
-		return true;
+		return false;
 	}
 
 	@Override
 	public IOperation<Context> getOperation() {
-		return this.op;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

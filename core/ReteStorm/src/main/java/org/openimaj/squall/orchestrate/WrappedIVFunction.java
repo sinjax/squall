@@ -1,16 +1,18 @@
 package org.openimaj.squall.orchestrate;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
- *
+ *@author David Monks <dm11g08@ecs.soton.ac.uk>
  */
-public class WrappedIVFunction implements IVFunction<Context,Context>{
+public class WrappedIVFunction extends IVFunction<Context,Context>{
 
 	
 	/**
@@ -40,18 +42,38 @@ public class WrappedIVFunction implements IVFunction<Context,Context>{
 	}
 
 	@Override
-	public List<String> variables() {
+	public String[] variables() {
 		return func.variables();
 	}
 
 	@Override
-	public String anonimised(Map<String, Integer> varmap) {
-		return func.anonimised(varmap);
+	public List<String> ruleVariables() {
+		return func.ruleVariables();
 	}
 
 	@Override
-	public String anonimised() {
-		return func.anonimised();
+	public Map<String, String> ruleToBaseVarMap() {
+		return func.ruleToBaseVarMap();
+	}
+
+	@Override
+	public boolean mirrorInRule(AnonimisedRuleVariableHolder toMirror) {
+		return func.mirrorInRule(toMirror);
+	}
+
+	@Override
+	public String identifier(Map<String, String> varmap) {
+		return func.identifier(varmap);
+	}
+
+	@Override
+	public Collection<AnonimisedRuleVariableHolder> contributors() {
+		return func.contributors();
+	}
+
+	@Override
+	public String identifier() {
+		return func.identifier();
 	}
 
 	@Override
@@ -67,12 +89,6 @@ public class WrappedIVFunction implements IVFunction<Context,Context>{
 	@Override
 	public String toString() {
 		return func.toString();
-	}
-	
-	@Override
-	public void mapVariables(Map<String, String> varmap) {
-		// TODO Implement Variable Mapping
-		
 	}
 
 	
