@@ -70,18 +70,31 @@ public class LiteralNotEqualProvider extends ExternalFunctionProvider {
 				anon.append(super.varHolder.identifier(varmap));
 			}
 			anon.append("LiteralNotEqual(");
-			int i = 0;
-			anon.append(super.mapNode(varmap, super.nodes[i]));
-			for (i++; i < super.nodes.length; i++){
-				anon.append(",").append(super.mapNode(varmap, super.nodes[i]));;
+			if (super.nodes.length > 0){
+				int i = 0;
+				anon.append(super.mapNode(varmap, super.nodes[i]));
+				for (i++; i < super.nodes.length; i++){
+					anon.append(",").append(super.mapNode(varmap, super.nodes[i]));;
+				}
 			}
 			return anon.append(")").toString();
 		}
 
 		@Override
 		public String identifier() {
-			// TODO Auto-generated method stub
-			return null;
+			StringBuilder anon = new StringBuilder();
+			if (super.varHolder == null){
+				anon.append(super.varHolder.identifier(varmap));
+			}
+			anon.append("LiteralNotEqual(");
+			if (super.nodes.length > 0){
+				int i = 0;
+				anon.append(super.stringifyNode(super.nodes[i]));
+				for (i++; i < super.nodes.length; i++){
+					anon.append(",").append(super.stringifyNode(super.nodes[i]));;
+				}
+			}
+			return anon.append(")").toString();
 		}
 		
 	}

@@ -41,12 +41,14 @@ public class NamedStream extends VariableHolder{
 	 */
 	public NamedStream(String name, String[] streamVars) {
 		StringBuilder n = new StringBuilder(name).append("[");
-		int i = 0;
-		n.append(streamVars[i]);
-		this.addVariable(streamVars[i]);
-		for (i++; i < streamVars.length - 1; i++){
-			n.append(",").append(streamVars[i]);
+		if (streamVars.length > 0){
+			int i = 0;
+			n.append(streamVars[i]);
 			this.addVariable(streamVars[i]);
+			for (i++; i < streamVars.length - 1; i++){
+				n.append(",").append(streamVars[i]);
+				this.addVariable(streamVars[i]);
+			}
 		}
 		n.append("]");
 		this.name = n.toString();

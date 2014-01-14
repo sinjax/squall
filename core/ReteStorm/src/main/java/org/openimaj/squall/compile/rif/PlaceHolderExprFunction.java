@@ -72,10 +72,12 @@ public class PlaceHolderExprFunction extends BaseRIFPredicateFunction {
 			anon.append(super.varHolder.identifier());
 		}
 		anon.append("PlaceHolder:").append(this.name).append("(");
-		int i = 0;
-		anon.append(super.stringifyNode(super.nodes[i]));
-		for (i++; i < this.varCount(); i++){
-			anon.append(",").append(super.stringifyNode(super.nodes[i]));
+		if (super.nodes.length > 0){
+			int i = 0;
+			anon.append(super.stringifyNode(super.nodes[i]));
+			for (i++; i < this.varCount(); i++){
+				anon.append(",").append(super.stringifyNode(super.nodes[i]));
+			}
 		}
 		return anon.append(")").toString();
 	}
@@ -87,10 +89,12 @@ public class PlaceHolderExprFunction extends BaseRIFPredicateFunction {
 			anon.append(super.varHolder.identifier(varmap));
 		}
 		anon.append("PlaceHolder:").append(this.name).append("(");
-		int i = 0;
-		anon.append(super.mapNode(varmap, super.nodes[i]));
-		for (i++; i < this.varCount(); i++){
-			anon.append(",").append(super.mapNode(varmap, super.nodes[i]));
+		if (super.nodes.length > 0){
+			int i = 0;
+			anon.append(super.mapNode(varmap, super.nodes[i]));
+			for (i++; i < this.varCount(); i++){
+				anon.append(",").append(super.mapNode(varmap, super.nodes[i]));
+			}
 		}
 		return anon.append(")").toString();
 	}

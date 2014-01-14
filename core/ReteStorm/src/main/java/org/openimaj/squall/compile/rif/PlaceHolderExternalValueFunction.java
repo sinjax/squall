@@ -67,10 +67,12 @@ public class PlaceHolderExternalValueFunction extends BaseRIFPredicateFunction {
 	@Override
 	public String identifier() {
 		StringBuilder anon = new StringBuilder("External(PlaceHolder:").append(this.name).append("(");
-		int i = 0;
-		anon.append(this.getVariable(i));
-		for (i++; i < this.varCount(); i++){
-			anon.append(",").append(this.getVariable(i));
+		if (super.nodes.length > 0){
+			int i = 0;
+			anon.append(super.stringifyNode(super.nodes[i]));
+			for (i++; i < this.varCount(); i++){
+				anon.append(",").append(super.stringifyNode(super.nodes[i]));
+			}
 		}
 		return anon.append("))").toString();
 	}
@@ -78,10 +80,12 @@ public class PlaceHolderExternalValueFunction extends BaseRIFPredicateFunction {
 	@Override
 	public String identifier(Map<String, String> varmap) {
 		StringBuilder anon = new StringBuilder("External(PlaceHolder:").append(this.name).append("(");
-		int i = 0;
-		anon.append(varmap.get(this.getVariable(i)));
-		for (i++; i < this.varCount(); i++){
-			anon.append(",").append(varmap.get(this.getVariable(i)));
+		if (super.nodes.length > 0){
+			int i = 0;
+			anon.append(super.mapNode(varmap, super.nodes[i]));
+			for (i++; i < this.varCount(); i++){
+				anon.append(",").append(super.mapNode(varmap, super.nodes[i]));
+			}
 		}
 		return anon.append("))").toString();
 	}

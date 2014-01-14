@@ -63,10 +63,12 @@ public class NumericGreaterThanProvider extends ExternalFunctionProvider {
 				anon.append(super.varHolder.identifier(varmap));
 			}
 			anon.append("NumericGreaterThan(");
-			int i = 0;
-			anon.append(super.mapNode(varmap, super.nodes[i]));
-			for (i++; i < super.nodes.length; i++){
-				anon.append(",").append(super.mapNode(varmap, super.nodes[i]));
+			if (super.nodes.length > 0){
+				int i = 0;
+				anon.append(super.mapNode(varmap, super.nodes[i]));
+				for (i++; i < super.nodes.length; i++){
+					anon.append(",").append(super.mapNode(varmap, super.nodes[i]));
+				}
 			}
 			return anon.append(")").toString();
 		}
@@ -78,10 +80,12 @@ public class NumericGreaterThanProvider extends ExternalFunctionProvider {
 				anon.append(super.varHolder.identifier());
 			}
 			anon.append("NumericGreaterThan(");
-			int i = 0;
-			anon.append(super.stringifyNode(super.nodes[i]));
-			for (i++; i < super.nodes.length; i++){
-				anon.append(",").append(super.stringifyNode(super.nodes[i]));
+			if (super.nodes.length > 0){
+				int i = 0;
+				anon.append(super.stringifyNode(super.nodes[i]));
+				for (i++; i < super.nodes.length; i++){
+					anon.append(",").append(super.stringifyNode(super.nodes[i]));
+				}
 			}
 			return anon.append(")").toString();
 		}

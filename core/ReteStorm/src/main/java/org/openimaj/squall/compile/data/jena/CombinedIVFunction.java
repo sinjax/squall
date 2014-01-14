@@ -61,10 +61,8 @@ public abstract class CombinedIVFunction<A,B> extends IVFunction<A,B> {
 	
 	@Override
 	public String identifier() {
-		StringBuilder out = new StringBuilder();
-		int i = 0;
-		out.append(this.functions.get(i).identifier());
-		for (i++; i < this.functions.size(); i++) {
+		StringBuilder out = new StringBuilder("Combined:");
+		for (int i = 0; i < this.functions.size(); i++) {
 			out.append("\n")
 			   .append(this.functions.get(i).identifier());
 		}
@@ -73,10 +71,8 @@ public abstract class CombinedIVFunction<A,B> extends IVFunction<A,B> {
 	
 	@Override
 	public String identifier(Map<String, String> varmap) {
-		StringBuilder out = new StringBuilder();
-		int i = 0;
-		out.append(this.functions.get(i).identifier(varmap));
-		for (i++; i < this.functions.size(); i++) {
+		StringBuilder out = new StringBuilder("Combined:");
+		for (int i = 0; i < this.functions.size(); i++) {
 			out.append("\n")
 			   .append(this.functions.get(i).identifier(varmap));
 		}

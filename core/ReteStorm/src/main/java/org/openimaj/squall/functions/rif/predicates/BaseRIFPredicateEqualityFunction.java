@@ -65,10 +65,12 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 		if (super.varHolder == null){
 			anon.append(super.varHolder.identifier(varmap));
 		}
-		int i = 0;
-		anon.append(super.mapNode(varmap, super.nodes[i]));
-		for (i++; i < super.nodes.length; i++){
-			anon.append(" = ").append(super.mapNode(varmap, super.nodes[i]));;
+		if (super.nodes.length > 0){
+			int i = 0;
+			anon.append(super.mapNode(varmap, super.nodes[i]));
+			for (i++; i < super.nodes.length; i++){
+				anon.append(" = ").append(super.mapNode(varmap, super.nodes[i]));;
+			}
 		}
 		return anon.toString();
 	}
@@ -79,10 +81,12 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 		if (super.varHolder == null){
 			anon.append(super.varHolder.identifier());
 		}
-		int i = 0;
-		anon.append(super.stringifyNode(super.nodes[i]));
-		for (i++; i < super.nodes.length; i++){
-			anon.append(" = ").append(super.stringifyNode(super.nodes[i]));;
+		if (super.nodes.length > 0){
+			int i = 0;
+			anon.append(super.stringifyNode(super.nodes[i]));
+			for (i++; i < super.nodes.length; i++){
+				anon.append(" = ").append(super.stringifyNode(super.nodes[i]));;
+			}
 		}
 		return anon.toString();
 	}
