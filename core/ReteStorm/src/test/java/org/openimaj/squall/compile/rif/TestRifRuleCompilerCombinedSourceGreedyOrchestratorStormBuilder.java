@@ -44,12 +44,6 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 
 
 
-	private RIFRuleSet simpleRules;
-	private RIFRuleSet simplejoinRules;
-	private RIFRuleSet complexjoinRules;
-	private RIFRuleSet multiunionRules;
-	private RIFRuleSet lsbench;
-
 	private RIFRuleSet readRules(String ruleSource) {
 		RIFRuleSet rules = null;
 		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
@@ -69,25 +63,13 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 		}
 		return rules;
 	}
-	/**
-	 * @throws IOException 
-	 * 
-	 */
-	@Before
-	public void before() throws IOException{
-		this.simpleRules = readRules("/test.simple.rule.rif");
-		this.simplejoinRules = readRules("/test.simplejoin.rule.rif");
-		this.complexjoinRules = readRules("/test.complexjoin.rule.rif");
-		this.multiunionRules = readRules("/test.multiunion.rule.rif");
-		this.lsbench = readRules("/lsbench/queries/rif/query-7.5-with-small-test-data.rif");
-	}
 	
 	/**
 	 * 
 	 */
 	@Test
 	public void testSimpleRulesBuilder(){
-		testRuleSet(simpleRules);
+		testRuleSet(readRules("/test.simple.rule.rif"));
 	}
 	
 	/**
@@ -95,7 +77,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testSimpleJoinBuilder(){
-		testRuleSet(simplejoinRules);
+		testRuleSet(readRules("/test.simplejoin.rule.rif"));
 	}
 	
 	/**
@@ -103,7 +85,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testComplexRules(){
-		testRuleSet(complexjoinRules);
+		testRuleSet(readRules("/test.complexjoin.rule.rif"));
 	}
 	
 	/**
@@ -111,7 +93,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testMultiUnionRules(){
-		testRuleSet(multiunionRules);
+		testRuleSet(readRules("/test.multiunion.rule.rif"));
 	}
 	
 	/**
@@ -119,7 +101,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testLSBenchRulesBuilder(){
-		testRuleSet(lsbench);
+		testRuleSet(readRules("/lsbench/queries/rif/query-7.5-with-small-test-data.rif"));
 	}
 	
 	private void testRuleSet(RIFRuleSet ruleSet) {
