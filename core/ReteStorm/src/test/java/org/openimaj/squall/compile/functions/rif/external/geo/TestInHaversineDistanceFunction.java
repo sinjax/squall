@@ -15,6 +15,7 @@ import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -47,19 +48,19 @@ public class TestInHaversineDistanceFunction {
 
 		//London - Berlin
 		ret = performHaversineTest(1000,places[2][0],places[2][1],places[3][0],places[3][1]);
-		assertTrue(!ret.isEmpty());
+		assertFalse(ret.isEmpty());
 		
 		//London - Moscow
 		ret = performHaversineTest(1000,places[2][0],places[2][1],places[4][0],places[4][1]);
 		assertTrue(ret.isEmpty());
 		
-//		//Aukland - Moscow
-//		ret = performHaversineTest(1000,places[2][0],places[2][1],places[4][0],places[4][1]);
-//		assertTrue(ret.isEmpty());
+		//Aukland - Moscow
+		ret = performHaversineTest(1000,places[2][0],places[2][1],places[4][0],places[4][1]);
+		assertTrue(ret.isEmpty());
 		
 		//Bristol - Dover
 		ret = performHaversineTest(300,places[11][0],places[11][1],places[12][0],places[12][1]);
-		assertTrue(!ret.isEmpty());
+		assertFalse(ret.isEmpty());
 	}
 	
 	/**
@@ -67,9 +68,8 @@ public class TestInHaversineDistanceFunction {
 	 */
 	@Test
 	public void testInHaversineDistance(){
-		
-		List<Context> ret = performHaversineTest(1000,1000,1000,1000,1000);
-		assertTrue(!ret.isEmpty());
+		List<Context> ret = performHaversineTest(6000,140.0,140.0,0.0,0.0);
+		assertTrue(ret.isEmpty());
 	}
 
 	private List<Context> performHaversineTest(double dist, double lat1, double long1, double lat2, double long2) {
@@ -100,11 +100,11 @@ public class TestInHaversineDistanceFunction {
 		Map<String,Node> map = new HashMap<String, Node>();
 		cont.put("bindings", map);
 		
-		map.put("dist", Node.createLiteral(""+dist, XSDDatatype.XSDdouble));
-		map.put("lat1", Node.createLiteral(""+lat1, XSDDatatype.XSDdouble));
-		map.put("long1", Node.createLiteral(""+long1, XSDDatatype.XSDdouble));
-		map.put("lat2", Node.createLiteral(""+lat2, XSDDatatype.XSDdouble));
-		map.put("long2", Node.createLiteral(""+long2, XSDDatatype.XSDdouble));
+		map.put("dist", NodeFactory.createLiteral(""+dist, XSDDatatype.XSDdouble));
+		map.put("lat1", NodeFactory.createLiteral(""+lat1, XSDDatatype.XSDdouble));
+		map.put("long1", NodeFactory.createLiteral(""+long1, XSDDatatype.XSDdouble));
+		map.put("lat2", NodeFactory.createLiteral(""+lat2, XSDDatatype.XSDdouble));
+		map.put("long2", NodeFactory.createLiteral(""+long2, XSDDatatype.XSDdouble));
 		
 		List<Context> ret = (new GeoInHaversineDistanceProvider()).apply(e).apply(cont);
 		return ret;

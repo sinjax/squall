@@ -79,7 +79,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 		this.simplejoinRules = readRules("/test.simplejoin.rule.rif");
 		this.complexjoinRules = readRules("/test.complexjoin.rule.rif");
 		this.multiunionRules = readRules("/test.multiunion.rule.rif");
-		this.lsbench = readRules("/lsbench/queries.rif");
+		this.lsbench = readRules("/lsbench/queries/rif/query-7.5-with-small-test-data.rif");
 	}
 	
 	/**

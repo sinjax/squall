@@ -1,6 +1,5 @@
 package org.openimaj.squall.compile.jena;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -35,11 +34,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	
 	
 	@org.junit.Rule
-	public TemporaryFolder folder = new TemporaryFolder();
-	private File output;
-	private File input;
-
-
+	private TemporaryFolder folder = new TemporaryFolder();
 	private SourceRulePair singlejoinRules;
 
 
