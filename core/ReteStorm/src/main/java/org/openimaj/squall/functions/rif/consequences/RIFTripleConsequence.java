@@ -39,9 +39,9 @@ public class RIFTripleConsequence extends AbstractRIFFunction implements IConseq
 		super();
 		Count count = new Count();
 		this.clause = new TriplePattern(
-			registerVariable(clause.getSubject(), count),
-			registerVariable(clause.getPredicate(), count),
-			registerVariable(clause.getObject(), count)
+			registerVariable(tp.getSubject(), count),
+			registerVariable(tp.getPredicate(), count),
+			registerVariable(tp.getObject(), count)
 		);
 		id = ruleID;
 	}

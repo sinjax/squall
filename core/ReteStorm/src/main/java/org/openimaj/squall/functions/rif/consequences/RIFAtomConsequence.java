@@ -36,11 +36,11 @@ public class RIFAtomConsequence extends AbstractRIFFunction implements IConseque
 	public RIFAtomConsequence(Functor tp, String ruleID) {
 		super();
 		Count count = new Count();
-		Node[] newArgs = new Node[clause.getArgLength()];
-		for (int i = 0; i < clause.getArgs().length; i++){
-			newArgs[i] = registerVariable(clause.getArgs()[i], count);
+		Node[] newArgs = new Node[tp.getArgLength()];
+		for (int i = 0; i < tp.getArgs().length; i++){
+			newArgs[i] = registerVariable(tp.getArgs()[i], count);
 		}
-		this.clause = new Functor(clause.getName(), newArgs);
+		this.clause = new Functor(tp.getName(), newArgs);
 		id = ruleID;
 	}
 	

@@ -38,6 +38,9 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 				}
 			}
 		}
+		if (super.varCount() == 0){
+			throw new RIFPredicateException("RIF translator: Predicate must compare at least one variable.");
+		}
 	}
 	
 	@Override

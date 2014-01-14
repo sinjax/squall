@@ -38,9 +38,12 @@ public class LiteralNotEqualProvider extends ExternalFunctionProvider {
 					if (val == null){
 						val = (Node_Concrete) n;
 					}else if (val.sameValueAs(n)){
-						throw new RIFPredicateException("RIF translator: All constants compared must be semantically equal.");
+						throw new RIFPredicateException("RIF translator: All constants compared must be semantically different.");
 					}
 				}
+			}
+			if (this.varCount() == 0){
+				throw new RIFPredicateException("RIF translator: Predicate must compare at least one variable.");
 			}
 		}
 		
