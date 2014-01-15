@@ -105,7 +105,7 @@ public class StormStreamBuilder implements Builder{
 					NamedStream strm = p.firstObject();
 					NamedNode<?> parent = p.secondObject();
 					String parentName = StormUtils.legalizeStormIdentifier(parent.getName());
-					String streamName = StormUtils.legalizeStormIdentifier(NamedNodeComponent.constructStreamName(parent,strm,namedNode));
+					String streamName = NamedNodeComponent.constructStreamName(parent,strm,namedNode);
 					dec.shuffleGrouping(parentName, streamName);
 				}
 				state.put(name, namedNode);
@@ -142,7 +142,7 @@ public class StormStreamBuilder implements Builder{
 						NamedStream strm = p.firstObject();
 						NamedNode<?> parent = p.secondObject();
 						String parentName = StormUtils.legalizeStormIdentifier(parent.getName());
-						String streamName = StormUtils.legalizeStormIdentifier(NamedNodeComponent.constructStreamName(parent,strm,namedNode));
+						String streamName = NamedNodeComponent.constructStreamName(parent,strm,namedNode);
 						if(strm.varCount() < 1){
 							dec.shuffleGrouping(parentName, streamName);
 						}

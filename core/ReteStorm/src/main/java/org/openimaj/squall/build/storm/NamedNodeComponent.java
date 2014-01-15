@@ -42,13 +42,13 @@ public abstract class NamedNodeComponent implements IComponent{
 		this.outputStreams = new ArrayList<String>();
 		for (NamedStream edge : nn.childEdges()) {
 			for (NamedNode<?> child : edge.destinations()){
-				this.outputStreams.add(StormUtils.legalizeStormIdentifier(constructStreamName(nn,edge,child)));
+				this.outputStreams.add(constructStreamName(nn,edge,child));
 			}
 		}
 		this.correctedStreamName = new HashMap<String,String>();
 		for (NamedStream edge : nn.parentEdges()) {
 			for (NamedNode<?> parent : edge.sources()){
-				String stormName = StormUtils.legalizeStormIdentifier(constructStreamName(parent,edge,nn));
+				String stormName = constructStreamName(parent,edge,nn);
 				this.correctedStreamName.put(stormName, edge.identifier());
 			}
 		}
@@ -140,7 +140,7 @@ public abstract class NamedNodeComponent implements IComponent{
 	 */
 	public static String constructStreamName(NamedNode<?> parent,NamedStream strm, NamedNode<?> namedNode) {
 		
-		return parent.getName() + "_" + strm.identifier() + "_" + namedNode.getName();
+		return StormUtils.legalizeStormIdentifier(parent.getName() + "_" + strm.identifier() + "_" + namedNode.getName());
 	}
 
 }
