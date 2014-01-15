@@ -1,15 +1,7 @@
 package org.openimaj.storm.utils;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 import org.objenesis.strategy.StdInstantiatorStrategy;
-import org.openimaj.io.IOUtils;
-import org.openimaj.rdf.storm.utils.JenaStormUtils;
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
@@ -52,6 +44,12 @@ public class StormUtils {
 		return deserialiseFunction(kryo,bytes);
 	}
 
+	/**
+	 * @param kryo
+	 * @param bytes
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
 	public static <T> T deserialiseFunction(Kryo kryo, byte[] bytes) {
 		Object obj;
 		try {
@@ -65,5 +63,16 @@ public class StormUtils {
 			}
 		}
 		return (T) obj;
+	}
+	
+	/**
+	 * @param identifier
+	 * @return
+	 */
+	public static String legalizeStormIdentifier(String identifier){
+		return identifier.replaceAll("\\(","")
+						 .replaceAll("\\)",",")
+						 .replaceAll("_","-")
+						 .replaceAll("\\?","VAR");
 	}
 }

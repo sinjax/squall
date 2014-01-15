@@ -17,14 +17,8 @@ import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
-import org.openimaj.util.data.Context;
-import org.openimaj.util.data.JoinStream;
-import org.openimaj.util.function.MultiFunction;
+import org.openimaj.storm.utils.StormUtils;
 import org.openimaj.util.pair.IndependentPair;
-import org.openimaj.util.stream.SplitStream;
-import org.openimaj.util.stream.Stream;
-import org.openimaj.util.stream.StreamLoopGuard;
-
 import backtype.storm.Config;
 import backtype.storm.generated.StormTopology;
 import backtype.storm.topology.BoltDeclarer;
@@ -70,6 +64,8 @@ public class StormStreamBuilder implements Builder{
 			}
 			StormTopology top = tb.createTopology();
 			topop.perform(top);
+		} catch (Throwable e){
+			e.printStackTrace();
 		}
 		finally{			
 			topop.cleanup();
@@ -92,7 +88,7 @@ public class StormStreamBuilder implements Builder{
 		Set<NamedNode<?>> newdisconnected = new HashSet<NamedNode<?>>();
 		while(iter.hasNext()){
 			NamedNode<?> namedNode = iter.next();
-			String name = namedNode.getName();
+			String name = StormUtils.legalizeStormIdentifier(namedNode.getName());
 			
 			boolean remove = false;
 			
@@ -108,8 +104,9 @@ public class StormStreamBuilder implements Builder{
 				for (IndependentPair<NamedStream, NamedNode<?>> p : parents) {
 					NamedStream strm = p.firstObject();
 					NamedNode<?> parent = p.secondObject();
-					String streamName = NamedNodeComponent.constructStreamName(parent,strm,namedNode);
-					dec.shuffleGrouping(parent.getName(), streamName);
+					String parentName = StormUtils.legalizeStormIdentifier(parent.getName());
+					String streamName = StormUtils.legalizeStormIdentifier(NamedNodeComponent.constructStreamName(parent,strm,namedNode));
+					dec.shuffleGrouping(parentName, streamName);
 				}
 				state.put(name, namedNode);
 				remove = true;
@@ -144,15 +141,16 @@ public class StormStreamBuilder implements Builder{
 					for (IndependentPair<NamedStream, NamedNode<?>> p : parentStreams) {
 						NamedStream strm = p.firstObject();
 						NamedNode<?> parent = p.secondObject();
-						String streamName = NamedNodeComponent.constructStreamName(parent,strm,namedNode);
-						if(strm.variables() == null){
-							dec.shuffleGrouping(parent.getName(), streamName);
+						String parentName = StormUtils.legalizeStormIdentifier(parent.getName());
+						String streamName = StormUtils.legalizeStormIdentifier(NamedNodeComponent.constructStreamName(parent,strm,namedNode));
+						if(strm.varCount() < 1){
+							dec.shuffleGrouping(parentName, streamName);
 						}
 						else if(strm.varCount() == 0){
-							dec.allGrouping(parent.getName(), streamName);
+							dec.allGrouping(parentName, streamName);
 						}
 						else{							
-							dec.customGrouping(parent.getName(), streamName, new ContextVariableGrouping(strm.variables()));
+							dec.customGrouping(parentName, streamName, new ContextVariableGrouping(strm.variables()));
 						}
 					}
 					state.put(name, namedNode);
@@ -165,9 +163,9 @@ public class StormStreamBuilder implements Builder{
 			else{
 				// add the children!
 				for (NamedNode<?> child : namedNode.children()) {
-					if(!disconnected.contains(child) && !state.containsKey(child.getName()))
-					{
-						newdisconnected.add(child);
+						if(!disconnected.contains(child) && !state.containsKey(StormUtils.legalizeStormIdentifier(child.getName())))
+						{
+							newdisconnected.add(child);
 					}
 				}
 			}
@@ -199,8 +197,8 @@ public class StormStreamBuilder implements Builder{
 	private boolean containsAllParents(Map<String, NamedNode<?>> state,NamedNode<?> namedNode) {
 		
 		for (NamedNode<?> par : namedNode.parents()) {
-			if(!state.containsKey(par.getName())){
-				return false;
+				if(!state.containsKey(StormUtils.legalizeStormIdentifier(par.getName()))){
+					return false;
 			}
 		}
 		return true;

@@ -6,15 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.openimaj.rdf.storm.utils.JenaStormUtils;
-import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.storm.utils.StormUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
-
-import com.esotericsoftware.kryo.Kryo;
 
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.IComponent;
@@ -50,7 +46,7 @@ public abstract class NamedNodeComponent implements IComponent{
 		this.correctedStreamName = new HashMap<String,String>();
 		for (NamedStream edge : nn.parentEdges()) {
 			String stormName = constructStreamName(nn.getRoot().getEdgeSource(edge),edge,nn);
-			this.correctedStreamName.put(stormName, edge.identifier());
+				this.correctedStreamName.put(stormName, edge.identifier());
 		}
 	}
 	

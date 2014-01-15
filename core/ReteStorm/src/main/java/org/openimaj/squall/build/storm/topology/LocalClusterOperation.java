@@ -1,6 +1,5 @@
 package org.openimaj.squall.build.storm.topology;
 
-import org.openimaj.rdf.storm.utils.JenaStormUtils;
 import org.openimaj.squall.compile.data.IOperation;
 
 import backtype.storm.Config;
@@ -13,7 +12,10 @@ import backtype.storm.utils.Utils;
 	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
 	 *
 	 */
-	public class LocalClusterOperation implements IOperation<StormTopology>{		
+	public class LocalClusterOperation implements IOperation<StormTopology>{
+		/**
+		 * 
+		 */
 		public static final String SLEEPKEY = "org.openimaj.squall.build.storm.sleep";
 
 		long DEFAULT_SLEEP_TIME = 5000;
@@ -23,6 +25,9 @@ import backtype.storm.utils.Utils;
 
 		private LocalCluster cluster;
 
+		/**
+		 * @param conf
+		 */
 		public LocalClusterOperation(Config conf) {
 			this.conf = conf;
 			this.conf.put(Config.STORM_LOCAL_MODE_ZMQ, true);

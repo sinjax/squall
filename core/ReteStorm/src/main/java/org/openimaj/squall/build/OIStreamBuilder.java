@@ -185,8 +185,8 @@ public class OIStreamBuilder implements Builder{
 		for (NamedStream edge : namedNode.parentEdges()) {
 			Function<Context, Context> edgeFunction = edge.getFunction();
 			String sourceName = ops.getEdgeSource(edge).getName();
-			Stream<Context> sourceStream = state.get(sourceName);
-			ret.add(sourceStream.map(edgeFunction));
+				Stream<Context> sourceStream = state.get(sourceName);
+				ret.add(sourceStream.map(edgeFunction));
 		}
 		return ret;
 	}
@@ -200,8 +200,8 @@ public class OIStreamBuilder implements Builder{
 	private boolean containsAllParents(Map<String, Stream<Context>> state,NamedNode<?> namedNode) {
 		
 		for (NamedNode<?> par : namedNode.parents()) {
-			if(!state.containsKey(par.getName())){
-				return false;
+				if(!state.containsKey(par.getName())){
+					return false;
 			}
 		}
 		return true;
