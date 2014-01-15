@@ -1,9 +1,9 @@
 package org.openimaj.squall.orchestrate;
 
-import java.util.List;
-import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
+
+import cern.colt.Arrays;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -12,19 +12,19 @@ import org.openimaj.util.function.Function;
  * the list must all go to the same instance of the end node.
  *
  */
-public class NamedStream extends VariableHolder{
+public class NamedStream extends DirectedEdge<NamedNode<?>> {
 	
 	
 	protected static final String STREAM_KEY = "stream";
-	String name;
+	protected String name;
+	
 	
 	/**
 	 * Simple link, named, with a start and end
 	 * @param name
 	 */
 	public NamedStream(String name) {
-		super();
-		this.name = name;
+		this(name, new String[0]);
 	}
 	
 	/**
@@ -40,6 +40,7 @@ public class NamedStream extends VariableHolder{
 	 * @param streamVars the variables which are required up stream on this stream
 	 */
 	public NamedStream(String name, String[] streamVars) {
+		super();
 		StringBuilder n = new StringBuilder(name).append("[");
 		if (streamVars.length > 0){
 			int i = 0;
@@ -86,7 +87,7 @@ public class NamedStream extends VariableHolder{
 	public boolean equals(Object obj) {
 		try {
 			NamedStream other = (NamedStream) obj;
-			return this.name.equals(other.identifier());
+			return this.identifier().equals(other.identifier());
 		} catch (ClassCastException e) {
 			return false;
 		}

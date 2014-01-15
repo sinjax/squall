@@ -84,7 +84,7 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	
 	@Override
 	public String toString() {
-		return String.format(this.name + "(children=%d)",this.children.size());
+		return String.format(this.name + "(incoming=%d)(outgoing=%d)",this.parentEdges.size(),this.childEdges.size());
 	}
 
 	/**

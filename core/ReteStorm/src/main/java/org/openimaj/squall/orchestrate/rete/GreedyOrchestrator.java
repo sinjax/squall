@@ -111,7 +111,8 @@ public class GreedyOrchestrator implements Orchestrator{
 		// The nodes which must be connected to reentrant consequences are those which are connected to any sources
 		Set<NamedNode<?>> filters = new HashSet<NamedNode<?>>();
 		for (NamedSourceNode source : ret.root) {
-			for (NamedNode<?> namedNode : source.children()) {
+			for (NamedStream edge : source.childEdges())
+			for (NamedNode<?> namedNode : edge.destinations()) {
 				filters.add(namedNode);
 			}
 		}
@@ -125,15 +126,19 @@ public class GreedyOrchestrator implements Orchestrator{
 
 	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op) {
 		NamedNode<?> opNode = new NGNOperation(ret, "OPERATION", op);
-		for (NamedNode<?> namedNode : ret.getLeaves()) {			
-			namedNode.connect(new NamedStream("link"), opNode);
+		for (NamedNode<?> namedNode : ret.getLeaves()) {
+			NamedStream str = new NamedStream(namedNode.getName());
+			namedNode.connectOutgoingEdge(str);
+			opNode.connectIncomingEdge(str);
 		}
 	}
 
 	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op, List<NamedNode<? extends IVFunction<Context, Context>>> finalsys) {
 		NamedNode<?> opNode = new NGNOperation(ret, "OPERATION", op);
 		for (NamedNode<? extends IVFunction<Context, Context>> sys : finalsys){
-			sys.connect(new NamedStream("link"), opNode);
+			NamedStream str = new NamedStream(sys.getName());
+			sys.connectOutgoingEdge(str);
+			opNode.connectIncomingEdge(str);
 		}
 	}
 
@@ -275,17 +280,18 @@ public class GreedyOrchestrator implements Orchestrator{
 		for (NamedNode<? extends IVFunction<Context, Context>> namedNode : consequences) {
 			Set<NamedNode<?>> filters = new HashSet<NamedNode<?>>();
 			for (NamedSourceNode source : root.root) {
-				for (NamedNode<?> filterNN : source.children()) {
-					filters.add(filterNN);
+				for (NamedStream edge : source.childEdges()){
+					for (NamedNode<?> filterNN : edge.destinations()) {
+						filters.add(filterNN);
+					}
 				}
 			}
 			for (NamedNode<?> filter : filters){
 				
 			}
-			namedNode.connect(
-				new NamedStream("link"), 
-				root.reentrant
-			);
+			NamedStream str = new NamedStream(namedNode.getName());
+			namedNode.connectOutgoingEdge(str);
+			root.reentrant.connectIncomingEdge(str);
 		}
 	}
 
@@ -317,7 +323,9 @@ public class GreedyOrchestrator implements Orchestrator{
 				function
 			);
 			for (NamedNode<? extends IVFunction<Context, Context>> body : bodies) {
-				body.connect(new NamedStream("link"), consequenceNode);
+				NamedStream str = new NamedStream(body.getName());
+				body.connectOutgoingEdge(str);
+				consequenceNode.connectIncomingEdge(str);
 			}
 			consequencesList.add(consequenceNode);
 		}
@@ -353,7 +361,9 @@ public class GreedyOrchestrator implements Orchestrator{
 					nextPredicateName(),
 					pred
 			);
-			currentNode.connect(new NamedStream("link"), prednode);
+			NamedStream str = new NamedStream(currentNode.getName());
+			currentNode.connectOutgoingEdge(str);
+			prednode.connectIncomingEdge(str);
 			currentNode = prednode;
 		}
 		return currentNode;
@@ -421,7 +431,9 @@ public class GreedyOrchestrator implements Orchestrator{
 				filterFunc
 		);
 		for (NamedSourceNode input : root.root) {
-			input.connect(new NamedStream("link"), currentNode);;
+			NamedStream str = new NamedStream(input.getName());
+			input.connectOutgoingEdge(str);
+			currentNode.connectIncomingEdge(str);
 		}
 		return currentNode;
 	}

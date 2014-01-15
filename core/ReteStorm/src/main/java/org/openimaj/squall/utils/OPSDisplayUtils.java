@@ -53,18 +53,20 @@ public class OPSDisplayUtils {
 
 		}
 		for (NamedStream e : ops.edgeSet()) {
-			NamedNode<?> edgeSource = ops.getEdgeSource(e);
-			NamedNode<?> edgeTarget = ops.getEdgeTarget(e);
-			Object edgeSourceCell = cells.get(edgeSource.getName());
-			Object edgeTargetCell = cells.get(edgeTarget.getName());
-			if(edgeSource.isReentrantSource()) {
-				edgeTargetCell = null;
+			for (NamedNode<?> edgeSource : e.sources()){
+				for (NamedNode<?> edgeTarget : e.destinations()){
+					Object edgeSourceCell = cells.get(edgeSource.getName());
+					Object edgeTargetCell = cells.get(edgeTarget.getName());
+					if(edgeSource.isReentrantSource()) {
+						edgeTargetCell = null;
+					}
+					mxgraph.insertEdge(
+						mxgraph.getDefaultParent(), null, e.identifier(), 
+						edgeSourceCell, 
+						edgeTargetCell
+					);
+				}
 			}
-			mxgraph.insertEdge(
-				mxgraph.getDefaultParent(), null, e.identifier(), 
-				edgeSourceCell, 
-				edgeTargetCell
-			);
 		}
 		
 		

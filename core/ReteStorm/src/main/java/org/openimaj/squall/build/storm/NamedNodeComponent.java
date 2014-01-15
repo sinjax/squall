@@ -41,12 +41,16 @@ public abstract class NamedNodeComponent implements IComponent{
 		new HashMap<String,Function<Context, Context>>();
 		this.outputStreams = new ArrayList<String>();
 		for (NamedStream edge : nn.childEdges()) {
-			this.outputStreams.add(constructStreamName(nn,edge,nn.getRoot().getEdgeTarget(edge)));
+			for (NamedNode<?> child : edge.destinations()){
+				this.outputStreams.add(StormUtils.legalizeStormIdentifier(constructStreamName(nn,edge,child)));
+			}
 		}
 		this.correctedStreamName = new HashMap<String,String>();
 		for (NamedStream edge : nn.parentEdges()) {
-			String stormName = constructStreamName(nn.getRoot().getEdgeSource(edge),edge,nn);
+			for (NamedNode<?> parent : edge.sources()){
+				String stormName = StormUtils.legalizeStormIdentifier(constructStreamName(parent,edge,nn));
 				this.correctedStreamName.put(stormName, edge.identifier());
+			}
 		}
 	}
 	

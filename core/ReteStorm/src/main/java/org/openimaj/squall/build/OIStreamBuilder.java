@@ -52,7 +52,7 @@ public class OIStreamBuilder implements Builder{
 		 * By defenition this must be the NamedNode which holds the Operation so start the forEach here
 		 * 
 		 */
-		if(disconnected.size() == 1 && disconnected.iterator().next().childCount() == 0){
+		if(disconnected.size() == 1 && disconnected.iterator().next().outgoingEdgeCount() == 0){
 			NamedNode<?> last = disconnected.iterator().next();
 			if(last.isInitialisable()){
 				Initialisable init = last.getInit();
@@ -112,7 +112,7 @@ public class OIStreamBuilder implements Builder{
 				}
 				
 				Stream<Context> source = new NonBlockingStream<Context>(namedNode.getSource().apply()).map(new NullCatch<Context>());
-				if(namedNode.childCount() > 1){
+				if(namedNode.outgoingEdgeCount() > 1){
 					source = new SplitStream<Context>(source);
 				}
 				state.put(name, source);
@@ -139,7 +139,7 @@ public class OIStreamBuilder implements Builder{
 					} else {
 						funStream = parents.get(0).map(fun);				
 					}
-					if(namedNode.childCount() > 1){
+					if(namedNode.outgoingEdgeCount() > 1){
 						funStream = new SplitStream<Context>(funStream);
 					}
 					
@@ -152,20 +152,22 @@ public class OIStreamBuilder implements Builder{
 			}
 			else{
 				// add the children!
-				for (NamedNode<?> child : namedNode.children()) {
-					if(child.isReentrantSource()){
-						// If the child is the reentrant source, it must already be added, you must add the parent to the child
-						Stream<Context> reentrantSource = state.get(child.getName());
-						// The reentrant source is a SplitStream which contains a join, this node must be added to that join!
-						JoinStream<Context> strm = (JoinStream<Context>) ((SplitStream<Context>)reentrantSource).getInnerStream();
-						Stream<Context> currentStream = state.get(name);
-						MultiFunction<Context, Context> reentrantFun = child.getFunction();
-						Stream<Context> mapped = currentStream.map(reentrantFun);
-						Stream<Context> loopGuarded = new StreamLoopGuard<Context>(mapped);
-//						strm.addStream(loopGuarded);
-					}
-					else{						
-						newdisconnected.add(child);
+				for (NamedStream outStream : namedNode.childEdges()){
+					for (NamedNode<?> child : outStream.destinations()) {
+						if(child.isReentrantSource()){
+							// If the child is the reentrant source, it must already be added, you must add the parent to the child
+							Stream<Context> reentrantSource = state.get(child.getName());
+							// The reentrant source is a SplitStream which contains a join, this node must be added to that join!
+							JoinStream<Context> strm = (JoinStream<Context>) ((SplitStream<Context>)reentrantSource).getInnerStream();
+							Stream<Context> currentStream = state.get(name);
+							MultiFunction<Context, Context> reentrantFun = child.getFunction();
+							Stream<Context> mapped = currentStream.map(reentrantFun);
+							Stream<Context> loopGuarded = new StreamLoopGuard<Context>(mapped);
+//							strm.addStream(loopGuarded);
+						}
+						else{						
+							newdisconnected.add(child);
+						}
 					}
 				}
 			}
@@ -184,9 +186,11 @@ public class OIStreamBuilder implements Builder{
 		List<Stream<Context>> ret = new ArrayList<Stream<Context>>();
 		for (NamedStream edge : namedNode.parentEdges()) {
 			Function<Context, Context> edgeFunction = edge.getFunction();
-			String sourceName = ops.getEdgeSource(edge).getName();
+			for (NamedNode<?> node : edge.destinations()){
+				String sourceName = node.getName();
 				Stream<Context> sourceStream = state.get(sourceName);
 				ret.add(sourceStream.map(edgeFunction));
+			}
 		}
 		return ret;
 	}
@@ -199,9 +203,11 @@ public class OIStreamBuilder implements Builder{
 	 */
 	private boolean containsAllParents(Map<String, Stream<Context>> state,NamedNode<?> namedNode) {
 		
-		for (NamedNode<?> par : namedNode.parents()) {
+		for (NamedStream edge : namedNode.parentEdges()){
+			for (NamedNode<?> par : edge.sources()) {
 				if(!state.containsKey(par.getName())){
 					return false;
+				}
 			}
 		}
 		return true;

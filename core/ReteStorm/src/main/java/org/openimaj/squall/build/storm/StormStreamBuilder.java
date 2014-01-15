@@ -162,10 +162,12 @@ public class StormStreamBuilder implements Builder{
 			}
 			else{
 				// add the children!
-				for (NamedNode<?> child : namedNode.children()) {
+				for (NamedStream edge : namedNode.childEdges()){
+					for (NamedNode<?> child : edge.destinations()) {
 						if(!disconnected.contains(child) && !state.containsKey(StormUtils.legalizeStormIdentifier(child.getName())))
 						{
 							newdisconnected.add(child);
+						}
 					}
 				}
 			}
@@ -182,8 +184,10 @@ public class StormStreamBuilder implements Builder{
 	private List<IndependentPair<NamedStream, NamedNode<?>>> extractParentStreams(OrchestratedProductionSystem ops, NamedNode<?> namedNode) {
 		List<IndependentPair<NamedStream, NamedNode<?>>> ret = new ArrayList<IndependentPair<NamedStream, NamedNode<?>>>();
 		for (NamedStream edge : namedNode.parentEdges()) {
-			IndependentPair<NamedStream, NamedNode<?>> pair = new IndependentPair<NamedStream, NamedNode<?>>(edge, ops.getEdgeSource(edge));
-			ret.add(pair);
+			for (NamedNode<?> nn : edge.sources()){
+				IndependentPair<NamedStream, NamedNode<?>> pair = new IndependentPair<NamedStream, NamedNode<?>>(edge, nn);
+				ret.add(pair);
+			}
 		}
 		return ret;
 	}
@@ -196,9 +200,11 @@ public class StormStreamBuilder implements Builder{
 	 */
 	private boolean containsAllParents(Map<String, NamedNode<?>> state,NamedNode<?> namedNode) {
 		
-		for (NamedNode<?> par : namedNode.parents()) {
+		for (NamedStream edge : namedNode.parentEdges()){
+			for (NamedNode<?> par : edge.sources()) {
 				if(!state.containsKey(StormUtils.legalizeStormIdentifier(par.getName()))){
 					return false;
+				}
 			}
 		}
 		return true;

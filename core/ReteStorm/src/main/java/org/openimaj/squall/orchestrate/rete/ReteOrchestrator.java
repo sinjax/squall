@@ -61,14 +61,18 @@ public class ReteOrchestrator implements Orchestrator{
 
 	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op) {
 		NamedNode<?> opNode = new NGNOperation(ret, "OPERATION", op);
-		for (NamedNode<?> namedNode : ret.getLeaves()) {			
-			namedNode.connect(new NamedStream("link"), opNode);
+		for (NamedNode<?> namedNode : ret.getLeaves()) {
+			NamedStream str = new NamedStream(namedNode.getName());
+			namedNode.connectOutgoingEdge(str); 
+			opNode.connectIncomingEdge(str);
 		}
 	}
 
 	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op, NamedNode<? extends IVFunction<Context, Context>> finalsys) {
 		NamedNode<?> opNode = new NGNOperation(ret, "OPERATION", op);
-		finalsys.connect(new NamedStream("link"), opNode);
+		NamedStream str = new NamedStream(finalsys.getName());
+		finalsys.connectOutgoingEdge(str);
+		opNode.connectIncomingEdge(str);
 	}
 
 	private void orchestrateSources(CompiledProductionSystem sys,OrchestratedProductionSystem root) {
@@ -111,7 +115,9 @@ public class ReteOrchestrator implements Orchestrator{
 			function
 		);
 		for (NamedNode<?> namedNode : joinedCPS) {
-			namedNode.connect(new NamedStream("link"), consequenceNode);
+			NamedStream str = new NamedStream(namedNode.getName());
+			namedNode.connectOutgoingEdge(str);
+			consequenceNode.connectIncomingEdge(str);
 		}
 		return consequenceNode;
 	}
@@ -131,7 +137,9 @@ public class ReteOrchestrator implements Orchestrator{
 				nextPredicateName(),
 				pred
 			);
-			currentNode.connect(new NamedStream("link"), prednode);
+			NamedStream str = new NamedStream(currentNode.getName());
+			currentNode.connectOutgoingEdge(str);
+			prednode.connectIncomingEdge(str);
 			currentNode = prednode;
 		}
 		return currentNode;
@@ -202,7 +210,9 @@ public class ReteOrchestrator implements Orchestrator{
 				filterFunc
 		);
 		for (NamedSourceNode input : root.root) {
-			input.connect(new NamedStream("link"), currentNode);;
+			NamedStream str = new NamedStream(input.getName());
+			input.connectOutgoingEdge(str);
+			currentNode.connectIncomingEdge(str);
 		}
 		return currentNode;
 	}

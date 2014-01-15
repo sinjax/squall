@@ -1,8 +1,8 @@
 package org.openimaj.squall.orchestrate;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -13,12 +13,10 @@ import java.util.List;
  * @param <DATA> The type of data held by the node
  *
  */
-public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> implements Iterable<NODE>{
-	protected List<NODE> children;
-	protected List<NODE> parents;
-	protected List<EDGE> childEdges;
-	private DirectedGraph<NODE, EDGE> root;
-	private ArrayList<EDGE> parentEdges;
+public abstract class DGNode<NODE extends DGNode<NODE, EDGE, ?>, EDGE extends DirectedEdge<NODE>, DATA> implements Iterable<NODE>{
+	protected Set<EDGE> childEdges;
+	protected DirectedGraph<NODE, EDGE> root;
+	protected Set<EDGE> parentEdges;
 	
 	/**
 	 * @param root 
@@ -26,53 +24,10 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> impleme
 	 */
 	@SuppressWarnings("unchecked")
 	public DGNode(DirectedGraph<NODE, EDGE> root) {
-		this.children = new ArrayList<NODE>();
-		this.parents = new ArrayList<NODE>();
-		this.childEdges = new ArrayList<EDGE>();
-		this.parentEdges = new ArrayList<EDGE>();
+		this.childEdges = new HashSet<EDGE>();
+		this.parentEdges = new HashSet<EDGE>();
 		this.root = root;
 		this.root.addVertex((NODE) this);
-	}
-	
-	/**
-	 * @param child
-	 * @return the child being added
-	 */
-	NODE addChild(NODE child){
-		this.children.add(child);
-		return child;
-	}
-	
-	@Override
-	public Iterator<NODE> iterator() {
-		return childiterator();
-	}
-	
-	/**
-	 * @return
-	 */
-	private Iterator<NODE> childiterator() {
-		return this.children.iterator();
-	}
-	
-	/**
-	 * @return
-	 */
-	private Iterator<NODE> parentiterator() {
-		return this.parents.iterator();
-	}
-	
-	/**
-	 * @return iterable of the parents
-	 */
-	public Iterable<NODE> parents(){
-		return new Iterable<NODE>() {
-
-			@Override
-			public Iterator<NODE> iterator() {
-				return parentiterator();
-			}
-		};
 	}
 	
 	/**
@@ -102,46 +57,61 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> impleme
 	}
 	
 	/**
-	 * @return iterable of the parents
+	 * @param edge
+	 * @return 
 	 */
-	public Iterable<NODE> children(){
-		return new Iterable<NODE>() {
-
-			@Override
-			public Iterator<NODE> iterator() {
-				return childiterator();
-			}
-		};
-	}
-
-	/**
-	 * @param child
-	 * @return the child being added
-	 */
-	NODE addParent(NODE parent){
-		this.parents.add(parent);
-		return parent;
-	}
-	
-	void addEdge(EDGE edge){
-		this.childEdges.add(edge);
-	}
-	
-	void addParentEdge(EDGE edge){
-		this.parentEdges.add(edge);
+	public boolean addEdge(EDGE edge){
+		return this.childEdges.add(edge);
 	}
 	
 	/**
 	 * @param edge
-	 * @param child
+	 * @return 
+	 */
+	public boolean addIncomingEdge(EDGE edge){
+		return this.parentEdges.add(edge);
+	}
+	
+	/**
+	 * @param edge
 	 */
 	@SuppressWarnings("unchecked")
-	public void connect(EDGE edge, NODE child) {
-		this.addChild(child);
-		child.addParent((NODE) this);
-		this.addEdge(edge);
-		child.addParentEdge(edge);
-		this.root.addEdge(edge, (NODE) this, child);
+	public void connectOutgoingEdge(EDGE edge) {
+		if (!this.root.addEdge(edge)){
+			for (EDGE e : this.root.edgeSet()){
+				if (e.equals(edge)){
+					edge = e;
+					break;
+				}
+			}
+		}
+		
+		if (!this.childEdges.contains(edge)){
+			this.addEdge(edge);
+		}
+		
+		edge.addSource((NODE) this);
+	}
+	
+	/**
+	 * @param edge
+	 */
+	@SuppressWarnings("unchecked")
+	public void connectIncomingEdge(EDGE edge) {
+		if (!this.root.addEdge(edge)){
+			for (EDGE e : this.root.edgeSet()){
+				if (e.equals(edge)){
+					edge = e;
+					break;
+				}
+			}
+		}
+		
+		if (!this.parentEdges.contains(edge)){
+			this.addIncomingEdge(edge);
+		}
+		
+		edge.addDestination((NODE) this);
 	}
 	
 	/**
@@ -152,15 +122,15 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> impleme
 	/**
 	 * @return number of child nodes
 	 */
-	public int childCount() {
-		return this.children.size();
+	public int outgoingEdgeCount() {
+		return this.childEdges.size();
 	}
 	
 	/**
 	 * @return number of parent nodes
 	 */
-	public int parentCount() {
-		return this.parents.size();
+	public int incomingEdgeCount() {
+		return this.parentEdges.size();
 	}
 	
 	/**
@@ -168,6 +138,37 @@ public abstract class DGNode<NODE extends DGNode<NODE,EDGE,?>,EDGE,DATA> impleme
 	 */
 	public DirectedGraph<NODE, EDGE> getRoot(){
 		return this.root;
+	}
+	
+	public Iterator<NODE> iterator(){
+		return new Iterator<NODE>(){
+
+			private Iterator<EDGE> edges = childEdges.iterator();
+			private Iterator<NODE> dests = null;
+			
+			@Override
+			public boolean hasNext() {
+				if (this.dests == null || !this.dests.hasNext()){
+					if (this.edges.hasNext()){
+						this.dests = this.edges.next().destinations.iterator();
+						return true;
+					}
+					return false;
+				}
+				return true;
+			}
+
+			@Override
+			public NODE next() {
+				return this.dests.next();
+			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException("Cannot remove a child NODE whilst iterating");
+			}
+			
+		};
 	}
 	
 }

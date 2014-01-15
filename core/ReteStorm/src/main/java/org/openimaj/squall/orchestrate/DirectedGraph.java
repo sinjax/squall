@@ -1,32 +1,31 @@
 package org.openimaj.squall.orchestrate;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.openimaj.util.pair.Pair;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  * @param <NODE>
- * @param <EDGE>
+ * @param <EDGE> 
  */
-public abstract class DirectedGraph<NODE extends DGNode<NODE, EDGE, ?>,EDGE> {
+public abstract class DirectedGraph<NODE extends DGNode<NODE, EDGE, ?>,EDGE extends DirectedEdge<NODE>> {
 	
 	
 	private HashSet<NODE> verts = new HashSet<NODE>();
-	private HashMap<EDGE,Pair<NODE>> edges = new HashMap<EDGE, Pair<NODE>>();
+	private HashSet<EDGE> edges = new HashSet<EDGE>();
 	
 	/**
 	 * @return set of nodes with no children
 	 */
 	public Set<NODE> getLeaves() {
 		Set<NODE> leaves = new HashSet<NODE>();
-		for (Pair<NODE> node : this.edges.values()) {
-			if(node.secondObject().childCount() == 0)
-			{
-				leaves.add(node.secondObject());
+		for (EDGE edge : this.edges) {
+			for (NODE node : edge.destinations()){
+				if(node.outgoingEdgeCount() == 0)
+				{
+					leaves.add(node);
+				}
 			}
 		}
 		return leaves;
@@ -44,39 +43,23 @@ public abstract class DirectedGraph<NODE extends DGNode<NODE, EDGE, ?>,EDGE> {
 	 * @return the verticies of this graph
 	 */
 	public Set<EDGE> edgeSet() {
-		return edges.keySet();
+		return edges;
 	}
 	
 	/**
 	 * @param node
+	 * @return 
 	 */
-	public void addVertex(NODE node){
-		this.verts.add(node);
+	public boolean addVertex(NODE node){
+		return this.verts.add(node);
 	}
 	
 	/**
 	 * @param edge 
-	 * @param start 
-	 * @param end 
+	 * @return 
 	 */
-	public void addEdge(EDGE edge, NODE start, NODE end){
-		this.edges.put(edge,new Pair<NODE>(start,end));
-	}
-	
-	/**
-	 * @param e
-	 * @return the start of an edge
-	 */
-	public NODE getEdgeSource(EDGE e) {
-		return this.edges.get(e).firstObject();
-	}
-	
-	/**
-	 * @param e
-	 * @return the start of an edge
-	 */
-	public NODE getEdgeTarget(EDGE e) {
-		return this.edges.get(e).secondObject();
+	public boolean addEdge(EDGE edge){
+		return this.edges.add(edge);
 	}
 	
 }

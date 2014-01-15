@@ -87,7 +87,7 @@ public class LiteralNotEqualProvider extends ExternalFunctionProvider {
 		public String identifier() {
 			StringBuilder anon = new StringBuilder();
 			if (super.varHolder == null){
-				anon.append(super.varHolder.identifier(varmap));
+				anon.append(super.varHolder.identifier());
 			}
 			anon.append("LiteralNotEqual(");
 			if (super.nodes.length > 0){

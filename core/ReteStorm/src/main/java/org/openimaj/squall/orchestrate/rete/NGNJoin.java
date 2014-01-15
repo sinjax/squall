@@ -33,8 +33,13 @@ public class NGNJoin extends NNIVFunction {
 		List<String> rsv = ((StreamAwareFixedJoinFunction) this.getData()).rightSharedVars();
 		String[] rightSharedVars = rsv.toArray(new String[rsv.size()]);
 		
-		left.connect(new NamedStream(left.getVariableHolder().identifier(), leftSharedVars), this);
-		right.connect(new NamedStream(right.getVariableHolder().identifier(), rightSharedVars), this);
+		NamedStream leftStream = new NamedStream(left.getVariableHolder().identifier(), leftSharedVars);
+		left.connectOutgoingEdge(leftStream);
+		this.connectIncomingEdge(leftStream);
+		
+		NamedStream rightStream = new NamedStream(right.getVariableHolder().identifier(), rightSharedVars);
+		right.connectOutgoingEdge(rightStream);
+		this.connectIncomingEdge(rightStream);
 	}
 
 }
