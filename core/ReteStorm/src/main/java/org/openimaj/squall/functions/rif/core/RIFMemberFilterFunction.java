@@ -1,10 +1,9 @@
 package org.openimaj.squall.functions.rif.core;
 
 import org.openimaj.rifcore.conditions.formula.RIFMember;
-import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.functions.rif.filters.BaseTripleFilterFunction;
 
-import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 
 /**
@@ -22,7 +21,7 @@ public class RIFMemberFilterFunction extends BaseTripleFilterFunction {
 	private static TriplePattern extractTriplePattern(RIFMember rm){
 		TriplePattern tp = new TriplePattern(
 				rm.getInstance().getNode(),
-				Node.createURI(RDF_TYPE_URI),
+				NodeFactory.createURI(RDF_TYPE_URI),
 				rm.getInClass().getNode()
 			);
 		return tp; //TODO proper conversion

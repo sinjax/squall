@@ -10,4 +10,11 @@ package org.openimaj.squall.compile.data;
  */
 public abstract class IVFunction<I,O> extends AnonimisedRuleVariableHolder implements IFunction<I,O>{
 
+	@Override
+	public void setup() {}
+	@Override
+	public void cleanup() {
+		super.wipeVars();
+	}
+	
 }

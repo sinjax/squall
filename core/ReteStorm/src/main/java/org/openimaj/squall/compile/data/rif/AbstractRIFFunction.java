@@ -43,10 +43,4 @@ public abstract class AbstractRIFFunction extends IVFunction<Context, Context> {
 				: nodeString;
 	}
 
-	@Override
-	public void setup() {}
-
-	@Override
-	public void cleanup() {}
-
 }
