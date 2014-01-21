@@ -52,12 +52,13 @@ public class StormUtils {
 	@SuppressWarnings("unchecked")
 	public static <T> T deserialiseFunction(Kryo kryo, byte[] bytes) {
 		Object obj;
+		Input input = new Input(bytes);
 		try {
-			obj = kryo.readClassAndObject(new Input(bytes));
+			obj = kryo.readClassAndObject(input);
 		} catch (final KryoException e) {
 			kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
 			try{
-				obj = kryo.readClassAndObject(new Input(bytes));
+				obj = kryo.readClassAndObject(input);
 			}catch(Throwable t){
 				throw new RuntimeException(t);
 			}
@@ -70,9 +71,9 @@ public class StormUtils {
 	 * @return
 	 */
 	public static String legalizeStormIdentifier(String identifier){
-		return identifier.replaceAll("\\(","")
+		return identifier/*.replaceAll("\\(","")
 						 .replaceAll("\\)",",")
 						 .replaceAll("_","-")
-						 .replaceAll("\\?","VAR");
+						 .replaceAll("\\?","VAR")*/;
 	}
 }

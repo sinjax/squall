@@ -27,7 +27,7 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1803166504917265930L;
+	private static final long serialVersionUID = 792877157792845249L;
 	private Stream<Context> stream;
 	private ISource<Stream<Context>> streamSource;
 	private SpoutOutputCollector collector;

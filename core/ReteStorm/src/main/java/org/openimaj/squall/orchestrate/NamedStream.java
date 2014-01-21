@@ -3,8 +3,6 @@ package org.openimaj.squall.orchestrate;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 
-import cern.colt.Arrays;
-
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * A {@link NamedStream} has a name, a start node, an end node and an ordered list of variables. 
