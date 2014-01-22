@@ -24,6 +24,7 @@ public class BaseBindingConsequence extends AbstractRIFFunction implements ICons
 
 	private static final Logger logger = Logger.getLogger(BaseBindingConsequence.class);
 	private String[] inVars;
+	private String[] outVars;
 	private String id;
 	
 	/**
@@ -41,11 +42,13 @@ public class BaseBindingConsequence extends AbstractRIFFunction implements ICons
 	@Override
 	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
 		this.inVars = new String[this.varCount()];
+		this.outVars = new String[this.varCount()];
 		
 		Map<String, String> subRuleToBaseVarMap = arvh.ruleToBaseVarMap();
 		for (int i = 0; i < this.varCount(); i++){
 			this.putRuleToBaseVarMapEntry(this.getVariable(i), subRuleToBaseVarMap.get(this.getVariable(i)));
 			this.inVars[i] = subRuleToBaseVarMap.get(this.getVariable(i));
+			this.outVars[i] = this.getVariable(i);
 		}
 	}
 	
@@ -57,7 +60,7 @@ public class BaseBindingConsequence extends AbstractRIFFunction implements ICons
 										bindings,
 										this.inVars
 									),
-									this.variables()
+									this.outVars
 								);
 		
 		Context out = new Context();

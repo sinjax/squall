@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.utils.JenaStormUtils;
+import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.utils.JenaUtils;
@@ -25,7 +26,7 @@ public class MultiFunctionBolt extends ProcessingBolt {
 	 * 
 	 */
 	private static final long serialVersionUID = 2034257684933988838L;
-	private IVFunction<Context, Context> fun;
+	private IFunction<Context, Context> fun;
 	private byte[] serializedFun;
 	/**
 	 * @param nn

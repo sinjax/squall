@@ -68,7 +68,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testSimpleRulesBuilder(){
-		testRuleSet(readRules("/test.simple.rule.rif"));
+		testRuleSet(readRules("/test.simple.rule.rif"), -1);
 	}
 	
 	/**
@@ -76,7 +76,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testSimpleJoinBuilder(){
-		testRuleSet(readRules("/test.simplejoin.rule.rif"));
+		testRuleSet(readRules("/test.simplejoin.rule.rif"), -1);
 	}
 	
 	/**
@@ -84,7 +84,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testComplexRules(){
-		testRuleSet(readRules("/test.complexjoin.rule.rif"));
+		testRuleSet(readRules("/test.complexjoin.rule.rif"), -1);
 	}
 	
 	/**
@@ -92,7 +92,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testMultiUnionRules(){
-		testRuleSet(readRules("/test.multiunion.rule.rif"));
+		testRuleSet(readRules("/test.multiunion.rule.rif"), -1);
 	}
 	
 	/**
@@ -100,10 +100,10 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testLSBenchRulesBuilder(){
-		testRuleSet(readRules("/lsbench/queries/rif/query-7.5-with-small-test-data.rif"));
+		testRuleSet(readRules("/lsbench/queries/rif/query-7.5-with-small-test-data.rif"), -1);
 	}
 	
-	private void testRuleSet(RIFRuleSet ruleSet) {
+	private void testRuleSet(RIFRuleSet ruleSet, int sleep) {
 		ExternalLoader.loadExternals();
 		
 		IOperation<Context> op = new PrintAllOperation();
@@ -114,7 +114,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 		CombinedSourceGreedyOrchestrator go = new CombinedSourceGreedyOrchestrator();
 		OrchestratedProductionSystem orchestrated = go.orchestrate(comp, op );
 		
-		Builder builder = StormStreamBuilder.localClusterBuilder(5000);
+		Builder builder = StormStreamBuilder.localClusterBuilder(sleep);
 		builder.build(orchestrated);
 	}
 	

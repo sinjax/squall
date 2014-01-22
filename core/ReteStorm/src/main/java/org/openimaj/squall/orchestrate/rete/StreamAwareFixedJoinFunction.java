@@ -200,6 +200,7 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 	
 	@Override
 	public void setup() {
+		super.setup();
 		leftQueue = new FixedHashSteM(this.leftOverflow, this.sharedOutVars, this.leftOverflow.getWindowInformation());
 		rightQueue = new FixedHashSteM(this.rightOverflow, this.sharedOutVars, this.rightOverflow.getWindowInformation());
 		
@@ -211,7 +212,7 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 
 	@Override
 	public void cleanup() {
-		this.wipeVars();
+		super.cleanup();
 		this.contributors = null;
 		
 		this.leftQueue = null;
