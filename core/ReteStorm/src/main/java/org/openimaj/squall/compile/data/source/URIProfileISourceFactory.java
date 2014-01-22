@@ -17,13 +17,17 @@ import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.Stream;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
 public class URIProfileISourceFactory {
 	private static final Logger logger = Logger.getLogger(URIProfileISourceFactory.class);
-	private final class LocationProfileISource implements ISource<Stream<Context>> {
+	private static final class LocationProfileISource implements ISource<Stream<Context>> {
 		private Function<URI, InputStream> reader;
 		private Function<InputStream, Stream<Context>> creator;
 		private URI location;
@@ -63,9 +67,27 @@ public class URIProfileISourceFactory {
 		public String toString() {
 			return this.location.toString();
 		}
+		
+		@SuppressWarnings("unused") // required for deserialisation by reflection
+		private LocationProfileISource(){}
+
+		@Override
+		public void write(Kryo kryo, Output output) {
+			kryo.writeClassAndObject(output, this.reader);
+			kryo.writeClassAndObject(output, this.creator);
+			kryo.writeClassAndObject(output, this.location);
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public void read(Kryo kryo, Input input) {
+			this.reader = (Function<URI, InputStream>) kryo.readClassAndObject(input);
+			this.creator = (Function<InputStream, Stream<Context>>) kryo.readClassAndObject(input);
+			this.location = (URI) kryo.readClassAndObject(input);
+		}
 	}
 	
-	private final class LocationISource implements ISource<Stream<Context>> {
+	private static final class LocationISource implements ISource<Stream<Context>> {
 		private Function<URI, Stream<Context>> reader;
 		private URI location;
 
@@ -90,6 +112,22 @@ public class URIProfileISourceFactory {
 
 		@Override
 		public void cleanup() {
+		}
+
+		@SuppressWarnings("unused") // required for deserialisation by reflection
+		private LocationISource(){}
+		
+		@Override
+		public void write(Kryo kryo, Output output) {
+			kryo.writeClassAndObject(output, this.reader);
+			kryo.writeClassAndObject(output, this.location);
+		}
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public void read(Kryo kryo, Input input) {
+			this.reader = (Function<URI, Stream<Context>>) kryo.readClassAndObject(input);
+			this.location = (URI) kryo.readClassAndObject(input);
 		}
 	}
 

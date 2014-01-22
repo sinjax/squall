@@ -14,6 +14,9 @@ import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.AbstractStream;
 import org.openimaj.util.stream.Stream;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
@@ -284,6 +287,20 @@ public abstract class CompiledProductionSystem {
 				}
 				
 				return this;
+			}
+			@Override
+			public void write(Kryo kryo, Output output) {
+				output.writeInt(this.axioms.length);
+				for (int i = 0; i < this.axioms.length; i++){
+					kryo.writeClassAndObject(output, this.axioms[i]);
+				}
+			}
+			@Override
+			public void read(Kryo kryo, Input input) {
+				this.axioms = new Context[input.readInt()];
+				for (int i = 0; i < this.axioms.length; i++){
+					this.axioms[i] = (Context) kryo.readClassAndObject(input);
+				}
 			}
 			
 		}.setAxiomList(this.axioms);

@@ -6,6 +6,9 @@ import org.apache.log4j.Logger;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.graph.TripleMatch;
@@ -26,13 +29,18 @@ public abstract class AbstractTripleFunction extends IVFunction<Context, Context
 	protected Triple extended;
 	
 	/**
+	 * @param r 
 	 * @param clause construct using a {@link TriplePattern}
 	 */
 	public AbstractTripleFunction(Rule r, TriplePattern clause) {
 		super();
-		this.clause = clause;
-		this.extended = asExtendedTripleMatch(clause).asTriple();
-		this.ruleVariables = BindingsUtils.extractRuleVariables(r);
+		if (clause != null){
+			this.clause = clause;
+			this.extended = asExtendedTripleMatch(clause).asTriple();
+		}
+		if (r != null){
+			this.ruleVariables = BindingsUtils.extractRuleVariables(r);
+		}
 	}
 	
 	private TripleMatch asExtendedTripleMatch(TriplePattern tp){
@@ -131,5 +139,39 @@ public abstract class AbstractTripleFunction extends IVFunction<Context, Context
 	public void setup() {}
 	@Override
 	public void cleanup() {}
+	
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.clause);
+		output.writeInt(this.ruleVariables.length);
+		for (int i = 0; i < this.ruleVariables.length; i++){
+			kryo.writeClassAndObject(output, this.ruleVariables[i]);
+		}
+	}
+
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.clause = (TriplePattern) kryo.readClassAndObject(input);
+		
+		Node object = this.clause.getObject();
+		if(Functor.isFunctor(object)){
+			Functor f = (Functor)object.getLiteralValue();
+			Node[] newArgs = new Node[f.getArgLength()];
+			for (int i = 0; i < f.getArgs().length; i++){
+				newArgs[i] = registerVariable(f.getArgs()[i]);
+			}
+			object = Functor.makeFunctorNode(f.getName(), newArgs);
+		}
+		this.extended = new Triple(
+				this.clause.getSubject().isVariable() ? Node.ANY : this.clause.getSubject(),
+				this.clause.getPredicate().isVariable() ? Node.ANY : this.clause.getPredicate(),
+				this.clause.getObject().isVariable() ? Node.ANY : this.clause.getObject()
+			);
+		
+		this.ruleVariables = new Node_RuleVariable[input.readInt()];
+		for (int i = 0; i < this.ruleVariables.length; i++){
+			this.ruleVariables[i] = (Node_RuleVariable) kryo.readClassAndObject(input);
+		}
+	}
 
 }

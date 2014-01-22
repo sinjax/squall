@@ -4,11 +4,16 @@ import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoSerializable;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class WrappedContextISource implements ISource<Stream<Context>>{
+public class WrappedContextISource implements ISource<Stream<Context>>, KryoSerializable {
 	
 	private ContextAugmentingFunction saf;
 	private ISource<Stream<Context>> strm;
@@ -45,6 +50,22 @@ public class WrappedContextISource implements ISource<Stream<Context>>{
 	@Override
 	public String toString() {
 		return this.strm.toString();
+	}
+	
+	@SuppressWarnings("unused") // required for deserialisation by reflection
+	private WrappedContextISource(){}
+
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.saf);
+		kryo.writeClassAndObject(output, this.strm);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.saf = (ContextAugmentingFunction) kryo.readClassAndObject(input);
+		this.strm = (ISource<Stream<Context>>) kryo.readClassAndObject(input);
 	}
 	
 }

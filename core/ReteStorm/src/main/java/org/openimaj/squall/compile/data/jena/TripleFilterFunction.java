@@ -30,6 +30,10 @@ public class TripleFilterFunction extends AbstractTripleFunction {
 		super(r, clause);
 	}
 	
+	private TripleFilterFunction(){
+		super(null, null);
+	}
+	
 	@Override
 	public List<Context> apply(Context inc) {
 		List<Context> ctxs = new ArrayList<Context>();

@@ -4,6 +4,9 @@ import java.util.Map;
 
 import org.openimaj.squall.compile.data.IVFunction;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
@@ -28,9 +31,16 @@ public abstract class AbstractFunctorFunction<T1, T2> extends IVFunction<T1, T2>
 	 * @param clause construct using a {@link TriplePattern}
 	 */
 	public AbstractFunctorFunction(Rule r, Functor clause) {
-		super();
-		this.clause = clause;
-		this.ruleVariables = BindingsUtils.extractRuleVariables(r);
+		if (clause != null){
+			this.clause = clause;
+			this.registerVariables(this.clause);
+		}
+		if (r != null){
+			this.ruleVariables = BindingsUtils.extractRuleVariables(r);
+		}
+	}
+	
+	private void registerVariables(Functor clause){
 		for (Node iterable_element : clause.getArgs()) {
 			if(iterable_element.isVariable()){
 				this.addVariable(iterable_element.getName());
@@ -88,5 +98,24 @@ public abstract class AbstractFunctorFunction<T1, T2> extends IVFunction<T1, T2>
 	
 	@Override
 	public void cleanup() { }
+	
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.clause);
+		output.writeInt(this.ruleVariables.length);
+		for (int i = 0; i < this.ruleVariables.length; i++){
+			kryo.writeClassAndObject(output, this.ruleVariables[i]);
+		}
+	}
+
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.clause = (Functor) kryo.readClassAndObject(input);
+		this.registerVariables(this.clause);
+		this.ruleVariables = new Node_RuleVariable[input.readInt()];
+		for (int i = 0; i < this.ruleVariables.length; i++){
+			this.ruleVariables[i] = (Node_RuleVariable) kryo.readClassAndObject(input);
+		}
+	}
 	
 }

@@ -55,9 +55,13 @@ public class TestRIFPredicateFunctions {
 	private AnonimisedRuleVariableHolder arvh;
 	private IVFunction<Context,Context> func;
 	
+	/**
+	 * 
+	 */
 	@Before
 	public void before(){
 		this.vars = new ArrayList<Node_Variable>();
+		this.vars.add((Node_Variable) NodeFactory.createVariable("foo"));
 		
 		this.arvh = new StubAnonRVarHolder(this.vars);
 	}

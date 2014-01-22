@@ -14,6 +14,9 @@ import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
@@ -104,6 +107,21 @@ public class RIFAtomConsequence extends AbstractRIFFunction implements IConseque
 	@Override
 	public String toString() {
 		return String.format("CONSEQUENCE: clause %s",this.clause.toString());
+	}
+	
+	@SuppressWarnings("unused") // required for deserialisation by reflection
+	private RIFAtomConsequence(){}
+
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.clause);
+		output.writeString(this.id);
+	}
+
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.clause = (Functor) kryo.readClassAndObject(input);
+		this.id = input.readString();
 	}
 
 }

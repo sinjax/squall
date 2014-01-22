@@ -12,6 +12,9 @@ import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Node_Variable;
 
@@ -87,6 +90,23 @@ public class BaseBindingConsequence extends AbstractRIFFunction implements ICons
 	@Override
 	public String toString() {
 		return String.format("CONSEQUENCE: inVariables %s -> outVariables %s", Arrays.toString(this.inVars), Arrays.toString(this.variables()));
+	}
+	
+	@SuppressWarnings("unused") // required for deserialisation by reflection
+	private BaseBindingConsequence(){}
+
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.inVars);
+		kryo.writeClassAndObject(output, this.outVars);
+		output.writeString(this.id);
+	}
+
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.inVars = (String[]) kryo.readClassAndObject(input);
+		this.outVars = (String[]) kryo.readClassAndObject(input);
+		this.id = input.readString();
 	}
 
 }

@@ -9,6 +9,10 @@ import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.NGNOperation;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
@@ -26,6 +30,13 @@ public class TestOperationBolt {
 		private static final long serialVersionUID = -9434419327111404L;
 		private int expected;
 		private int count;
+		
+		/**
+		 * creates a PrintAllOperation that will never realistically be satisfied.
+		 */
+		public PrintAllOperation() {
+			this(Integer.MAX_VALUE);
+		}
 		
 		/**
 		 * @param expected
@@ -51,6 +62,18 @@ public class TestOperationBolt {
 		@Override
 		public void perform(Context object) {
 			this.count ++;
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {
+			output.writeInt(this.expected);
+			output.writeInt(this.count);
+		}
+
+		@Override
+		public void read(Kryo kryo, Input input) {
+			this.expected = input.readInt();
+			this.count = input.readInt();
 		}
 	}
 	

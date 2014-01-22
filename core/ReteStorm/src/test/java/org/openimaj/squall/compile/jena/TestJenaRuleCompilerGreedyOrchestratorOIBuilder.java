@@ -24,6 +24,9 @@ import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
@@ -47,6 +50,11 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 		public void perform(Context object) {
 			System.out.println(object);
 		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {}
+		@Override
+		public void read(Kryo kryo, Input input) {}
 	}
 
 	private SourceRulePair nojoinRules;
@@ -105,7 +113,20 @@ public class TestJenaRuleCompilerGreedyOrchestratorOIBuilder {
 			}
 			
 			@Override
-			public void cleanup() { }
+			public void cleanup() {
+				try {
+					this.nTripleStream.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				this.nTripleStream = null;
+			}
+
+			@Override
+			public void write(Kryo kryo, Output output) {}
+			@Override
+			public void read(Kryo kryo, Input input) {}
 		};
 		
 		nojoinRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.nojoin.rules"));

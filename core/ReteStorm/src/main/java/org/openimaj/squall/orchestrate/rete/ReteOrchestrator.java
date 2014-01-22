@@ -183,12 +183,35 @@ public class ReteOrchestrator implements Orchestrator{
 			NamedNode<? extends IVFunction<Context, Context>> left,
 			NamedNode<? extends IVFunction<Context, Context>> right) {
 		// Create a new NGNIVFunction that performs the desired IVFunction.
-		NGNJoin joined = new NGNJoin(root,nextJoinName(), left, right, this.windowInformation);
+		StreamAwareFixedJoinFunction join = new StreamAwareFixedJoinFunction(
+														left.getData(),
+														this.windowInformation,
+														right.getData(),
+														this.windowInformation
+											);
+		NamedNode<IVFunction<Context,Context>> joined = new NNIVFunction(root, nextJoinName(), join);
+		
 		// If the function already exists in the set of created functions, return the existing NGNIVFunction.
-		if (funcMap.containsKey(joined.getFunction().identifier())) {
-			return funcMap.get(joined.getFunction().identifier());
+		if (funcMap.containsKey(joined.getVariableHolder().identifier())) {
+			joined = funcMap.get(joined.getVariableHolder().identifier());
+		} else {
+			funcMap.put(joined.getVariableHolder().identifier(),joined);
 		}
-		funcMap.put(joined.getFunction().identifier(),joined);
+		
+		List<String> lsv = join.leftSharedVars();
+		String[] leftSharedVars = lsv.toArray(new String[lsv.size()]);
+		
+		List<String> rsv = join.rightSharedVars();
+		String[] rightSharedVars = rsv.toArray(new String[rsv.size()]);
+		
+		NamedStream leftStream = new NamedStream(left.getVariableHolder().identifier(), leftSharedVars);
+		left.connectOutgoingEdge(leftStream);
+		joined.connectIncomingEdge(leftStream);
+		
+		NamedStream rightStream = new NamedStream(right.getVariableHolder().identifier(), rightSharedVars);
+		right.connectOutgoingEdge(rightStream);
+		joined.connectIncomingEdge(rightStream);
+		
 		return joined;
 	}
 

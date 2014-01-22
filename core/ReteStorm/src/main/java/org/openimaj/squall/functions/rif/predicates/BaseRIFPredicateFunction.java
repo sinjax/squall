@@ -7,6 +7,10 @@ import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IPredicate;
 import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.graph.Node_Concrete;
@@ -128,6 +132,16 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 				return lit.getBlankNodeLabel();
 		}
 		throw new UnsupportedOperationException("Incorrect node type for comparison: " + node);
+	}
+	
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.nodes);
+	}
+
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.nodes = (Node[]) kryo.readClassAndObject(input);
 	}
 	
 }

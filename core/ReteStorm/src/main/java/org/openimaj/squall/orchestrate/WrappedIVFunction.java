@@ -8,11 +8,15 @@ import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *@author David Monks <dm11g08@ecs.soton.ac.uk>
  */
-public class WrappedIVFunction extends IVFunction<Context,Context>{
+public class WrappedIVFunction extends IVFunction<Context,Context> {
 
 	/**
 	 * 
@@ -88,6 +92,22 @@ public class WrappedIVFunction extends IVFunction<Context,Context>{
 	@Override
 	public String toString() {
 		return func.toString();
+	}
+
+	@SuppressWarnings("unused") // required for deserialisation by reflection
+	private WrappedIVFunction(){}
+	
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.saf);
+		kryo.writeClassAndObject(output, this.func);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.saf = (ContextAugmentingFunction) kryo.readClassAndObject(input);
+		this.func = (IVFunction<Context, Context>) kryo.readClassAndObject(input);
 	}
 
 	

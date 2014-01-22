@@ -16,6 +16,9 @@ import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;

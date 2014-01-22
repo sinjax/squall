@@ -13,7 +13,9 @@ import org.openimaj.kestrel.KestrelServerSpec;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.storm.utils.KestrelParsedURI;
 import org.openimaj.storm.utils.KestrelUtils;
-import org.openimaj.util.pair.IndependentPair;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 import backtype.storm.spout.KestrelThriftClient;
 
@@ -117,7 +119,16 @@ public class KestrelWriter implements IOperation<byte[]>{
 
 		}
 	}
+	
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.host);
+	}
 
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.host = (URI) kryo.readClassAndObject(input);
+	}
 
 	@Override
 	public void perform(byte[] item) {

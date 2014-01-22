@@ -10,6 +10,9 @@ import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.reasoner.TriplePattern;
@@ -83,6 +86,19 @@ public class BaseAtomFilterFunction extends AbstractRIFFunction {
 		}
 		obj.append(")");
 		return obj.toString();
+	}
+	
+	@SuppressWarnings("unused") // required for deserialisation by reflection
+	private BaseAtomFilterFunction(){}
+	
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.clause);
+	}
+
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.clause = (Functor) kryo.readClassAndObject(input);
 	}
 
 }

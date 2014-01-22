@@ -1,6 +1,8 @@
 package org.openimaj.squall.data;
 
 
+import java.io.Serializable;
+
 import org.openimaj.squall.compile.data.Initialisable;
 import org.openimaj.util.function.Source;
 
@@ -10,6 +12,6 @@ import org.openimaj.util.function.Source;
  *
  * @param <T>
  */
-public interface ISource<T> extends Initialisable, Source<T>{
+public interface ISource<T> extends Source<T>, Initialisable{
 
 }

@@ -7,6 +7,10 @@ import java.util.Map;
 
 import org.openimaj.squall.compile.data.IVFunction;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
  * A {@link CombinedIVFunction} performs all functions on the data.
  * Implementations know how to make an initial, empty output of 
@@ -96,6 +100,23 @@ public abstract class CombinedIVFunction<A,B> extends IVFunction<A,B> {
 	@Override
 	public String toString() {
 		return this.functions.toString();
+	}
+	
+	@Override
+	public void write(Kryo kryo, Output output) {
+		output.writeInt(this.functions.size());
+		for (int i = 0; i < this.functions.size(); i++){
+			kryo.writeClassAndObject(output, this.functions.get(i));
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void read(Kryo kryo, Input input) {
+		int size = input.readInt();
+		for (int i = 0; i < size; i++){
+			this.functions.add((IVFunction<A, B>) kryo.readClassAndObject(input));
+		}
 	}
 
 }

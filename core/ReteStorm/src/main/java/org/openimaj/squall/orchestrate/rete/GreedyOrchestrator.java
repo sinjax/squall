@@ -43,6 +43,9 @@ import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
 import org.xml.sax.SAXException;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Triple;
 
 /**
@@ -414,7 +417,23 @@ public class GreedyOrchestrator implements Orchestrator{
 			NamedNode<? extends IVFunction<Context, Context>> left,
 			NamedNode<? extends IVFunction<Context, Context>> right) {
 		
-		NGNJoin joined = new NGNJoin(root,nextJoinName(), left, right, this.wi);
+		StreamAwareFixedJoinFunction join = new StreamAwareFixedJoinFunction(left.getData(), wi, right.getData(), wi);
+		NNIVFunction joined = new NNIVFunction(root, nextJoinName(), join);
+		
+		List<String> lsv = join.leftSharedVars();
+		String[] leftSharedVars = lsv.toArray(new String[lsv.size()]);
+		
+		List<String> rsv = join.rightSharedVars();
+		String[] rightSharedVars = rsv.toArray(new String[rsv.size()]);
+		
+		NamedStream leftStream = new NamedStream(left.getVariableHolder().identifier(), leftSharedVars);
+		left.connectOutgoingEdge(leftStream);
+		joined.connectIncomingEdge(leftStream);
+		
+		NamedStream rightStream = new NamedStream(right.getVariableHolder().identifier(), rightSharedVars);
+		right.connectOutgoingEdge(rightStream);
+		joined.connectIncomingEdge(rightStream);
+		
 		return joined;
 	}
 
@@ -469,7 +488,20 @@ public class GreedyOrchestrator implements Orchestrator{
 			}
 			
 			@Override
-			public void cleanup() { }
+			public void cleanup() {
+				try {
+					this.nTripleStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				this.nTripleStream = null;
+			}
+
+			@Override
+			public void write(Kryo kryo, Output output) {}
+
+			@Override
+			public void read(Kryo kryo, Input input) {}
 		};
 		
 		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
@@ -504,6 +536,12 @@ public class GreedyOrchestrator implements Orchestrator{
 			
 			@Override
 			public void perform(Context object) { }
+
+			@Override
+			public void write(Kryo kryo, Output output) {}
+
+			@Override
+			public void read(Kryo kryo, Input input) {}
 		};
 		OrchestratedProductionSystem ops = go.orchestrate(
 				new RIFCoreRuleCompiler().compile(rules), op);

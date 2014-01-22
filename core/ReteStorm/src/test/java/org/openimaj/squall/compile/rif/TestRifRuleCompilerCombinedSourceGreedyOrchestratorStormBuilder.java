@@ -18,6 +18,10 @@ import org.openimaj.squall.orchestrate.greedy.CombinedSourceGreedyOrchestrator;
 import org.openimaj.util.data.Context;
 import org.xml.sax.SAXException;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
@@ -39,6 +43,11 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 		public void perform(Context object) { 
 			System.out.println(object);
 		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {}
+		@Override
+		public void read(Kryo kryo, Input input) {}
 	}
 
 

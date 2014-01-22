@@ -1,5 +1,7 @@
 package org.openimaj.squall.orchestrate;
 
+import java.io.Serializable;
+
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 
@@ -7,9 +9,13 @@ import org.openimaj.util.function.Function;
  * @author davidlmonks
  *
  */
-public class ContextAugmentingFunction implements Function<Context, Context> {
+public class ContextAugmentingFunction implements Function<Context, Context>, Serializable {
 
-	private static final String NAME_KEY = "information";
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5178137783782497990L;
+	private static final String NAME_KEY = "lastFunction";
 	private String sourceName;
 	
 	/**
@@ -32,5 +38,8 @@ public class ContextAugmentingFunction implements Function<Context, Context> {
 		in.put(NAME_KEY, this.sourceName);
 		return in;
 	}
+	
+	@SuppressWarnings("unused") // required for deserialisation by reflection
+	private ContextAugmentingFunction(){}
 
 }

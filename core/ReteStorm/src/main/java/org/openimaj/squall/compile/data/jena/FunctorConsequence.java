@@ -7,6 +7,9 @@ import java.util.Map;
 import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.rulesys.Builtin;
@@ -60,6 +63,23 @@ public class FunctorConsequence extends AbstractFunctorFunction<Context,Context>
 		out.put("triple", toret);
 		ctxs.add(out);
 		return ctxs;
+	}
+	
+	// required for deserialisation by reflection
+	private FunctorConsequence(){
+		super(null, null);
+	}
+
+	@Override
+	public void write(Kryo kryo, Output output) {
+		super.write(kryo, output);
+		kryo.writeClassAndObject(output, this.rule);
+	}
+
+	@Override
+	public void read(Kryo kryo, Input input) {
+		super.read(kryo, input);
+		this.rule = (Rule) kryo.readClassAndObject(input);
 	}
 
 }

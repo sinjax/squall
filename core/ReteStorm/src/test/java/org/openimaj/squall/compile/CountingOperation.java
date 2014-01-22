@@ -5,6 +5,10 @@ import java.io.Serializable;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
 	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
 	 *
@@ -16,6 +20,13 @@ import org.openimaj.util.data.Context;
 		private static final long serialVersionUID = 6987720033468611350L;
 		private int expected;
 		private int count;
+		
+		/**
+		 * creates a CountingOperation that will never realistically be satisfied.
+		 */
+		public CountingOperation() {
+			this(Integer.MAX_VALUE);
+		}
 		
 		/**
 		 * @param expected
@@ -46,5 +57,17 @@ import org.openimaj.util.data.Context;
 		public void perform(Context object) {
 //			System.out.println(object);
 			this.count ++;
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {
+			output.writeInt(this.expected);
+			output.writeInt(this.count);
+		}
+
+		@Override
+		public void read(Kryo kryo, Input input) {
+			this.expected = input.readInt();
+			this.count = input.readInt();
 		}
 	}

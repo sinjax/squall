@@ -10,6 +10,9 @@ import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
@@ -121,10 +124,18 @@ public class BaseTripleFilterFunction extends AbstractRIFFunction {
 		return name.toString();
 	}
 	
+	@SuppressWarnings("unused") // required for deserialisation by reflection
+	private BaseTripleFilterFunction(){}
+	
 	@Override
-	public void setup() { }
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.clause);
+	}
+
 	@Override
-	public void cleanup() { }
+	public void read(Kryo kryo, Input input) {
+		this.clause = (TriplePattern) kryo.readClassAndObject(input);
+	}
 	
 	@Override
 	public String toString() {

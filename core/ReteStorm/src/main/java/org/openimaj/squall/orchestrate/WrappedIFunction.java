@@ -5,11 +5,16 @@ import java.util.List;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoSerializable;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class WrappedIFunction implements IFunction<Context, Context> {
+public class WrappedIFunction implements IFunction<Context, Context>, KryoSerializable {
 
 	/**
 	 * 
@@ -50,6 +55,22 @@ public class WrappedIFunction implements IFunction<Context, Context> {
 	@Override
 	public String toString() {
 		return func.toString();
+	}
+	
+	@SuppressWarnings("unused") // required for deserialisation by reflection
+	private WrappedIFunction(){}
+
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.saf);
+		kryo.writeClassAndObject(output, this.func);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.saf = (ContextAugmentingFunction) kryo.readClassAndObject(input);
+		this.func = (IFunction<Context, Context>) kryo.readClassAndObject(input);
 	}
 
 }

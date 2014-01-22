@@ -7,6 +7,10 @@ import java.util.Map;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
@@ -29,5 +33,11 @@ public class PassThroughConsequence implements IFunction<Context, Context> {
 	public void setup() {}
 	@Override
 	public void cleanup() {}
+
+	@Override
+	public void write(Kryo kryo, Output output) {}
+
+	@Override
+	public void read(Kryo kryo, Input input) {}
 
 }

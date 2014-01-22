@@ -29,6 +29,7 @@ import org.openimaj.squall.orchestrate.exception.CompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.MultiConsequenceSubCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.PlanningException;
 import org.openimaj.squall.orchestrate.rete.NGNJoin;
+import org.openimaj.squall.orchestrate.rete.StreamAwareFixedJoinFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.pair.IndependentPair;
@@ -403,7 +404,23 @@ public class GreedyOrchestrator implements Orchestrator{
 			NamedNode<? extends IVFunction<Context, Context>> left,
 			NamedNode<? extends IVFunction<Context, Context>> right) {
 		
-		NGNJoin joined = new NGNJoin(root,nextJoinName(), left, right, this.wi);
+		StreamAwareFixedJoinFunction join = new StreamAwareFixedJoinFunction(left.getData(), wi, right.getData(), wi);
+		NNIVFunction joined = new NNIVFunction(root, nextJoinName(), join);
+		
+		List<String> lsv = join.leftSharedVars();
+		String[] leftSharedVars = lsv.toArray(new String[lsv.size()]);
+		
+		List<String> rsv = join.rightSharedVars();
+		String[] rightSharedVars = rsv.toArray(new String[rsv.size()]);
+		
+		NamedStream leftStream = new NamedStream(left.getVariableHolder().identifier(), leftSharedVars);
+		left.connectOutgoingEdge(leftStream);
+		joined.connectIncomingEdge(leftStream);
+		
+		NamedStream rightStream = new NamedStream(right.getVariableHolder().identifier(), rightSharedVars);
+		right.connectOutgoingEdge(rightStream);
+		joined.connectIncomingEdge(rightStream);
+		
 		return joined;
 	}
 

@@ -20,12 +20,16 @@ public class NGNJoin extends NNIVFunction {
 	/**
 	 * @param parent
 	 * @param name 
-	 * @param left
-	 * @param right
+	 * @param leftNode
+	 * @param rightNode
 	 * @param wi 
 	 */
-	public NGNJoin(OrchestratedProductionSystem parent, String name, NamedNode<? extends IVFunction<Context, Context>> left,NamedNode<? extends IVFunction<Context, Context>> right, WindowInformation wi) {
-		super(parent, name, new StreamAwareFixedJoinFunction(left.getData(), left.getVariableHolder().identifier(), wi, right.getData(), right.getVariableHolder().identifier(), wi));
+	public NGNJoin(OrchestratedProductionSystem parent,
+				   String name,
+				   NamedNode<? extends IVFunction<Context, Context>> leftNode,
+				   NamedNode<? extends IVFunction<Context, Context>> rightNode,
+				   WindowInformation wi) {
+		super(parent, name, new StreamAwareFixedJoinFunction(leftNode.getData(), wi, rightNode.getData(), wi));
 		
 		List<String> lsv = ((StreamAwareFixedJoinFunction) this.getData()).leftSharedVars();
 		String[] leftSharedVars = lsv.toArray(new String[lsv.size()]);
@@ -33,12 +37,12 @@ public class NGNJoin extends NNIVFunction {
 		List<String> rsv = ((StreamAwareFixedJoinFunction) this.getData()).rightSharedVars();
 		String[] rightSharedVars = rsv.toArray(new String[rsv.size()]);
 		
-		NamedStream leftStream = new NamedStream(left.getVariableHolder().identifier(), leftSharedVars);
-		left.connectOutgoingEdge(leftStream);
+		NamedStream leftStream = new NamedStream(leftNode.getVariableHolder().identifier(), leftSharedVars);
+		leftNode.connectOutgoingEdge(leftStream);
 		this.connectIncomingEdge(leftStream);
 		
-		NamedStream rightStream = new NamedStream(right.getVariableHolder().identifier(), rightSharedVars);
-		right.connectOutgoingEdge(rightStream);
+		NamedStream rightStream = new NamedStream(rightNode.getVariableHolder().identifier(), rightSharedVars);
+		rightNode.connectOutgoingEdge(rightStream);
 		this.connectIncomingEdge(rightStream);
 	}
 

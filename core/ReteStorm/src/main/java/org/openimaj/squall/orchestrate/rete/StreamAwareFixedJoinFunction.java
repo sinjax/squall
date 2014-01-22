@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
@@ -14,11 +15,16 @@ import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.compile.data.BufferedOutputStreamHolder;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.SIVFunction;
 import org.openimaj.squall.compile.data.VariableHolderAnonimisationUtils;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoSerializable;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
 
 /**
@@ -49,19 +55,15 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 	private Map<String, List<Context>> outputStreamBuffers;
 	
 	/**
-	 * @param left 
-	 * @param leftStream 
+	 * @param left  
 	 * @param leftwi 
 	 * @param right
-	 * @param rightStream 
 	 * @param rightwi 
 	 */
 	public StreamAwareFixedJoinFunction(
 			IVFunction<Context,Context> left,
-			String leftStream,
 			WindowInformation leftwi,
 			IVFunction<Context,Context> right,
-			String rightStream,
 			WindowInformation rightwi
 	) {
 		super();
@@ -109,8 +111,8 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		
 		// Set the OverflowHandlers for the left and right queues, as well as explicitly setting the queues to null
 		// (queues are created in setup).
-		this.leftOverflow = new BindingsOverflowHandler(leftStream, leftwi);
-		this.rightOverflow = new BindingsOverflowHandler(rightStream, rightwi);
+		this.leftOverflow = new BindingsOverflowHandler(left.identifier(), leftwi);
+		this.rightOverflow = new BindingsOverflowHandler(right.identifier(), rightwi);
 		this.leftQueue = null;
 		this.rightQueue = null;
 		
@@ -220,6 +222,92 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		this.outputStreamBuffers = null;
 	}
 	
+	@SuppressWarnings("unused") // required for deserialisation by reflection
+	private StreamAwareFixedJoinFunction(){
+		this.contributors = null;
+		
+		this.leftQueue = null;
+		this.rightQueue = null;
+		this.outputStreamBuffers = null;
+	}
+	
+	@Override
+	public void write(Kryo kryo, Output output) {
+		output.writeInt(this.sharedOutVars.size());
+		for (int i = 0; i < this.sharedOutVars.size(); i++){
+			output.writeString(this.sharedOutVars.get(i));
+		}
+		
+		output.writeInt(this.leftVarsToOutVars.size());
+		for (String key : this.leftVarsToOutVars.keySet()){
+			output.writeString(key);
+			output.writeString(this.leftVarsToOutVars.get(key));
+		}
+		
+		output.writeInt(this.rightVarsToOutVars.size());
+		for (String key : this.rightVarsToOutVars.keySet()){
+			output.writeString(key);
+			output.writeString(this.rightVarsToOutVars.get(key));
+		}
+		
+		output.writeString(this.leftOverflow.getSource());
+		output.writeInt(this.leftOverflow.getWindowInformation().getCapacity());
+		output.writeLong(this.leftOverflow.getWindowInformation().getDuration());
+		kryo.writeClassAndObject(output, this.leftOverflow.getWindowInformation().getGranularity());
+		output.writeBoolean(this.leftOverflow.getWindowInformation().isOverriding());
+		
+		output.writeString(this.rightOverflow.getSource());
+		output.writeInt(this.rightOverflow.getWindowInformation().getCapacity());
+		output.writeLong(this.rightOverflow.getWindowInformation().getDuration());
+		kryo.writeClassAndObject(output, this.rightOverflow.getWindowInformation().getGranularity());
+		output.writeBoolean(this.rightOverflow.getWindowInformation().isOverriding());
+		
+		output.writeString(this.anonimisedDefaultStreamName);
+	}
+
+	@Override
+	public void read(Kryo kryo, Input input) {
+		int size = input.readInt();
+		this.sharedOutVars = new ArrayList<>(size);
+		for (int i = 0; i < size; i++){
+			this.sharedOutVars.add(input.readString());
+		}
+		
+		size = input.readInt();
+		this.leftVarsToOutVars = new HashMap<String,String>(size);
+		for (int i = 0; i < size; i++){
+			this.leftVarsToOutVars.put(
+					input.readString(),
+					input.readString()
+			);
+		}
+		
+		size = input.readInt();
+		this.rightVarsToOutVars = new HashMap<String,String>(size);
+		for (int i = 0; i < size; i++){
+			this.rightVarsToOutVars.put(
+					input.readString(),
+					input.readString()
+			);
+		}
+		
+		String leftSource = input.readString();
+		int leftCap = input.readInt();
+		long leftDur = input.readLong();
+		TimeUnit leftUnit = (TimeUnit) kryo.readClassAndObject(input);
+		boolean leftOverride = input.readBoolean();
+		this.leftOverflow = new BindingsOverflowHandler(leftSource, new WindowInformation(leftOverride,leftCap,leftDur,leftUnit));
+		
+		String rightSource = input.readString();
+		int rightCap = input.readInt();
+		long rightDur = input.readLong();
+		TimeUnit rightUnit = (TimeUnit) kryo.readClassAndObject(input);
+		boolean rightOverride = input.readBoolean();
+		this.rightOverflow = new BindingsOverflowHandler(rightSource, new WindowInformation(rightOverride,rightCap,rightDur,rightUnit));
+		
+		this.anonimisedDefaultStreamName = input.readString();
+	}
+	
 	// MULTIFUNCTION
 	
 	@Override
@@ -227,6 +315,12 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		this.flushStreamBuffers();
 		
 		String stream = in.getTyped("stream");
+		logger.debug(String.format("JOIN: Received input from %s, checking against %s and %s",
+										stream,
+										this.leftOverflow.getSource(),
+										this.rightOverflow.getSource()
+								)
+					);
 		List<Context> ret = new ArrayList<Context>();
 		
 		Map<String, Node> typed;
@@ -362,7 +456,5 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		}
 		
 	}
-
-	
 	
 }

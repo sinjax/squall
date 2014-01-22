@@ -41,11 +41,11 @@ import org.openimaj.squall.functions.rif.consequences.RIFAtomConsequence;
 import org.openimaj.squall.functions.rif.consequences.RIFTripleConsequence;
 import org.openimaj.squall.functions.rif.core.RIFCoreExprLibrary;
 import org.openimaj.squall.functions.rif.core.RIFCorePredicateEqualityFunction;
-import org.openimaj.squall.functions.rif.core.RIFForAllBindingConsequence;
 import org.openimaj.squall.functions.rif.core.RIFMemberFilterFunction;
 import org.openimaj.squall.functions.rif.filters.BaseAtomFilterFunction;
 import org.openimaj.squall.functions.rif.filters.BaseTripleFilterFunction;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
+import org.openimaj.squall.providers.rif.consequences.RIFForAllBindingConsequenceProvider;
 import org.openimaj.squall.util.MD5Utils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
@@ -123,12 +123,12 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 			translate((RIFRule) fa.getStatement(), ccps); 
 		}
 		
-		String id;
+		RIFForAllBindingConsequenceProvider consequenceProvider;
 		if (fa.getID() == null)
-			id = MD5Utils.md5Hex(fa.toString());
+			consequenceProvider = new RIFForAllBindingConsequenceProvider(MD5Utils.md5Hex(fa.toString()));
 		else
-			id = fa.getID().getNode().getURI();
-		ccps.addConsequence(new RIFForAllBindingConsequence(fa, id));
+			consequenceProvider = new RIFForAllBindingConsequenceProvider(fa.getID().getNode().getURI());
+		ccps.addConsequence(consequenceProvider.apply(fa));
 	}
 	
 	protected void translate(RIFRule r, ContextCPS ccps) throws RIFPredicateException, UnsupportedOperationException {

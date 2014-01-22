@@ -4,15 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
-import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
-import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
 
@@ -28,6 +25,10 @@ public class TripleConsequence extends AbstractTripleFunction {
 	 */
 	public TripleConsequence(Rule r,TriplePattern clause) {
 		super(r, clause);
+	}
+	
+	private TripleConsequence(){
+		super(null, null);
 	}
 
 	@Override

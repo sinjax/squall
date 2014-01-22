@@ -6,6 +6,7 @@ import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.KryoSerializable;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 
@@ -13,7 +14,12 @@ import com.hp.hpl.jena.graph.NodeFactory;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public abstract class AbstractRIFFunction extends IVFunction<Context, Context> {
+public abstract class AbstractRIFFunction extends IVFunction<Context, Context> implements KryoSerializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7761395895169220137L;
 
 	protected Node registerVariable(Node n, Count count){
 		if(n.isVariable()){

@@ -1,5 +1,6 @@
 package org.openimaj.squall.functions.rif.sources;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
@@ -10,6 +11,9 @@ import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Triple;
 
 /**
@@ -43,11 +47,28 @@ public class NTriplesISourceFactory extends ISourceFactory {
 			}
 			
 			@Override
-			public void cleanup() { }
+			public void cleanup() {
+				try {
+					this.nTripleStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				this.nTripleStream = null;
+			}
 			
 			public ISource<Stream<Context>> setInputStreamSource(URI loc){
 				this.nTripleStreamLocation = loc.toString();
 				return this;
+			}
+
+			@Override
+			public void write(Kryo kryo, Output output) {
+				output.writeString(this.nTripleStreamLocation);
+			}
+
+			@Override
+			public void read(Kryo kryo, Input input) {
+				this.nTripleStreamLocation = input.readString();
 			}
 		}
 		// Set the URI of the source before returning

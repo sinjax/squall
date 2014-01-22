@@ -2,6 +2,10 @@ package org.openimaj.squall.build.storm.topology;
 
 import org.openimaj.squall.compile.data.IOperation;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 import backtype.storm.Config;
 import backtype.storm.StormSubmitter;
 import backtype.storm.generated.AlreadyAliveException;
@@ -42,6 +46,16 @@ public class StormClusterOperation implements IOperation<StormTopology> {
 
 	@Override
 	public void cleanup() {
+	}
+
+	@Override
+	public void write(Kryo kryo, Output output) {
+		kryo.writeClassAndObject(output, this.conf);
+	}
+
+	@Override
+	public void read(Kryo kryo, Input input) {
+		this.conf = (Config) kryo.readClassAndObject(input);
 	}
 
 }

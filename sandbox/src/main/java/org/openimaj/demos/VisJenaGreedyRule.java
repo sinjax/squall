@@ -1,5 +1,6 @@
 package org.openimaj.demos;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -17,6 +18,9 @@ import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
@@ -35,6 +39,12 @@ public class VisJenaGreedyRule {
 		public void perform(Context object) {
 			System.out.println(object);
 		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {}
+
+		@Override
+		public void read(Kryo kryo, Input input) {}
 	}
 	static ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
 		
@@ -57,7 +67,26 @@ public class VisJenaGreedyRule {
 		}
 		
 		@Override
-		public void cleanup() { }
+		public void cleanup() {
+			try {
+				this.nTripleStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			this.nTripleStream = null;
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void read(Kryo kryo, Input input) {
+			// TODO Auto-generated method stub
+			
+		}
 	};
 	
 	private static List<Rule> loadRules(String stream) {
