@@ -7,8 +7,8 @@ import org.kohsuke.args4j.Option;
 import org.openimaj.rifcore.RIFRuleSet;
 import org.openimaj.rifcore.utils.RifUtils;
 import org.openimaj.squall.compile.CompiledProductionSystem;
-import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
+import org.openimaj.squall.functions.rif.external.ExternalLoader;
 import org.openimaj.squall.tool.SquallToolOptions;
 
 /**

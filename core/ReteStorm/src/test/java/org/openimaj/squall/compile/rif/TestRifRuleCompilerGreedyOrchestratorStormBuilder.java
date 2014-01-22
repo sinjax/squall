@@ -14,7 +14,7 @@ import org.openimaj.squall.build.storm.StormStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.CountingOperation;
 import org.openimaj.squall.compile.data.IOperation;
-import org.openimaj.squall.compile.functions.rif.external.ExternalLoader;
+import org.openimaj.squall.functions.rif.external.ExternalLoader;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.util.data.Context;
