@@ -9,7 +9,9 @@ import java.util.concurrent.TimeUnit;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.OptionalProductionSystems;
+import org.openimaj.squall.compile.data.IConsequence;
 import org.openimaj.squall.compile.data.IOperation;
+import org.openimaj.squall.compile.data.IPredicate;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.CPSResult;
@@ -208,7 +210,8 @@ public class GreedyOrchestrator implements Orchestrator{
 				CPSResult subResult = orchestrate(root,cps);
 				try {
 					// ... orchestrate the subCPS and then for each resulting processing option for that subCPS ...
-					for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>> combinedCPS : subResult.getProcessingOptions()){
+					for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>
+							combinedCPS : subResult.getProcessingOptions()){
 						// ... for each processing option determined prior to the processing of this set of options (UNION, Or(), etc) ...
 						for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>
 								jCPS : joinedCPSs.getProcessingOptions()){
@@ -245,7 +248,8 @@ public class GreedyOrchestrator implements Orchestrator{
 			} else if (joinedCPSs.getProcessingOptions().isEmpty()) {
 				return unionedRules;
 			} else {
-				for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>> jCPS : joinedCPSs.getProcessingOptions()) {
+				for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>
+						jCPS : joinedCPSs.getProcessingOptions()) {
 					if (!(jCPS.firstObject().isEmpty() && jCPS.secondObject().isEmpty())){
 						throw new UnsupportedOperationException("Cannot interpret a subCPS with a consequence being optionally directly joined with JoinComponents."
 																+ "Translate elements such as sub-queries into an optional CPS containing the sub-query CPS as a join component.");
@@ -299,6 +303,7 @@ public class GreedyOrchestrator implements Orchestrator{
 		CompleteCPSResult consequencesList = new CompleteCPSResult();
 		List<NamedNode<? extends IVFunction<Context, Context>>> bodies = orchestratePredicates(root, partialCPS);
 		for (IVFunction<Context, Context> function : functions){
+			((IConsequence) function).setSourceVariableHolder(bodies.get(0).getData());
 			NNIVFunction consequenceNode = new NNIVFunction(
 				root,
 				nextConsequenceName(), 
@@ -324,7 +329,8 @@ public class GreedyOrchestrator implements Orchestrator{
 		
 		List<NamedNode<? extends IVFunction<Context, Context>>> newFinalNodes = new ArrayList<NamedNode<? extends IVFunction<Context,Context>>>();
 		try {
-			for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>> currentCPS : partialCPS.getProcessingOptions()){
+			for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>
+					currentCPS : partialCPS.getProcessingOptions()){
 				newFinalNodes.add(orchestratePredicates(root, orchestrateJoinComponents(root, currentCPS.getFirstObject()), currentCPS.getSecondObject()));
 			}
 		} catch (CompleteCPSPlanningException e) {
@@ -338,6 +344,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			NamedNode<?  extends IVFunction<Context, Context>> currentNode,
 			List<IVFunction<Context,Context>> list) {
 		for (IVFunction<Context, Context> pred : list) {
+			((IPredicate) pred).setSourceVariableHolder(currentNode.getData());
 			NNIVFunction prednode = new NNIVFunction(
 					root,
 					nextPredicateName(),

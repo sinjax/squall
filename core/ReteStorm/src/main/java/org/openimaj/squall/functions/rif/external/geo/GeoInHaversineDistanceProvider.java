@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.functions.rif.external.geo;
+package org.openimaj.squall.functions.rif.external.geo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +9,8 @@ import org.openimaj.rifcore.conditions.atomic.RIFAtom;
 import org.openimaj.rifcore.conditions.data.RIFExternalExpr;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.functions.rif.predicates.NumericRIFPredicateFunction;
 import org.openimaj.squall.compile.rif.provider.ExternalFunctionProvider;
+import org.openimaj.squall.functions.rif.predicates.NumericRIFPredicateFunction;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
 

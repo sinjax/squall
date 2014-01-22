@@ -13,7 +13,7 @@ import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
+import com.hp.hpl.jena.graph.Node_Variable;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -30,7 +30,7 @@ public class BaseBindingConsequence extends AbstractRIFFunction implements ICons
 	 * @param vars 
 	 * @param ruleID 
 	 */
-	public BaseBindingConsequence(List<Node_RuleVariable> vars, String ruleID){
+	public BaseBindingConsequence(List<Node_Variable> vars, String ruleID){
 		super();
 		for (int i = 0; i < vars.size(); i ++){
 			this.addVariable(vars.get(i).getName());

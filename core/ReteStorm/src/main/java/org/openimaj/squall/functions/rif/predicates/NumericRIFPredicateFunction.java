@@ -1,8 +1,7 @@
-package org.openimaj.squall.compile.functions.rif.predicates;
+package org.openimaj.squall.functions.rif.predicates;
 
 import java.util.Map;
 
-import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction;
 import com.hp.hpl.jena.graph.Node;
 
 /**

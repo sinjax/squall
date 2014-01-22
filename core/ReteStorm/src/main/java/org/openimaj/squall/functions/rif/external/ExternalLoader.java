@@ -1,7 +1,7 @@
-package org.openimaj.squall.compile.functions.rif.external;
+package org.openimaj.squall.functions.rif.external;
 
-import org.openimaj.squall.compile.functions.rif.external.geo.GeoInHaversineDistanceProvider;
 import org.openimaj.squall.compile.rif.provider.ExternalFunctionRegistry;
+import org.openimaj.squall.functions.rif.external.geo.GeoInHaversineDistanceProvider;
 
 public class ExternalLoader {
 

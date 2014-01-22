@@ -19,7 +19,8 @@ public abstract class AbstractRIFFunction extends IVFunction<Context, Context> {
 		if(n.isVariable()){
 			String name = this.getBaseFromRuleVar(n.getName());
 			if (name == null){
-				name = Integer.toString(count.inc());
+				count.inc();
+				name = Integer.toString(count.getCount());
 			}
 			Node var = NodeFactory.createVariable(name);
 			this.addVariable(name);
