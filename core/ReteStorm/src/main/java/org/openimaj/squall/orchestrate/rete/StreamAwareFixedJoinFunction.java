@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
 import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
+import org.openimaj.squall.orchestrate.ContextAugmentingFunction;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
@@ -92,7 +93,9 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		List<String> joinedRuleVars = VariableHolderAnonimisationUtils.extractJoinFields(this.contributors);
 		this.sharedOutVars = new ArrayList<String>();
 		for (String ruleVar : joinedRuleVars){
-			this.sharedOutVars.add(this.ruleToBaseVarMap().get(ruleVar));
+			if (left.ruleToBaseVarMap().containsKey(ruleVar) && right.ruleToBaseVarMap().containsKey(ruleVar)){
+				this.sharedOutVars.add(this.ruleToBaseVarMap().get(ruleVar));
+			}
 		}
 		
 		// Find the mapping from underlying input variables to underlying output variables. 
@@ -152,6 +155,22 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 			rightSharedVars.add(outVarsToRightVars.get(var));
 		}
 		return rightSharedVars;
+	}
+	
+	/**
+	 * updates the name of the source stream feeding the left side of the join.
+	 * @param lsn - new stream name.
+	 */
+	public void setLeftStreamName(String lsn){
+		this.leftOverflow.updateSource(lsn);
+	}
+	
+	/**
+	 * updates the name of the source stream feeding the right side of the join.
+	 * @param rsn - new stream name
+	 */
+	public void setRightStreamName(String rsn){
+		this.rightOverflow.updateSource(rsn);
 	}
 	
 	// VARIABLEHOLDER
@@ -313,8 +332,7 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 	@Override
 	public List<Context> apply(Context in) {
 		this.flushStreamBuffers();
-		
-		String stream = in.getTyped("stream");
+		String stream = in.getTyped(ContextAugmentingFunction.STREAM_KEY);
 		logger.debug(String.format("JOIN: Received input from %s, checking against %s and %s",
 										stream,
 										this.leftOverflow.getSource(),

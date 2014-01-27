@@ -93,7 +93,7 @@ public class VariableHolderAnonimisationUtils {
 	public static void extractSaneRuleAndAnonVarsAndMapping(final AnonimisedRuleVariableHolder arvh) {
 		List<String> rvars = extractOrderedFields(arvh.contributors());
 		for (int i = 0; i < rvars.size(); i++){
-			String baseVar = "?"+i;
+			String baseVar = Integer.toString(i+1);
 			arvh.addVariable(baseVar);
 			arvh.putRuleToBaseVarMapEntry(rvars.get(i), baseVar);
 		}

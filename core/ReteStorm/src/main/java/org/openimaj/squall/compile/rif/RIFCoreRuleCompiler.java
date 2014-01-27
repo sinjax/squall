@@ -33,7 +33,7 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.source.URIProfileISourceFactory;
-import org.openimaj.squall.compile.rif.provider.ExternalFunctionRegistry;
+import org.openimaj.squall.compile.rif.provider.RIFExternalFunctionRegistry;
 import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.functions.rif.RIFExprLibrary;
@@ -182,7 +182,7 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 			translateBody(((RIFExists) formula).getFormula(), ccps);
 		} else if (formula instanceof RIFExternalValue) { 
 			RIFExternalValue val = (RIFExternalValue) formula;
-			ccps.addPredicate(ExternalFunctionRegistry.compile(val));
+			ccps.addPredicate(RIFExternalFunctionRegistry.compile(val));
 		} else {
 			throw new UnsupportedOperationException("RIF translation: Unrecognised formula expression type.");
 		}
@@ -296,7 +296,7 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 				if (datum instanceof RIFExpr){
 					ccps.addPredicate(RIF_LIB.compile((RIFExpr) datum));
 				} else if (datum instanceof RIFExternalExpr){
-					ccps.addPredicate(ExternalFunctionRegistry.compile((RIFExternal) datum));
+					ccps.addPredicate(RIFExternalFunctionRegistry.compile((RIFExternal) datum));
 				} else {
 					throw new UnsupportedOperationException("RIF translation: Currently no support for functions other than Expr and External Expr.");
 				}

@@ -62,6 +62,14 @@ public abstract class VariableHolder{
 	/**
 	 * @return
 	 */
+	public boolean resetVars(){
+		this.variables.clear();
+		return true;
+	}
+	
+	/**
+	 * @return
+	 */
 	public boolean wipeVars(){
 		this.variables = null;
 		return true;

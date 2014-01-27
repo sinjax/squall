@@ -15,7 +15,7 @@
 <Document>
   <directive>
     <Import>
-    	<location>java:///lsbench/queries/queries.rif</location>
+    	<location>java:///lsbench/queries/rif/7.5.rif</location>
     </Import>
   </directive>
   <directive>

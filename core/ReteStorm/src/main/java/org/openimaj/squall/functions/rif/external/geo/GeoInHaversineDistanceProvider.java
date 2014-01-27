@@ -1,6 +1,7 @@
 package org.openimaj.squall.functions.rif.external.geo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -8,22 +9,26 @@ import org.apache.log4j.Logger;
 import org.openimaj.rifcore.conditions.atomic.RIFAtom;
 import org.openimaj.rifcore.conditions.data.RIFExternalExpr;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.rif.provider.ExternalFunctionProvider;
+import org.openimaj.squall.compile.rif.provider.RIFExprFunctionRegistry;
+import org.openimaj.squall.compile.rif.provider.RIFExternalFunctionProvider;
 import org.openimaj.squall.functions.rif.predicates.NumericRIFPredicateFunction;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.pair.IndependentPair;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class GeoInHaversineDistanceProvider extends ExternalFunctionProvider {
+public class GeoInHaversineDistanceProvider extends RIFExternalFunctionProvider {
 
 	private static final class GeoInHaversineDistanceFunction extends NumericRIFPredicateFunction {
 
@@ -31,37 +36,51 @@ public class GeoInHaversineDistanceProvider extends ExternalFunctionProvider {
 		 * 
 		 */
 		private static final long serialVersionUID = -7445044998530563542L;
-		private static final long earthRadius = 6371;//kilometres
 		private static final Logger logger = Logger.getLogger(GeoInHaversineDistanceFunction.class);
+		
+		private GeoHaversineDistanceFunction haversineFunc;
 		
 		public GeoInHaversineDistanceFunction(Node[] ns)
 				throws RIFPredicateException {
-			super(ns);
+			super(new Node[]{
+				ns[0],
+				NodeFactory.createVariable("placeHolder")
+			});
+			if (ns.length < 5){
+				throw new RIFPredicateException("Too few values defined for InHaversineDistance predicate:\nUsage: geoInHaversineDistance(dist in km, point A lat, point A long, point B lat, point B long)");
+			}
+			this.haversineFunc = new GeoHaversineDistanceFunction(new Node[]{
+				ns[1],ns[2],ns[3],ns[4]
+			});
 		}
 		
-		private double haversin(double pheta){
-			return (1d - Math.cos(pheta)) / 2d;
+		private GeoInHaversineDistanceFunction() // required for deserialisation by reflection
+				throws RIFPredicateException{
+			super(new Node[]{
+					NodeFactory.createLiteral("foo"),
+					NodeFactory.createVariable("bar")
+			});
+		}
+		
+		@Override
+		public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
+			super.setSourceVariableHolder(arvh);
+			this.haversineFunc.setSourceVariableHolder(arvh);
+			super.nodes[1] = this.haversineFunc.getResultVarNode();
 		}
 
 		@Override
 		public List<Context> apply(Context in) {
-			logger  .debug(String.format("Context(%s) sent to Predicate(haversine(%s,%s,%s,%s) < %s)" , in, super.nodes[1], super.nodes[2], super.nodes[3], super.nodes[4], super.nodes[0]));
+			logger  .debug(String.format("Context(%s) sent to Predicate(haversine(lat,long,lat,long) < %s)" , in, super.nodes[0]));
 			List<Context> ret = new ArrayList<Context>();
 			Map<String,Node> binds = in.getTyped("bindings");
 			
 			Double maxDist = super.extractBinding(binds, super.nodes[0]);//kilometres
-			Double lat1 = Math.PI * super.extractBinding(binds, super.nodes[1]) / 180d;
-			Double long1 = Math.PI * super.extractBinding(binds, super.nodes[2]) / 180d;
-			Double lat2 = Math.PI * super.extractBinding(binds, super.nodes[3]) / 180d;
-			Double long2 = Math.PI * super.extractBinding(binds, super.nodes[4]) / 180d;
 			
-			Double distance = 2 * earthRadius * Math.asin(
-													Math.sqrt(
-														haversin(lat2 - lat1) +
-														Math.cos(lat1) * Math.cos(lat2) * haversin(long2 - long1)
-													)
-												);
-			if (distance <= maxDist) {
+			List<Context> results = this.haversineFunc.apply(in);
+			binds = results.get(0).getTyped("bindings");
+			
+			if (super.extractBinding(binds, this.haversineFunc.getResultVarNode()) <= maxDist) {
 				logger  .debug(String.format("GeoHaversine check Passed!"));
 				ret.add(in);
 			}
@@ -72,34 +91,55 @@ public class GeoInHaversineDistanceProvider extends ExternalFunctionProvider {
 		@Override
 		public String identifier(Map<String, String> varmap) {
 			StringBuilder anon = new StringBuilder("GeoInHaversineDistance(");
-			anon.append(super.mapNode(varmap, super.nodes[0])).append(",")
-				.append(super.mapNode(varmap, super.nodes[1])).append(",")
-				.append(super.mapNode(varmap, super.nodes[2])).append(",")
-				.append(super.mapNode(varmap, super.nodes[3])).append(",")
-				.append(super.mapNode(varmap, super.nodes[4]));
+			anon.append(super.mapNode(varmap, super.nodes[0])).append(" > ")
+				.append(this.haversineFunc.identifier(varmap));
 			anon.append(")");
 			return anon.toString();
 		}
 
 		@Override
 		public String identifier() {
+			Map<String, String> funcToSubFuncVars= new HashMap<String, String>();
+			funcToSubFuncVars.put("0","1");
+			funcToSubFuncVars.put("1","2");
+			funcToSubFuncVars.put("2","3");
+			funcToSubFuncVars.put("3","4");
+			funcToSubFuncVars.put("4","5");
+			
 			StringBuilder anon = new StringBuilder("GeoInHaversineDistance(");
-			anon.append(super.stringifyNode(super.nodes[0])).append(",")
-				.append(super.stringifyNode(super.nodes[1])).append(",")
-				.append(super.stringifyNode(super.nodes[2])).append(",")
-				.append(super.stringifyNode(super.nodes[3])).append(",")
-				.append(super.stringifyNode(super.nodes[4]));
+			anon.append(super.stringifyNode(super.nodes[0])).append(" > ")
+				.append(this.haversineFunc.identifier(funcToSubFuncVars));
 			anon.append(")");
 			return anon.toString();
 		}
 		
+		@Override
+		public void write(Kryo kryo, Output output) {
+			super.write(kryo, output);
+			kryo.writeClassAndObject(output, this.haversineFunc);
+		}
+		
+		@Override
+		public void read(Kryo kryo, Input input) {
+			super.read(kryo, input);
+			this.haversineFunc = (GeoHaversineDistanceFunction) kryo.readClassAndObject(input);
+		}
+		
+	}
+	
+	/**
+	 * @param reg
+	 */
+	public GeoInHaversineDistanceProvider(RIFExprFunctionRegistry reg) {
+		super(reg);
 	}
 	
 	@Override
 	public IVFunction<Context, Context> apply(RIFExternalExpr in) {
 		RIFAtom atom = in.getExpr().getCommand();
 		try {
-			return new GeoInHaversineDistanceFunction(extractNodes(atom));
+			IndependentPair<Node[], IVFunction<Context,Context>[]> data = extractNodesAndSubFunctions(atom);
+			return new GeoInHaversineDistanceFunction(data.firstObject());
 		} catch (RIFPredicateException e) {
 			throw new UnsupportedOperationException(e);
 		}
@@ -109,7 +149,8 @@ public class GeoInHaversineDistanceProvider extends ExternalFunctionProvider {
 	public IVFunction<Context, Context> apply(RIFExternalValue in) {
 		RIFAtom atom = in.getVal();
 		try {
-			return new GeoInHaversineDistanceFunction(extractNodes(atom));
+			IndependentPair<Node[], IVFunction<Context,Context>[]> data = extractNodesAndSubFunctions(atom);
+			return new GeoInHaversineDistanceFunction(data.firstObject());
 		} catch (RIFPredicateException e) {
 			throw new UnsupportedOperationException(e);
 		}

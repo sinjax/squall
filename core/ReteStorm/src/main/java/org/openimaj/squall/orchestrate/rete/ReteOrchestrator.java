@@ -206,10 +206,12 @@ public class ReteOrchestrator implements Orchestrator{
 		
 		NamedStream leftStream = new NamedStream(left.getVariableHolder().identifier(), leftSharedVars);
 		left.connectOutgoingEdge(leftStream);
+		join.setLeftStreamName(leftStream.identifier());
 		joined.connectIncomingEdge(leftStream);
 		
 		NamedStream rightStream = new NamedStream(right.getVariableHolder().identifier(), rightSharedVars);
 		right.connectOutgoingEdge(rightStream);
+		join.setRightStreamName(rightStream.identifier());
 		joined.connectIncomingEdge(rightStream);
 		
 		return joined;

@@ -1,6 +1,7 @@
 package org.openimaj.squall.functions.rif.predicates;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.utils.Count;
@@ -21,12 +22,11 @@ import com.hp.hpl.jena.graph.Node_Concrete;
  */
 @SuppressWarnings("serial")
 public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction implements IPredicate {
-
+	
 	/**
 	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
 	 *
 	 */
-	@SuppressWarnings("serial")
 	public static class RIFPredicateException extends Exception {
 
 		/**
@@ -53,7 +53,6 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 		
 	}
 	
-	protected AnonimisedRuleVariableHolder varHolder;
 	protected Node[] nodes;
 	
 	/**
@@ -65,13 +64,10 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 	 */
 	public BaseRIFPredicateFunction(Node[] ns) throws RIFPredicateException {
 		super();
-		this.varHolder = null;
 		
 		Count count = new Count();
 		for (int i = 0; i < ns.length; i++){
-			if (registerVariable(ns[i], count) == Node.ANY){
-				ns[i] = NodeFactory.createVariable(Integer.toString(count.getCount()));
-			}
+			ns[i] = registerVariable(ns[i], count);
 		}
 		if (this.varCount() < 1){
 			throw new RIFPredicateException("RIF translator: Must compare some variable(s).");
@@ -82,17 +78,18 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 	
 	@Override
 	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
-		this.varHolder = arvh;
+		Map<String, String> arvhVarMap = arvh.ruleToBaseVarMap();
 		Map<String, String> thisVarMap = this.ruleToBaseVarMap();
-		Map<String, String> arvhVarMap = this.varHolder.ruleToBaseVarMap();
 		
 		Map<String, String> directVarMap = new HashMap<String, String>();
-		for (int i = 0; i < this.varCount(); i++){
-			directVarMap.put(thisVarMap.get(this.getVariable(i)), arvhVarMap.get(this.getVariable(i)));
+		for (String ruleVar : thisVarMap.keySet()){
+			if (arvhVarMap.containsKey(ruleVar)){
+				directVarMap.put(thisVarMap.get(ruleVar), arvhVarMap.get(ruleVar));
+			}
 		}
 		
 		for (int i = 0; i < nodes.length; i++){
-			if (nodes[i].isVariable()) {
+			if (nodes[i].isVariable() && directVarMap.containsKey(nodes[i].getName())) {
 				nodes[i] = NodeFactory.createVariable(
 								directVarMap.get(
 									nodes[i].getName()
@@ -100,27 +97,23 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 							);
 			}
 		}
-	}
-	
-	@Override
-	public String[] variables() {
-		if (this.varHolder != null){
-			return this.varHolder.variables();
+		
+		if (super.resetVars()){
+			for (String ruleVar : arvh.ruleVariables()){
+				String baseVar = arvhVarMap.get(ruleVar);
+				super.addVariable(baseVar);
+				super.putRuleToBaseVarMapEntry(ruleVar, baseVar);
+			}
 		}
-		return super.variables();
-	}
-	
-	@Override
-	public String getVariable(int index) {
-		return this.varHolder == null ? super.getVariable(index) : this.varHolder.getVariable(index);
 	}
 	
 	protected Object extractBinding(Map<String, Node> binds, Node node) {
 		if(node.isVariable()){
-			node = binds.get(node.getName());
-			if(node == null){
+			Node boundNode = binds.get(node.getName());
+			if(boundNode == null){
 				throw new UnsupportedOperationException("Unbound variable");
 			}
+			node = boundNode;
 		}
 		if(node.isConcrete()){
 			Node_Concrete lit = (Node_Concrete) node;

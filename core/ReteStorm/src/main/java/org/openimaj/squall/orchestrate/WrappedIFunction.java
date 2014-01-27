@@ -28,7 +28,7 @@ public class WrappedIFunction implements IFunction<Context, Context>, KryoSerial
 	 * @param nn
 	 */
 	public WrappedIFunction(IFunction<Context,Context> func, NamedNode<IFunction<Context,Context>> nn){
-		this.saf = new ContextAugmentingFunction(nn.getName());
+		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
 		this.func = func;
 	}
 	

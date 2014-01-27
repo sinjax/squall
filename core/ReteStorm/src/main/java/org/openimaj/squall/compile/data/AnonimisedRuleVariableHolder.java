@@ -81,12 +81,14 @@ public abstract class AnonimisedRuleVariableHolder extends VariableHolder {
 		for (String ruleVar : toMirror.ruleToBaseVarMap().keySet()){
 			mirroredBaseToRuleVarMap.put(toMirror.ruleToBaseVarMap().get(ruleVar), ruleVar);
 		}
+		Map<String, String> newR2BVarMap = new HashMap<String, String>();
 		for (String baseVar : this.variables()){
 			String newRuleVar = mirroredBaseToRuleVarMap.get(baseVar);
 			if (newRuleVar == null) return false;
+			newR2BVarMap.put(newRuleVar, baseVar);
 		}
 		
-		this.ruleToVarMap = toMirror.ruleToBaseVarMap();
+		this.ruleToVarMap = newR2BVarMap;
 		
 		return true;
 	}
@@ -107,6 +109,11 @@ public abstract class AnonimisedRuleVariableHolder extends VariableHolder {
 		Collection<AnonimisedRuleVariableHolder> conts = new ArrayList<AnonimisedRuleVariableHolder>();
 		conts.add(this);
 		return conts;
+	}
+	
+	public boolean resetVars(){
+		this.ruleToVarMap.clear();
+		return super.resetVars();
 	}
 	
 	public boolean wipeVars(){

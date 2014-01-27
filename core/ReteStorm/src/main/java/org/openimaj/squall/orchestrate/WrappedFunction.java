@@ -23,7 +23,7 @@ public class WrappedFunction implements MultiFunction<Context,Context>, KryoSeri
 	 * @param nn
 	 */
 	public WrappedFunction(MultiFunction<Context,Context> func, NamedNode<MultiFunction<Context,Context>> nn) {
-		this.saf = new ContextAugmentingFunction(nn.getName());
+		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
 		this.func = func;
 	}
 	

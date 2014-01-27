@@ -24,7 +24,7 @@ public class WrappedContextISource implements ISource<Stream<Context>>, KryoSeri
 	 */
 	public WrappedContextISource(ISource<Stream<Context>> strm, NamedNode<ISource<Stream<Context>>> nn) {
 		this.strm = strm;
-		this.saf = new ContextAugmentingFunction(nn.getName());
+		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
 	}
 
 	@Override

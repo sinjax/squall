@@ -12,10 +12,8 @@ import org.openimaj.util.function.Function;
  */
 public class NamedStream extends DirectedEdge<NamedNode<?>> {
 	
-	
-	protected static final String STREAM_KEY = "stream";
 	protected String name;
-	
+	protected String identifier;
 	
 	/**
 	 * Simple link, named, with a start and end
@@ -39,33 +37,26 @@ public class NamedStream extends DirectedEdge<NamedNode<?>> {
 	 */
 	public NamedStream(String name, String[] streamVars) {
 		super();
-		StringBuilder n = new StringBuilder(name).append("[");
+		this.name = name;
+		StringBuilder i = new StringBuilder(name).append("[");
 		if (streamVars.length > 0){
-			int i = 0;
-			n.append(streamVars[i]);
-			this.addVariable(streamVars[i]);
-			for (i++; i < streamVars.length - 1; i++){
-				n.append(",").append(streamVars[i]);
-				this.addVariable(streamVars[i]);
+			int v = 0;
+			i.append("?").append(streamVars[v]);
+			this.addVariable(streamVars[v]);
+			for (v++; v < streamVars.length - 1; v++){
+				i.append(",").append("?").append(streamVars[v]);
+				this.addVariable(streamVars[v]);
 			}
 		}
-		n.append("]");
-		this.name = n.toString();
+		i.append("]");
+		this.identifier = i.toString();
 	}
 
 	/**
 	 * @return This function augments a {@link Context} with the name of this {@link NamedStream}
 	 */
 	public Function<Context,Context> getFunction(){
-		return new Function<Context, Context>() {
-			
-			@Override
-			public Context apply(Context in) {
-				Context clone = in.clone();
-				clone.put(STREAM_KEY, name);
-				return clone;
-			}
-		};
+		return new ContextAugmentingFunction(ContextAugmentingFunction.STREAM_KEY, this.identifier);
 	}
 	
 	/**
@@ -73,31 +64,43 @@ public class NamedStream extends DirectedEdge<NamedNode<?>> {
 	 * 		A reference to the stream of this name.
 	 */
 	public NamedStream duplicate(){
-		return new NamedStream(this.name, this.variables());
+		return new NamedStream(this.name.split("[")[0], this.variables());
 	}
 	
 	@Override
 	public String toString() {
-		return this.name;
+		return this.identifier;
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
+		NamedStream other;
 		try {
-			NamedStream other = (NamedStream) obj;
-			return this.identifier().equals(other.identifier());
+			other = (NamedStream) obj;
 		} catch (ClassCastException e) {
 			return false;
 		}
+		if (!this.name.equals(other.name)){
+			return false;
+		}
+		if (this.varCount() != other.varCount()){
+			return false;
+		}
+		for (int i = 0; i < this.varCount(); i++){
+			if (!this.getVariable(i).equals(other.getVariable(i))){
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	@Override
 	public int hashCode() {
-		return this.name.hashCode();
+		return this.identifier.hashCode();
 	}
 
 	@Override
 	public String identifier() {
-		return this.name;
+		return this.identifier;
 	}
 }

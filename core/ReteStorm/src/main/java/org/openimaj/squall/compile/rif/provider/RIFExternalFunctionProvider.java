@@ -6,12 +6,12 @@ import java.util.List;
 import org.openimaj.rifcore.conditions.RIFExternal;
 import org.openimaj.rifcore.conditions.atomic.RIFAtom;
 import org.openimaj.rifcore.conditions.data.RIFDatum;
+import org.openimaj.rifcore.conditions.data.RIFExpr;
 import org.openimaj.rifcore.conditions.data.RIFExternalExpr;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
-import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.function.Function;
+import org.openimaj.util.pair.IndependentPair;
 
 import com.hp.hpl.jena.graph.Node;
 
@@ -21,8 +21,14 @@ import com.hp.hpl.jena.graph.Node;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public abstract class ExternalFunctionProvider implements Function<RIFExternal, IVFunction<Context, Context>>{
+public abstract class RIFExternalFunctionProvider extends FunctionProvider<RIFExternal,RIFExpr> {
 	
+	/**
+	 * @param reg
+	 */
+	public RIFExternalFunctionProvider(RIFExprFunctionRegistry reg) {
+		super(reg);
+	}
 	
 	@Override
 	public IVFunction<Context, Context> apply(RIFExternal in) {
@@ -41,12 +47,27 @@ public abstract class ExternalFunctionProvider implements Function<RIFExternal, 
 	 */
 	public abstract IVFunction<Context, Context> apply(RIFExternalValue in) ;
 	
-	protected Node[] extractNodes(RIFAtom atom) {
+	protected IndependentPair<Node[],IVFunction<Context,Context>[]> extractNodesAndSubFunctions(RIFAtom atom) {
 		List<Node> nodes = new ArrayList<Node>();
+		List<IVFunction<Context,Context>> funcs = new ArrayList<IVFunction<Context,Context>>();
 		for (RIFDatum node : atom) {
 			nodes.add(node.getNode());
+			if (node instanceof RIFExpr){
+				if (node instanceof RIFExternal){
+					RIFExternal exp = (RIFExternal) node;
+					funcs.add(RIFExternalFunctionRegistry.compile(exp));
+				} else {
+					RIFExpr exp = (RIFExpr) node;
+					funcs.add(this.getRegistry().compile(exp));
+				}
+			}
 		}
-		return nodes.toArray(new Node[nodes.size()]);
+		
+		Node[] nodeArr = (Node[]) nodes.toArray(new Node[0]);
+		@SuppressWarnings("unchecked")
+		IVFunction<Context, Context>[] funcArr = (IVFunction<Context, Context>[]) funcs.toArray(new IVFunction[0]);
+		
+		return new IndependentPair<Node[], IVFunction<Context,Context>[]>(nodeArr,funcArr);
 	}
 	
 }

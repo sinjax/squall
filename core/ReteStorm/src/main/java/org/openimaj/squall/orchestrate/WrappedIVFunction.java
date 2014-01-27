@@ -30,7 +30,7 @@ public class WrappedIVFunction extends IVFunction<Context,Context> {
 	 * @param nn
 	 */
 	public WrappedIVFunction(IVFunction<Context,Context> func, NamedNode<IVFunction<Context,Context>> nn) {
-		this.saf = new ContextAugmentingFunction(nn.getName());
+		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
 		this.func = func;
 	}
 	
