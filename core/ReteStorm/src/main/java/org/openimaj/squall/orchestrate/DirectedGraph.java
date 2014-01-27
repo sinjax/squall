@@ -51,6 +51,7 @@ public abstract class DirectedGraph<NODE extends DGNode<NODE, EDGE, ?>,EDGE exte
 	 * @return 
 	 */
 	public boolean addVertex(NODE node){
+		if (node == null) throw new NullPointerException("Named node for connection cannot be null.");
 		return this.verts.add(node);
 	}
 	
@@ -59,6 +60,7 @@ public abstract class DirectedGraph<NODE extends DGNode<NODE, EDGE, ?>,EDGE exte
 	 * @return 
 	 */
 	public boolean addEdge(EDGE edge){
+		if (edge == null) throw new NullPointerException("Directed edge for connection cannot be null.");
 		return this.edges.add(edge);
 	}
 	

@@ -79,7 +79,7 @@ public abstract class DGNode<NODE extends DGNode<NODE, EDGE, ?>, EDGE extends Di
 	public void connectOutgoingEdge(EDGE edge) {
 		if (!this.root.addEdge(edge)){
 			for (EDGE e : this.root.edgeSet()){
-				if (e.equals(edge)){
+				if (edge.equals(e)){
 					edge = e;
 					break;
 				}
