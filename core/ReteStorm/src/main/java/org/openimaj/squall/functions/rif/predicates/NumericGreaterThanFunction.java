@@ -10,6 +10,7 @@ import org.openimaj.util.data.Context;
 import cern.colt.Arrays;
 
 import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -25,6 +26,14 @@ public class NumericGreaterThanFunction extends NumericRIFPredicateFunction {
 	 */
 	public NumericGreaterThanFunction(Node[] ns) throws RIFPredicateException {
 		super(ns);
+	}
+	
+	@SuppressWarnings("javadoc") // required for kryo deserialisation by reflection
+	public NumericGreaterThanFunction() throws RIFPredicateException {
+		super(new Node[]{
+				NodeFactory.createLiteral("foo"),
+				NodeFactory.createVariable("bar")
+		});
 	}
 
 	/**
@@ -55,8 +64,10 @@ public class NumericGreaterThanFunction extends NumericRIFPredicateFunction {
 	@Override
 	public String identifier(Map<String, String> varmap) {
 		StringBuilder anon = new StringBuilder();
-		if (this.varHolder != null){
-			anon.append(super.varHolder.identifier(varmap));
+		if (super.sourceVarHolder == null){
+			anon.append("No Source");
+		} else {
+			anon.append(super.sourceVarHolder.identifier(varmap));
 		}
 		anon.append("NumericGreaterThan(");
 		if (super.nodes.length > 0){
@@ -72,8 +83,10 @@ public class NumericGreaterThanFunction extends NumericRIFPredicateFunction {
 	@Override
 	public String identifier() {
 		StringBuilder anon = new StringBuilder();
-		if (this.varHolder != null){
-			anon.append(super.varHolder.identifier());
+		if (super.sourceVarHolder == null){
+			anon.append("No Source");
+		} else {
+			anon.append(super.sourceVarHolder.identifier());
 		}
 		anon.append("NumericGreaterThan(");
 		if (super.nodes.length > 0){

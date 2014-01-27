@@ -13,11 +13,15 @@ import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.rif.provider.RIFExprFunctionRegistry;
 import org.openimaj.squall.compile.rif.provider.RIFExternalFunctionProvider;
+import org.openimaj.squall.functions.rif.external.geo.GeoHaversineDistanceFunction;
 import org.openimaj.squall.functions.rif.predicates.NumericRIFPredicateFunction;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.pair.IndependentPair;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
 

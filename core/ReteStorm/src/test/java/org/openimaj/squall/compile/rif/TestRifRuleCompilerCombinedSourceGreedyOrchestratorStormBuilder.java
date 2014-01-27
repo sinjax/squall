@@ -77,7 +77,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testSimpleRulesBuilder(){
-		testRuleSet(readRules("/test.simple.rule.rif"), -1);
+		testRuleSet(readRules("/test.simple.rule.rif"), 5000);
 	}
 	
 	/**
@@ -85,7 +85,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testSimpleJoinBuilder(){
-		testRuleSet(readRules("/test.simplejoin.rule.rif"), -1);
+		testRuleSet(readRules("/test.simplejoin.rule.rif"), 5000);
 	}
 	
 	/**
@@ -93,7 +93,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testComplexRules(){
-		testRuleSet(readRules("/test.complexjoin.rule.rif"), -1);
+		testRuleSet(readRules("/test.complexjoin.rule.rif"), 5000);
 	}
 	
 	/**
@@ -101,7 +101,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testMultiUnionRules(){
-		testRuleSet(readRules("/test.multiunion.rule.rif"), -1);
+		testRuleSet(readRules("/test.multiunion.rule.rif"), 5000);
 	}
 	
 	/**
@@ -109,7 +109,7 @@ public class TestRifRuleCompilerCombinedSourceGreedyOrchestratorStormBuilder {
 	 */
 	@Test
 	public void testLSBenchRulesBuilder(){
-		testRuleSet(readRules("/lsbench/queries/rif/query-7.5-with-small-test-data.rif"), -1);
+		testRuleSet(readRules("/lsbench/queries/rif/query-7.5-with-small-test-data.rif"), 5000);
 	}
 	
 	private void testRuleSet(RIFRuleSet ruleSet, int sleep) {

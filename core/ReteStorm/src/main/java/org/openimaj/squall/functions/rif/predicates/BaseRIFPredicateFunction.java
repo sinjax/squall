@@ -54,6 +54,7 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 	}
 	
 	protected Node[] nodes;
+	protected AnonimisedRuleVariableHolder sourceVarHolder;
 	
 	/**
 	 * Constructs a new predicate function that filters bindings predicated on some function of the
@@ -64,6 +65,7 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 	 */
 	public BaseRIFPredicateFunction(Node[] ns) throws RIFPredicateException {
 		super();
+		this.sourceVarHolder = null;
 		
 		Count count = new Count();
 		for (int i = 0; i < ns.length; i++){
@@ -78,6 +80,7 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 	
 	@Override
 	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
+		this.sourceVarHolder = arvh;
 		Map<String, String> arvhVarMap = arvh.ruleToBaseVarMap();
 		Map<String, String> thisVarMap = this.ruleToBaseVarMap();
 		

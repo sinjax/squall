@@ -1255,7 +1255,7 @@ existsSeek:							while (formIter.hasNext()){
 											// ... check if the variable was declared in it...
 											if (e.containsExistentialVar(scopedName)){
 												// If the variable is within scope, assign the referenced variable the same rule index, then break: job done.
-												currentVar.setName(scopedName, e.getExistentialVar(scopedName).getNode().getIndex());
+												currentVar.setName(scopedName);
 												// Re-descend to actual depth
 												this.descent.push(other);
 												// exit switch
@@ -1278,7 +1278,7 @@ existsSeek:							while (formIter.hasNext()){
 								// If the variable has not been declared in an exists, but has been declared in the 'Forall'...
 								if (currentForAll.containsVar(scopedName)){
 									// ... assign the referenced variable the same rule index, then break: job done.
-									currentVar.setName(scopedName, currentForAll.getUniversalVar(scopedName).getNode().getIndex());
+									currentVar.setName(scopedName);
 									// Re-descend to actual depth
 									this.descent.push(other);
 									// exit switch
@@ -1291,7 +1291,7 @@ existsSeek:							while (formIter.hasNext()){
 						}
 						// If we are outside a 'Forall' or in an 'Declare' element of a 'Forall' or 'Exists', then we can add a new rule index and name,
 						// either to the global set or the current scoped rule, as appropriate.
-						currentVar.setName(scopedName,names.peek().contains(scopedName) ? names.peek().indexOf(scopedName) : names.peek().size());
+						currentVar.setName(scopedName);
 //System.out.println("\t"+scopedName);
 						if (!names.peek().contains(scopedName))
 							names.peek().add(scopedName);

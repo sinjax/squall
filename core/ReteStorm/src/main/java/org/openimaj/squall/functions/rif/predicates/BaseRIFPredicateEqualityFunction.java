@@ -65,8 +65,10 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 	@Override
 	public String identifier(Map<String, String> varmap) {
 		StringBuilder anon = new StringBuilder();
-		if (super.varHolder == null){
-			anon.append(super.varHolder.identifier(varmap));
+		if (super.sourceVarHolder == null){
+			anon.append("No Source");
+		} else {
+			anon.append(super.sourceVarHolder.identifier(varmap));
 		}
 		if (super.nodes.length > 0){
 			int i = 0;
@@ -81,8 +83,10 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 	@Override
 	public String identifier() {
 		StringBuilder anon = new StringBuilder();
-		if (super.varHolder == null){
-			anon.append(super.varHolder.identifier());
+		if (super.sourceVarHolder == null){
+			anon.append("No Source");
+		} else {
+			anon.append(super.sourceVarHolder.identifier());
 		}
 		if (super.nodes.length > 0){
 			int i = 0;

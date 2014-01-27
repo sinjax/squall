@@ -186,7 +186,7 @@ public class OIStreamBuilder implements Builder{
 		List<Stream<Context>> ret = new ArrayList<Stream<Context>>();
 		for (NamedStream edge : namedNode.parentEdges()) {
 			Function<Context, Context> edgeFunction = edge.getFunction();
-			for (NamedNode<?> node : edge.destinations()){
+			for (NamedNode<?> node : edge.sources()){
 				String sourceName = node.getName();
 				Stream<Context> sourceStream = state.get(sourceName);
 				ret.add(sourceStream.map(edgeFunction));

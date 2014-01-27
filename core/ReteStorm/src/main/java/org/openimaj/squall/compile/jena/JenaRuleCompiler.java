@@ -77,18 +77,16 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 				}
 				
 				
-				CombinedIVFunction<Context, Context> comb = new CombinedContextFunction();
 				// Extract all the head parts
 				for (int i = 0; i < rule.headLength(); i++) {
 					ClauseEntry clause = rule.getHeadElement(i);
 					if (clause instanceof TriplePattern) {
-						comb.addFunction(new TripleConsequence(rule, (TriplePattern)clause));
+						ruleret.addConsequence(new TripleConsequence(rule, (TriplePattern)clause));
 					} 
 					else if (clause instanceof Functor){
-						comb.addFunction(new FunctorConsequence(rule, (Functor)clause));
+						ruleret.addConsequence(new FunctorConsequence(rule, (Functor)clause));
 					}	
 				}
-				ruleret.addConsequence(comb);
 			}
 		}
 		return ret;

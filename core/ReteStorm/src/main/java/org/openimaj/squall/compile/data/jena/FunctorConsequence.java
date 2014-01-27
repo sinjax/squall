@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.compile.data.IConsequence;
 import org.openimaj.util.data.Context;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -22,7 +24,7 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class FunctorConsequence extends AbstractFunctorFunction<Context,Context> {
+public class FunctorConsequence extends AbstractFunctorFunction<Context,Context> implements IConsequence {
 
 	private Rule rule;
 	
@@ -81,5 +83,8 @@ public class FunctorConsequence extends AbstractFunctorFunction<Context,Context>
 		super.read(kryo, input);
 		this.rule = (Rule) kryo.readClassAndObject(input);
 	}
+
+	@Override
+	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {}
 
 }

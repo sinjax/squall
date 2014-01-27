@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.compile.data.IConsequence;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -17,7 +19,7 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class TripleConsequence extends AbstractTripleFunction {
+public class TripleConsequence extends AbstractTripleFunction implements IConsequence {
 
 	/**
 	 * @param r 
@@ -54,5 +56,8 @@ public class TripleConsequence extends AbstractTripleFunction {
 	public String toString() {
 		return this.clause.toString();
 	}
+
+	@Override
+	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {}
 
 }

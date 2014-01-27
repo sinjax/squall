@@ -2,27 +2,58 @@ package org.openimaj.squall.compile.functions.rif.external.geo;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.rifcore.conditions.atomic.RIFAtom;
 import org.openimaj.rifcore.conditions.data.RIFStringConst;
 import org.openimaj.rifcore.conditions.data.RIFVar;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
-import org.openimaj.squall.functions.rif.external.geo.GeoInHaversineDistanceProvider;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.compile.data.IPredicate;
+import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
+import com.hp.hpl.jena.graph.Node_Variable;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
 public class TestInHaversineDistanceFunction {
+	
+	private static final class StubAnonRVarHolder extends AnonimisedRuleVariableHolder {
+
+		public StubAnonRVarHolder(List<Node_Variable> vars){
+			super();
+			Count count = new Count();
+			for (Node_Variable var : vars){
+				count.inc();
+				this.addVariable(Integer.toString(count.getCount()));
+				this.putRuleToBaseVarMapEntry(var.getName(), Integer.toString(count.getCount()));
+			}
+		}
+		
+		@Override
+		public String identifier(Map<String, String> varmap) {
+			// TODO Auto-generated method stub
+			return "Stub";
+		}
+
+		@Override
+		public String identifier() {
+			// TODO Auto-generated method stub
+			return "Stub";
+		}
+		
+	}
 	
 	@Test
 	public void testPlacesInWorld(){
@@ -82,32 +113,41 @@ public class TestInHaversineDistanceFunction {
 		a.setOp(c);
 		
 		RIFVar v1 = new RIFVar();
-		v1.setName("dist", 1);
+		v1.setName("dist");
 		a.addArg(v1);
 		RIFVar v2 = new RIFVar();
-		v2.setName("lat1", 2);
+		v2.setName("lat1");
 		a.addArg(v2);
 		RIFVar v3 = new RIFVar();
-		v3.setName("long1", 3);
+		v3.setName("long1");
 		a.addArg(v3);
 		RIFVar v4 = new RIFVar();
-		v4.setName("lat2", 4);
+		v4.setName("lat2");
 		a.addArg(v4);
 		RIFVar v5 = new RIFVar();
-		v5.setName("long2", 5);
+		v5.setName("long2");
 		a.addArg(v5);
+		
+		List<Node_Variable> vars = new ArrayList<Node_Variable>();
+		for (int i = 0; i < a.getArgsSize(); i++){
+			vars.add(((RIFVar)a.getArg(i)).getNode());
+		}
+		StubAnonRVarHolder stub = new StubAnonRVarHolder(vars);
+		
+		IVFunction<Context, Context> ihdf = (new GeoInHaversineDistanceProvider(null)).apply(e);
+		((IPredicate) ihdf).setSourceVariableHolder(stub);
 		
 		Context cont = new Context();
 		Map<String,Node> map = new HashMap<String, Node>();
 		cont.put("bindings", map);
 		
-		map.put("dist", NodeFactory.createLiteral(""+dist, XSDDatatype.XSDdouble));
-		map.put("lat1", NodeFactory.createLiteral(""+lat1, XSDDatatype.XSDdouble));
-		map.put("long1", NodeFactory.createLiteral(""+long1, XSDDatatype.XSDdouble));
-		map.put("lat2", NodeFactory.createLiteral(""+lat2, XSDDatatype.XSDdouble));
-		map.put("long2", NodeFactory.createLiteral(""+long2, XSDDatatype.XSDdouble));
+		map.put("1", NodeFactory.createLiteral(""+dist, XSDDatatype.XSDdouble));
+		map.put("2", NodeFactory.createLiteral(""+lat1, XSDDatatype.XSDdouble));
+		map.put("3", NodeFactory.createLiteral(""+long1, XSDDatatype.XSDdouble));
+		map.put("4", NodeFactory.createLiteral(""+lat2, XSDDatatype.XSDdouble));
+		map.put("5", NodeFactory.createLiteral(""+long2, XSDDatatype.XSDdouble));
 		
-		List<Context> ret = (new GeoInHaversineDistanceProvider()).apply(e).apply(cont);
+		List<Context> ret = ihdf.apply(cont);
 		return ret;
 	}
 	
