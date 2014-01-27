@@ -40,9 +40,6 @@ public class OIStreamBuilderReentrantNonBlock implements Builder{
 	public void build(OrchestratedProductionSystem ops) {
 		Set<NamedNode<?>> rootset = new HashSet<>();
 		rootset.addAll(ops.root);
-		if(ops.reentrant!=null){			
-			rootset.add(ops.reentrant);
-		}
 		buildStream(ops,new HashMap<String,Stream<Context>>(),rootset);
 	}
 

@@ -53,9 +53,6 @@ public class StormStreamBuilder implements Builder{
 		try{
 			Set<NamedNode<?>> rootset = new HashSet<>();
 			rootset.addAll(ops.root);
-			if(ops.reentrant!=null){			
-				rootset.add(ops.reentrant);
-			}
 			TopologyBuilder tb = new TopologyBuilder();
 			try {
 				buildTopology(tb,ops,new HashMap<String,NamedNode<?>>(),rootset);
@@ -96,26 +93,7 @@ public class StormStreamBuilder implements Builder{
 			 * If it is a source, initialise the stream, grab it, 
 			 * build a spout
 			 */
-			if(namedNode.isReentrantSource()){
-				// build a spout
-				MultiFunctionBolt funcBolt = new MultiFunctionBolt(namedNode);
-				BoltDeclarer dec = tb.setBolt(name, funcBolt);
-				List<IndependentPair<NamedStream, NamedNode<?>>> parents = extractParentStreams(ops, namedNode);
-				for (IndependentPair<NamedStream, NamedNode<?>> p : parents) {
-					NamedStream strm = p.firstObject();
-					NamedNode<?> parent = p.secondObject();
-					String parentName = StormUtils.legalizeStormIdentifier(parent.getName());
-					String streamName = NamedNodeComponent.constructStreamName(parent,strm,namedNode);
-					dec.shuffleGrouping(parentName, streamName);
-				}
-				state.put(name, namedNode);
-				remove = true;
-			}
-			/**
-			 * If it is a source, initialise the stream, grab it, 
-			 * build a spout
-			 */
-			else if(namedNode.isSource()){
+			if(namedNode.isSource()){
 				// build a spout
 				IRichSpout s = new OIStreamSpout(namedNode);
 				tb.setSpout(name, s,1);
@@ -124,11 +102,10 @@ public class StormStreamBuilder implements Builder{
 				remove = true;
 			}
 			/**
-			 * If it is a function and all its parents are ready, build a bolt
+			 * If it is a function or an operation, build a bolt
 			 * 
 			 */
 			else if(namedNode.isFunction() || namedNode.isOperation()){
-				if(containsAllParents(state,namedNode)){
 					List<IndependentPair<NamedStream, NamedNode<?>>> parentStreams = extractParentStreams(ops,namedNode);
 					IRichBolt funcBolt = null;
 					
@@ -155,7 +132,6 @@ public class StormStreamBuilder implements Builder{
 					}
 					state.put(name, namedNode);
 					remove = true;
-				}
 			}
 			if(!remove){
 				newdisconnected.add(namedNode);
