@@ -22,10 +22,7 @@ import org.openimaj.util.stream.Stream;
  * @param <DATA> 
  */
 public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DATA>{
-	/**
-	 * key used to insert this node's name into the returned context
-	 */
-	public static final String NAME_KEY = "information";
+	
 	private String name;
 	/**
 	 * @param parent 
@@ -34,10 +31,6 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	public NamedNode(OrchestratedProductionSystem parent, String name) {
 		super(parent);
 		this.name = name;
-	}
-	
-	void addName(Context c){
-		c.put(NAME_KEY, NamedNode.this.name);
 	}
 	
 	/**
