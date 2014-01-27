@@ -15,6 +15,7 @@ import org.openimaj.rifcore.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.OptionalProductionSystems;
+import org.openimaj.squall.compile.data.IConsequence;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
@@ -28,7 +29,6 @@ import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.Orchestrator;
 import org.openimaj.squall.orchestrate.PartialCPSResult;
-import org.openimaj.squall.orchestrate.ReentrantNNIFunction;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.exception.CompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.MultiConsequenceSubCPSPlanningException;
@@ -63,6 +63,8 @@ import com.hp.hpl.jena.graph.Triple;
  *
  */
 public class GreedyOrchestrator implements Orchestrator{
+	
+	private static final String REENTRANT_STREAM = "reentrant-stream";
 	
 	private int consequence = 0;
 	private int predicate = 0;
@@ -105,26 +107,27 @@ public class GreedyOrchestrator implements Orchestrator{
 		}
 		
 		// Also connect all reentrant consequences to all the filters
-		if(ret.reentrant != null) orchestrateReentrateConsequences(ret);
+		connectReentrantSources(ret);
 		
 		return ret;
 	}
 
-	private void orchestrateReentrateConsequences(OrchestratedProductionSystem ret) {
-		// The nodes which must be connected to reentrant consequences are those which are connected to any sources
-		Set<NamedNode<?>> filters = new HashSet<NamedNode<?>>();
-		for (NamedSourceNode source : ret.root) {
-			for (NamedStream edge : source.childEdges())
-			for (NamedNode<?> namedNode : edge.destinations()) {
-				filters.add(namedNode);
+	private void connectReentrantSources(OrchestratedProductionSystem ret) {
+		if (ret.reentrant != null){
+			// The nodes which must be connected to reentrant consequences are those which are connected to any sources
+			Set<NamedNode<?>> filters = new HashSet<NamedNode<?>>();
+			for (NamedSourceNode source : ret.root) {
+				for (NamedStream edge : source.childEdges()){
+					for (NamedNode<?> namedNode : edge.destinations()) {
+						filters.add(namedNode);
+					}
+				}
+			}
+			
+			for (NamedNode<?> filt : filters) {
+				filt.connectIncomingEdge(ret.reentrant);
 			}
 		}
-		
-//		for (NamedNode<?> filt : filters) {
-//			
-//			ret.reentrant.connect(new NamedStream("reentrantstream"), filt);
-//		}
-		
 	}
 
 	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op) {
@@ -268,34 +271,46 @@ public class GreedyOrchestrator implements Orchestrator{
 				return unionedRules;
 			}
 		}else{
-			CompleteCPSResult consequences = orchestrateConsequences(root,joinedCPSs, sys.getConsequences());
+			CompleteCPSResult consequences = orchestrateConsequences(root,joinedCPSs, sys.getConsequences(), sys.isReentrant());
 			unionedRules.addAll(consequences);
-			if(sys.isReentrant()){
-				orchestrateReentrantConsequences(root,consequences);
-			}
 			
 			return unionedRules;
 		}
 	}
 
-
-	private void orchestrateReentrantConsequences(OrchestratedProductionSystem root, CompleteCPSResult consequences) {
-		for (NamedNode<? extends IVFunction<Context, Context>> namedNode : consequences) {
-			Set<NamedNode<?>> filters = new HashSet<NamedNode<?>>();
-			for (NamedSourceNode source : root.root) {
-				for (NamedStream edge : source.childEdges()){
-					for (NamedNode<?> filterNN : edge.destinations()) {
-						filters.add(filterNN);
-					}
+	private CompleteCPSResult orchestrateConsequences(
+			OrchestratedProductionSystem root,
+			PartialCPSResult partialCPS,
+			List<IVFunction<Context, Context>> functions,
+			boolean isReentrant) {
+		CompleteCPSResult consequencesList = new CompleteCPSResult();
+		List<NamedNode<? extends IVFunction<Context, Context>>> bodies = orchestratePredicates(root, partialCPS);
+		for (IVFunction<Context, Context> function : functions){
+			IConsequence cons = (IConsequence) function;
+			cons.setSourceVariableHolder(bodies.get(0).getData());
+			NNIVFunction consequenceNode = new NNIVFunction(
+				root,
+				nextConsequenceName(), 
+				function
+			);
+			
+			if (isReentrant && cons.isReentrant()){
+				try{
+					consequenceNode.connectOutgoingEdge(root.reentrant);
+				} catch (NullPointerException e) {
+					root.reentrant = new NamedStream(GreedyOrchestrator.REENTRANT_STREAM);
+					consequenceNode.connectOutgoingEdge(root.reentrant);
 				}
 			}
-			for (NamedNode<?> filter : filters){
-				
+			
+			for (NamedNode<? extends IVFunction<Context, Context>> body : bodies) {
+				NamedStream str = new NamedStream(body.getName());
+				body.connectOutgoingEdge(str);
+				consequenceNode.connectIncomingEdge(str);
 			}
-			NamedStream str = new NamedStream(namedNode.getName());
-			namedNode.connectOutgoingEdge(str);
-			root.reentrant.connectIncomingEdge(str);
+			consequencesList.add(consequenceNode);
 		}
+		return consequencesList;
 	}
 
 	@SuppressWarnings("unused")
@@ -311,28 +326,6 @@ public class GreedyOrchestrator implements Orchestrator{
 
 	protected String nextSourceName(OrchestratedProductionSystem ret) {
 		return "source_" + ret.root.size();
-	}
-
-	private CompleteCPSResult orchestrateConsequences(
-			OrchestratedProductionSystem root,
-			PartialCPSResult partialCPS,
-			List<IVFunction<Context, Context>> functions) {
-		CompleteCPSResult consequencesList = new CompleteCPSResult();
-		List<NamedNode<? extends IVFunction<Context, Context>>> bodies = orchestratePredicates(root, partialCPS);
-		for (IVFunction<Context, Context> function : functions){
-			NNIVFunction consequenceNode = new NNIVFunction(
-				root,
-				nextConsequenceName(), 
-				function
-			);
-			for (NamedNode<? extends IVFunction<Context, Context>> body : bodies) {
-				NamedStream str = new NamedStream(body.getName());
-				body.connectOutgoingEdge(str);
-				consequenceNode.connectIncomingEdge(str);
-			}
-			consequencesList.add(consequenceNode);
-		}
-		return consequencesList;
 	}
 
 	private String nextConsequenceName() {

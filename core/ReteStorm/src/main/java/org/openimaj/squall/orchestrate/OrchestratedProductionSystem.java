@@ -53,7 +53,7 @@ public class OrchestratedProductionSystem extends DirectedGraph<NamedNode<?>,Nam
 	/**
 	 * The source nodes which are connected to the children
 	 */
-	public ReentrantNNIFunction reentrant;
+	public NamedStream reentrant;
 	
 	
 	/**
