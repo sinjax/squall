@@ -87,4 +87,9 @@ public class FunctorConsequence extends AbstractFunctorFunction<Context,Context>
 	@Override
 	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {}
 
+	@Override
+	public boolean isReentrant() {
+		return true;
+	}
+
 }

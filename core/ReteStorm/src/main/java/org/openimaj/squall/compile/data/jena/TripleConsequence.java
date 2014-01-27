@@ -60,4 +60,9 @@ public class TripleConsequence extends AbstractTripleFunction implements IConseq
 	@Override
 	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {}
 
+	@Override
+	public boolean isReentrant() {
+		return true;
+	}
+
 }

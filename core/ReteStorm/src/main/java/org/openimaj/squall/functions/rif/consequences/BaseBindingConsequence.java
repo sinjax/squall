@@ -109,4 +109,9 @@ public class BaseBindingConsequence extends AbstractRIFFunction implements ICons
 		this.id = input.readString();
 	}
 
+	@Override
+	public boolean isReentrant() {
+		return false;
+	}
+
 }

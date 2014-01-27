@@ -124,4 +124,9 @@ public class RIFAtomConsequence extends AbstractRIFFunction implements IConseque
 		this.id = input.readString();
 	}
 
+	@Override
+	public boolean isReentrant() {
+		return true;
+	}
+
 }

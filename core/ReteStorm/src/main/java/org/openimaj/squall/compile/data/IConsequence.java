@@ -11,4 +11,11 @@ public interface IConsequence {
 	 */
 	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh);
 	
+	/**
+	 * @return
+	 * 		true - if any consequences fired are to be recycled back into the network
+	 * 		false - otherwise
+	 */
+	public boolean isReentrant();
+	
 }

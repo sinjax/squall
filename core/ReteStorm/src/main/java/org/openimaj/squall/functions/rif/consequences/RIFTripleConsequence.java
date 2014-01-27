@@ -141,5 +141,10 @@ public class RIFTripleConsequence extends AbstractRIFFunction implements IConseq
 		this.clause = (TriplePattern) kryo.readClassAndObject(input);
 		this.id = input.readString();
 	}
+
+	@Override
+	public boolean isReentrant() {
+		return true;
+	}
 	
 }
