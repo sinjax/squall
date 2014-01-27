@@ -79,7 +79,11 @@ public class TestJenaRuleCompilerFunctions {
 		
 		// Join the two filters
 		WindowInformation wi = new WindowInformation(1000,30, TimeUnit.SECONDS);
-		StreamAwareFixedJoinFunction j = new StreamAwareFixedJoinFunction(tf1, "left", wi, tf2, "right", wi);
+		StreamAwareFixedJoinFunction j = new StreamAwareFixedJoinFunction(tf1, wi, tf2, wi);
+		NamedStream leftStream = new NamedStream("left");
+		NamedStream rightStream = new NamedStream("right");
+		j.setLeftStreamName(leftStream.identifier());
+		j.setRightStreamName(rightStream.identifier());
 		
 		// The data (joines once)
 		List<Context> data = new ArrayList<Context>();
@@ -116,8 +120,8 @@ public class TestJenaRuleCompilerFunctions {
 		SplitStream<Context> ss = new SplitStream<Context>(s);
 		j.setup();
 		new JoinStream<Context>(
-			ss.map(tf1).map(new NamedStream("left").getFunction()),
-			ss.map(tf2).map(new NamedStream("right").getFunction())
+			ss.map(tf1).map(leftStream.getFunction()),
+			ss.map(tf2).map(rightStream.getFunction())
 		)
 		.map(j)
 		.forEach(new Operation<Context>() {

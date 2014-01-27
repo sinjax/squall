@@ -12,7 +12,7 @@ import org.openimaj.util.stream.Stream;
 public class WrappedContextISource implements ISource<Stream<Context>>{
 
 	private ISource<Stream<Context>> strm;
-	private NamedNode<ISource<Stream<Context>>> nn;
+	private ContextAugmentingFunction saf;
 	
 	
 	/**
@@ -21,7 +21,7 @@ public class WrappedContextISource implements ISource<Stream<Context>>{
 	 */
 	public WrappedContextISource(ISource<Stream<Context>> strm, NamedNode<ISource<Stream<Context>>> nn) {
 		this.strm = strm;
-		this.nn = nn;
+		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
 	}
 
 	@Override
@@ -32,18 +32,7 @@ public class WrappedContextISource implements ISource<Stream<Context>>{
 	@Override
 	public Stream<Context> apply() {
 		
-		return strm.apply().map(
-			new Function<Context, Context>() {
-				
-
-				@Override
-				public Context apply(Context in) {
-					if(in == null) return null;
-					nn.addName(in);
-					return in;
-				}
-			}		
-		);
+		return strm.apply().map(this.saf);
 	}
 	
 	@Override

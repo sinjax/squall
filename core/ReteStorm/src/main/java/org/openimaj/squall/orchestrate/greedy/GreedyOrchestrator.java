@@ -386,7 +386,25 @@ public class GreedyOrchestrator implements Orchestrator{
 			NamedNode<? extends IVFunction<Context, Context>> left,
 			NamedNode<? extends IVFunction<Context, Context>> right) {
 		
-		NGNJoin joined = new NGNJoin(root,nextJoinName(), left, right, this.wi);
+		StreamAwareFixedJoinFunction join = new StreamAwareFixedJoinFunction(left.getData(), wi, right.getData(), wi);
+		NNIVFunction joined = new NNIVFunction(root, nextJoinName(), join);
+		
+		List<String> lsv = join.leftSharedVars();
+		String[] leftSharedVars = lsv.toArray(new String[lsv.size()]);
+		
+		List<String> rsv = join.rightSharedVars();
+		String[] rightSharedVars = rsv.toArray(new String[rsv.size()]);
+		
+		NamedStream leftStream = new NamedStream(left.getVariableHolder().identifier(), leftSharedVars);
+		left.connectOutgoingEdge(leftStream);
+		join.setLeftStreamName(leftStream.identifier());
+		joined.connectIncomingEdge(leftStream);
+		
+		NamedStream rightStream = new NamedStream(right.getVariableHolder().identifier(), rightSharedVars);
+		right.connectOutgoingEdge(rightStream);
+		join.setRightStreamName(rightStream.identifier());
+		joined.connectIncomingEdge(rightStream);
+		
 		return joined;
 	}
 

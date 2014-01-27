@@ -12,14 +12,14 @@ import org.openimaj.util.data.Context;
 public class WrappedIFunction implements IFunction<Context, Context> {
 
 	private IFunction<Context, Context> func;
-	private NamedNode<IFunction<Context, Context>> nn;
+	private ContextAugmentingFunction saf;
 	
 	/**
 	 * @param func
 	 * @param nn
 	 */
 	public WrappedIFunction(IFunction<Context,Context> func, NamedNode<IFunction<Context,Context>> nn){
-		this.nn = nn;
+		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
 		this.func = func;
 	}
 	
@@ -28,7 +28,7 @@ public class WrappedIFunction implements IFunction<Context, Context> {
 		List<Context> ret = this.func.apply(in);
 		if(ret == null) return null;
 		for (Context ctx : ret) {
-			nn.addName(ctx);
+			this.saf.apply(ctx);
 		}
 		return ret;
 	}

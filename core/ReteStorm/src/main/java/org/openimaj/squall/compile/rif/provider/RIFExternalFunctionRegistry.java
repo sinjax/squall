@@ -20,9 +20,9 @@ import org.openimaj.util.function.Function;
  * @author David Monks (dm11g08@ecs.soton.ac.uk)
  *
  */
-public class ExternalFunctionRegistry {
+public class RIFExternalFunctionRegistry {
 	
-	private final static Map<String,ExternalFunctionProvider> providers = new HashMap<String, ExternalFunctionProvider>();
+	private final static Map<String, RIFExternalFunctionProvider> providers = new HashMap<String, RIFExternalFunctionProvider>();
 	
 	/**
 	 * @param ext
@@ -38,7 +38,7 @@ public class ExternalFunctionRegistry {
 	 * @param name
 	 * @param prov
 	 */
-	public static void register(String name, ExternalFunctionProvider prov){
+	public static void register(String name, RIFExternalFunctionProvider prov){
 		providers.put(name, prov);
 	}
 
@@ -52,11 +52,6 @@ public class ExternalFunctionRegistry {
 		} else {
 			throw new UnsupportedOperationException("Unrecognised RIFExternal");
 		}
-	}
-	
-	static {
-		register("http://www.w3.org/2007/rif-builtin-predicate#numeric-greater-than", new NumericGreaterThanProvider());
-		register("http://www.w3.org/2007/rif-builtin-predicate#literal-not-equal", new LiteralNotEqualProvider());
 	}
 	
 }

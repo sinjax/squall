@@ -19,7 +19,7 @@ public class WrappedIVFunction extends IVFunction<Context,Context>{
 	 * 
 	 */
 	private static final long serialVersionUID = -1533515752338530090L;
-	private NamedNode<IVFunction<Context, Context>> nn;
+	private ContextAugmentingFunction saf;
 	private IVFunction<Context,Context> func;
 
 	/**
@@ -27,7 +27,7 @@ public class WrappedIVFunction extends IVFunction<Context,Context>{
 	 * @param nn
 	 */
 	public WrappedIVFunction(IVFunction<Context,Context> func, NamedNode<IVFunction<Context,Context>> nn) {
-		this.nn = nn;
+		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
 		this.func = func;
 	}
 	
@@ -36,7 +36,7 @@ public class WrappedIVFunction extends IVFunction<Context,Context>{
 		List<Context> ret = this.func.apply(in);
 		if(ret == null) return null;
 		for (Context ctx : ret) {
-			nn.addName(ctx);
+			this.saf.apply(ctx);
 		}
 		return ret;
 	}

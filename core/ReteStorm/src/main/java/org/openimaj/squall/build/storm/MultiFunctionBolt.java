@@ -4,9 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.utils.JenaStormUtils;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
-import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.storm.utils.StormUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.MultiFunction;
