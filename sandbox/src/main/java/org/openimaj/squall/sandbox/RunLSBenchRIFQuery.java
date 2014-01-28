@@ -17,6 +17,10 @@ import org.openimaj.squall.orchestrate.greedy.CombinedSourceGreedyOrchestrator;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
@@ -44,6 +48,12 @@ public class RunLSBenchRIFQuery {
 				logger.info("Final output from lsbench-query-7.5:" + object);
 			}
 		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {}
+
+		@Override
+		public void read(Kryo kryo, Input input) {}
 	}
 	
 	/**

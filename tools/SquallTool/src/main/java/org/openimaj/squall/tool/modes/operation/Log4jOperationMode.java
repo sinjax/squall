@@ -6,6 +6,10 @@ import org.apache.log4j.Logger;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
@@ -36,6 +40,12 @@ public class Log4jOperationMode implements OperationMode {
 				logger.info(String.format("Final output from lsbench query %s: %s", object.get("rule").toString().substring(prefix.length()), object));
 			}
 		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {}
+
+		@Override
+		public void read(Kryo kryo, Input input) {}
 	}
 	
 	@Override

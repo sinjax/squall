@@ -46,12 +46,12 @@ import org.openimaj.util.function.Operation;
  */
 public class OrchestratedProductionSystem extends DirectedGraph<NamedNode<?>,NamedStream> {
 	/**
-	 * The source nodes which are connected to the children
+	 * The source nodes which are connected to the entry-level functions
 	 */
 	public List<NamedSourceNode> root;
 	
 	/**
-	 * The source nodes which are connected to the children
+	 * The stream by which reentrant consequences are looped back to the entry-level functions.
 	 */
 	public NamedStream reentrant;
 	

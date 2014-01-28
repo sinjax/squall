@@ -12,6 +12,9 @@ import org.kohsuke.args4j.Option;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.util.data.Context;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Graph;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.graph.GraphFactory;
@@ -73,6 +76,19 @@ public class TripleFileOperationMode implements OperationMode {
 					throw new RuntimeException(e);
 				}
 			}
+		}
+		
+		@SuppressWarnings("unused") // required for kryo deserialisation by reflection
+		private FileOutputOperation(){}
+
+		@Override
+		public void write(Kryo kryo, Output output) {
+			kryo.writeClassAndObject(output, this.outFile);
+		}
+
+		@Override
+		public void read(Kryo kryo, Input input) {
+			this.outFile = (File) kryo.readClassAndObject(input);
 		}
 	}
 

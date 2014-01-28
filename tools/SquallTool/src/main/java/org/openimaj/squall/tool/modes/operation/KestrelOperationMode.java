@@ -2,7 +2,6 @@ package org.openimaj.squall.tool.modes.operation;
 
 import java.net.URISyntaxException;
 
-import org.apache.log4j.Logger;
 import org.kohsuke.args4j.Option;
 import org.openimaj.rdf.storm.utils.JenaStormUtils;
 import org.openimaj.squall.compile.data.IOperation;
@@ -11,6 +10,8 @@ import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.KestrelWriter;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -41,6 +42,16 @@ public class KestrelOperationMode implements OperationMode {
 		public void perform(Context object) {
 			byte[] vals = StormUtils.serialiseFunction(kryo,object);
 			this.writer.perform(vals);
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {
+			kryo.writeClassAndObject(output, this.writer);
+		}
+
+		@Override
+		public void read(Kryo kryo, Input input) {
+			this.writer = (KestrelWriter) kryo.readClassAndObject(input);
 		}
 	}
 	

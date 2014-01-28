@@ -20,6 +20,10 @@ import org.openimaj.squall.orchestrate.greedy.CombinedSourceGreedyOrchestrator;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.util.data.Context;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.reasoner.rulesys.Rule;
 
 /**
@@ -46,6 +50,12 @@ public class RunLSBenchJenaQuery {
 		public void perform(Context object) {
 			logger.info("Final output:" + object);
 		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {}
+
+		@Override
+		public void read(Kryo kryo, Input input) {}
 	}
 	
 	
