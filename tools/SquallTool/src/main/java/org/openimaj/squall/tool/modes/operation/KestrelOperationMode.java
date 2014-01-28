@@ -53,6 +53,16 @@ public class KestrelOperationMode implements OperationMode {
 		public void read(Kryo kryo, Input input) {
 			this.writer = (KestrelWriter) kryo.readClassAndObject(input);
 		}
+
+		@Override
+		public boolean isStateless() {
+			return true;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return false;
+		}
 	}
 	
 	/**

@@ -497,6 +497,16 @@ public class GreedyOrchestrator implements Orchestrator{
 
 			@Override
 			public void read(Kryo kryo, Input input) {}
+
+			@Override
+			public boolean isStateless() {
+				return false;
+			}
+
+			@Override
+			public boolean forcedUnique() {
+				return true;
+			}
 		};
 		
 		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
@@ -537,6 +547,16 @@ public class GreedyOrchestrator implements Orchestrator{
 
 			@Override
 			public void read(Kryo kryo, Input input) {}
+
+			@Override
+			public boolean isStateless() {
+				return true;
+			}
+
+			@Override
+			public boolean forcedUnique() {
+				return false;
+			}
 		};
 		OrchestratedProductionSystem ops = go.orchestrate(
 				new RIFCoreRuleCompiler().compile(rules), op);

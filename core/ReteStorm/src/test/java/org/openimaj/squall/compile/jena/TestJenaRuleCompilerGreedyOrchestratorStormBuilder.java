@@ -93,6 +93,16 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 			public void write(Kryo kryo, Output output) {}
 			@Override
 			public void read(Kryo kryo, Input input) {}
+
+			@Override
+			public boolean isStateless() {
+				return false;
+			}
+
+			@Override
+			public boolean forcedUnique() {
+				return true;
+			}
 		};
 		
 		nojoinRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.nojoin.rules"));

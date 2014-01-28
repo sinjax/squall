@@ -9,8 +9,6 @@ import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.IConsequence;
-import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
@@ -28,7 +26,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
  *
  */
 @SuppressWarnings("serial")
-public class RIFTripleConsequence extends AbstractRIFFunction implements IConsequence {
+public class RIFTripleConsequence extends BaseConsequenceFunction {
 
 	private static final Logger logger = Logger.getLogger(RIFTripleConsequence.class);
 	private TriplePattern clause;

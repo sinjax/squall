@@ -302,6 +302,14 @@ public abstract class CompiledProductionSystem {
 					this.axioms[i] = (Context) kryo.readClassAndObject(input);
 				}
 			}
+			@Override
+			public boolean isStateless() {
+				return false;
+			}
+			@Override
+			public boolean forcedUnique() {
+				return true;
+			}
 			
 		}.setAxiomList(this.axioms);
 	}

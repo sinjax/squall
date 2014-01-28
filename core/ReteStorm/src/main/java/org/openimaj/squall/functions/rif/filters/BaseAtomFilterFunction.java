@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.Count;
-import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
@@ -14,7 +12,6 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
 
@@ -23,7 +20,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
  *
  */
 @SuppressWarnings("serial")
-public class BaseAtomFilterFunction extends AbstractRIFFunction {
+public class BaseAtomFilterFunction extends BaseFilterFunction {
 
 	private final static Logger logger = Logger.getLogger(BaseAtomFilterFunction.class);
 	private Functor clause;

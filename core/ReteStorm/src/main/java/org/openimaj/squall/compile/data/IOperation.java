@@ -8,6 +8,6 @@ import org.openimaj.util.function.Operation;
  *
  * @param <I>
  */
-public interface IOperation<I> extends Operation<I>, Initialisable{
+public interface IOperation<I> extends Operation<I>, Initialisable, Parallelisable {
 	
 }

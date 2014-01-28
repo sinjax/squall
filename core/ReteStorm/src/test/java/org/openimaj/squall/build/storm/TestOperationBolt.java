@@ -75,6 +75,16 @@ public class TestOperationBolt {
 			this.expected = input.readInt();
 			this.count = input.readInt();
 		}
+
+		@Override
+		public boolean isStateless() {
+			return true;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return false;
+		}
 	}
 	
 	/**

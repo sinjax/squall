@@ -54,7 +54,7 @@ public class NNIFunction extends NamedNode<IFunction<Context, Context>> {
 
 	@Override
 	public Initialisable getInit() {
-		return this.varfunc;
+		return this.wrapped;
 	}
 
 	@Override
@@ -85,6 +85,16 @@ public class NNIFunction extends NamedNode<IFunction<Context, Context>> {
 	@Override
 	public boolean isReentrantSource() {
 		return false;
+	}
+
+	@Override
+	public boolean isStateless() {
+		return this.wrapped.isStateless();
+	}
+
+	@Override
+	public boolean forcedUnique() {
+		return this.wrapped.forcedUnique();
 	}
 	
 }

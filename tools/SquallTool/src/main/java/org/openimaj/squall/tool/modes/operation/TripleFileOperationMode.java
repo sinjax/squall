@@ -90,6 +90,16 @@ public class TripleFileOperationMode implements OperationMode {
 		public void read(Kryo kryo, Input input) {
 			this.outFile = (File) kryo.readClassAndObject(input);
 		}
+
+		@Override
+		public boolean isStateless() {
+			return true;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return false;
+		}
 	}
 
 	@Override

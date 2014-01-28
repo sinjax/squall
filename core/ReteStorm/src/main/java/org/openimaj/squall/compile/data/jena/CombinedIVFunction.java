@@ -118,5 +118,25 @@ public abstract class CombinedIVFunction<A,B> extends IVFunction<A,B> {
 			this.functions.add((IVFunction<A, B>) kryo.readClassAndObject(input));
 		}
 	}
+	
+	@Override
+	public boolean isStateless() {
+		for (IVFunction<A, B> func : this.functions){
+			if (!func.isStateless()){
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public boolean forcedUnique() {
+		for (IVFunction<A, B> func : this.functions){
+			if (func.forcedUnique()){
+				return true;
+			}
+		}
+		return false;
+	}
 
 }

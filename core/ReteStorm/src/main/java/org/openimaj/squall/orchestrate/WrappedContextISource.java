@@ -13,7 +13,7 @@ import com.esotericsoftware.kryo.io.Output;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class WrappedContextISource implements ISource<Stream<Context>>, KryoSerializable {
+public class WrappedContextISource implements ISource<Stream<Context>> {
 	
 	private ContextAugmentingFunction saf;
 	private ISource<Stream<Context>> strm;
@@ -66,6 +66,16 @@ public class WrappedContextISource implements ISource<Stream<Context>>, KryoSeri
 	public void read(Kryo kryo, Input input) {
 		this.saf = (ContextAugmentingFunction) kryo.readClassAndObject(input);
 		this.strm = (ISource<Stream<Context>>) kryo.readClassAndObject(input);
+	}
+
+	@Override
+	public boolean isStateless() {
+		return this.strm.isStateless();
+	}
+
+	@Override
+	public boolean forcedUnique() {
+		return this.strm.forcedUnique();
 	}
 	
 }

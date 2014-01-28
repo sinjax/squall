@@ -86,5 +86,15 @@ public class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 	public boolean isReentrantSource() {
 		return false;
 	}
+
+	@Override
+	public boolean isStateless() {
+		return this.op.isStateless();
+	}
+	
+	@Override
+	public boolean forcedUnique() {
+		return this.op.forcedUnique();
+	}
 	
 }

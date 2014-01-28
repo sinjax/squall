@@ -11,6 +11,6 @@ import org.openimaj.util.function.MultiFunction;
  * @param <I>
  * @param <O>
  */
-public interface IFunction<I,O> extends MultiFunction<I,O>, Initialisable, Serializable{
+public interface IFunction<I,O> extends MultiFunction<I,O>, Initialisable, Serializable, Parallelisable {
 	
 }

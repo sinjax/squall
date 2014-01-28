@@ -47,6 +47,16 @@ public class VisRIFGreedyRule {
 
 		@Override
 		public void read(Kryo kryo, Input input) {}
+
+		@Override
+		public boolean isStateless() {
+			return true;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return false;
+		}
 	}
 	static ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
 		
@@ -79,15 +89,19 @@ public class VisRIFGreedyRule {
 		}
 
 		@Override
-		public void write(Kryo kryo, Output output) {
-			// TODO Auto-generated method stub
-			
+		public void write(Kryo kryo, Output output) {}
+
+		@Override
+		public void read(Kryo kryo, Input input) {}
+
+		@Override
+		public boolean isStateless() {
+			return false;
 		}
 
 		@Override
-		public void read(Kryo kryo, Input input) {
-			// TODO Auto-generated method stub
-			
+		public boolean forcedUnique() {
+			return true;
 		}
 	};
 	

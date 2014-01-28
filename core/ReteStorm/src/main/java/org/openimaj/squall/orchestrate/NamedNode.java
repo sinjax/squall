@@ -4,6 +4,7 @@ import org.openimaj.squall.orchestrate.DGNode;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.Initialisable;
+import org.openimaj.squall.compile.data.Parallelisable;
 import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
@@ -21,7 +22,7 @@ import org.openimaj.util.stream.Stream;
  * 
  * @param <DATA> 
  */
-public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DATA>{
+public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DATA> implements Parallelisable {
 	
 	private String name;
 	/**
@@ -49,7 +50,8 @@ public abstract class NamedNode<DATA> extends DGNode<NamedNode<?>,NamedStream,DA
 	/**
 	 * @return whether this node is {@link Initialisable}
 	 */
-	public abstract boolean isInitialisable() ;
+	public abstract boolean isInitialisable();
+	
 
 	/**
 	 * @return is this node an operation

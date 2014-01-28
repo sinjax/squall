@@ -54,6 +54,16 @@ public class RunLSBenchRIFQuery {
 
 		@Override
 		public void read(Kryo kryo, Input input) {}
+
+		@Override
+		public boolean isStateless() {
+			return true;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return false;
+		}
 	}
 	
 	/**

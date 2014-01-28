@@ -16,14 +16,12 @@ import org.openimaj.squall.orchestrate.ContextAugmentingFunction;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.BufferedOutputStreamHolder;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.SIVFunction;
 import org.openimaj.squall.compile.data.VariableHolderAnonimisationUtils;
 import org.openimaj.util.data.Context;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.KryoSerializable;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
@@ -325,6 +323,16 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		this.rightOverflow = new BindingsOverflowHandler(rightSource, new WindowInformation(rightOverride,rightCap,rightDur,rightUnit));
 		
 		this.anonimisedDefaultStreamName = input.readString();
+	}
+	
+	@Override
+	public boolean isStateless() {
+		return false;
+	}
+
+	@Override
+	public boolean forcedUnique() {
+		return false;
 	}
 	
 	// MULTIFUNCTION

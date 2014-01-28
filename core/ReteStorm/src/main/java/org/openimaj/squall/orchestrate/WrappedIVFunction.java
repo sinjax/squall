@@ -110,5 +110,15 @@ public class WrappedIVFunction extends IVFunction<Context,Context> {
 		this.func = (IVFunction<Context, Context>) kryo.readClassAndObject(input);
 	}
 
+	@Override
+	public boolean isStateless() {
+		return this.func.isStateless();
+	}
+
+	@Override
+	public boolean forcedUnique() {
+		return this.func.forcedUnique();
+	}
+
 	
 }

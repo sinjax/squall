@@ -173,5 +173,15 @@ public abstract class AbstractTripleFunction extends IVFunction<Context, Context
 			this.ruleVariables[i] = (Node_RuleVariable) kryo.readClassAndObject(input);
 		}
 	}
+	
+	@Override
+	public boolean isStateless() {
+		return true;
+	}
+	
+	@Override
+	public boolean forcedUnique() {
+		return false;
+	}
 
 }

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.utils.JenaStormUtils;
-import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.storm.utils.StormUtils;
 import org.openimaj.util.data.Context;
@@ -24,7 +23,7 @@ public class MultiFunctionBolt extends ProcessingBolt {
 	 * 
 	 */
 	private static final long serialVersionUID = 2034257684933988838L;
-	private IFunction<Context, Context> fun;
+	private MultiFunction<Context, Context> fun;
 	private byte[] serializedFun;
 	/**
 	 * @param nn
@@ -41,11 +40,18 @@ public class MultiFunctionBolt extends ProcessingBolt {
 		}
 	}
 	
+	protected byte[] getSerialisedFunction(){
+		return this.serializedFun;
+	}
+	
+	protected MultiFunction<Context, Context> getFunction(){
+		return this.fun;
+	}
+	
 	@Override
 	public void prepare(@SuppressWarnings("rawtypes") Map stormConf, TopologyContext context,OutputCollector collector) {
 		super.prepare(stormConf, context, collector);
 		this.fun = StormUtils.deserialiseFunction(JenaStormUtils.kryo(),this.serializedFun );
-		this.fun.setup();
 	}
 
 	@Override

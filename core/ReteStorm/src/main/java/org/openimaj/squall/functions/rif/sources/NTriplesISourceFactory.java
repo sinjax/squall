@@ -70,6 +70,16 @@ public class NTriplesISourceFactory extends ISourceFactory {
 			public void read(Kryo kryo, Input input) {
 				this.nTripleStreamLocation = input.readString();
 			}
+
+			@Override
+			public boolean isStateless() {
+				return false;
+			}
+
+			@Override
+			public boolean forcedUnique() {
+				return true;
+			}
 		}
 		// Set the URI of the source before returning
 		.setInputStreamSource(location);

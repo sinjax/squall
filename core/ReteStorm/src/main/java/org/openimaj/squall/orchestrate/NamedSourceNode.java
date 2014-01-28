@@ -1,7 +1,5 @@
 package org.openimaj.squall.orchestrate;
 
-import java.util.Iterator;
-
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.Initialisable;
@@ -118,6 +116,18 @@ public class NamedSourceNode extends NamedNode<ISource<Stream<Context>>> {
 	@Override
 	public ISource<Stream<Context>> getData() {
 		return wrapped;
+	}
+
+
+	@Override
+	public boolean isStateless() {
+		return this.wrapped.isStateless();
+	}
+
+
+	@Override
+	public boolean forcedUnique() {
+		return this.wrapped.forcedUnique();
 	}
 
 }

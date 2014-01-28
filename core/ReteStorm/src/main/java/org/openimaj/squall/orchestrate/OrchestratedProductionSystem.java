@@ -7,7 +7,6 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.orchestrate.DirectedGraph;
 import org.openimaj.squall.orchestrate.NamedSourceNode;
 import org.openimaj.squall.orchestrate.Orchestrator;
-import org.openimaj.squall.orchestrate.ReentrantNNIFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Operation;
 

@@ -70,4 +70,14 @@ import com.esotericsoftware.kryo.io.Output;
 			this.expected = input.readInt();
 			this.count = input.readInt();
 		}
+
+		@Override
+		public boolean isStateless() {
+			return false;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return true;
+		}
 	}

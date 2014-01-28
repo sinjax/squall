@@ -118,4 +118,14 @@ public abstract class AbstractFunctorFunction<T1, T2> extends IVFunction<T1, T2>
 		}
 	}
 	
+	@Override
+	public boolean isStateless() {
+		return true;
+	}
+	
+	@Override
+	public boolean forcedUnique() {
+		return false;
+	}
+	
 }

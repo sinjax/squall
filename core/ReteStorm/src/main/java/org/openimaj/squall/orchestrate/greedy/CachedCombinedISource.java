@@ -79,4 +79,24 @@ public class CachedCombinedISource implements ISource<Stream<Context>> {
 		}
 	}
 
+	@Override
+	public boolean isStateless() {
+		for (ISource<Stream<Context>> source : this.sources){
+			if (!source.isStateless()){
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public boolean forcedUnique() {
+		for (ISource<Stream<Context>> source : this.sources){
+			if (source.forcedUnique()){
+				return true;
+			}
+		}
+		return false;
+	}
+
 }

@@ -96,7 +96,11 @@ public class StormStreamBuilder implements Builder{
 			if(namedNode.isSource()){
 				// build a spout
 				IRichSpout s = new OIStreamSpout(namedNode);
-				tb.setSpout(name, s,1);
+				if (namedNode.forcedUnique()){
+					tb.setSpout(name, s, 1);
+				} else {
+					tb.setSpout(name, s);
+				}
 				
 				state.put(name, namedNode);
 				remove = true;
@@ -106,32 +110,42 @@ public class StormStreamBuilder implements Builder{
 			 * 
 			 */
 			else if(namedNode.isFunction() || namedNode.isOperation()){
-					List<IndependentPair<NamedStream, NamedNode<?>>> parentStreams = extractParentStreams(ops,namedNode);
-					IRichBolt funcBolt = null;
-					
-					if(namedNode.isFunction())
+				List<IndependentPair<NamedStream, NamedNode<?>>> parentStreams = extractParentStreams(ops,namedNode);
+				IRichBolt funcBolt = null;
+				
+				if(namedNode.isFunction()){
+					if (namedNode.isInitialisable()){
+						funcBolt = new IFunctionBolt(namedNode);
+					} else {
 						funcBolt = new MultiFunctionBolt(namedNode);
-					else 
-						funcBolt = new OperationBolt(namedNode);
-					
-					BoltDeclarer dec = tb.setBolt(name, funcBolt);
-					for (IndependentPair<NamedStream, NamedNode<?>> p : parentStreams) {
-						NamedStream strm = p.firstObject();
-						NamedNode<?> parent = p.secondObject();
-						String parentName = StormUtils.legalizeStormIdentifier(parent.getName());
-						String streamName = NamedNodeComponent.constructStreamName(parent,strm,namedNode);
-						if(strm.varCount() < 1){
-							dec.shuffleGrouping(parentName, streamName);
-						}
-						else if(strm.varCount() == 0){
-							dec.allGrouping(parentName, streamName);
-						}
-						else{							
-							dec.customGrouping(parentName, streamName, new ContextVariableGrouping(strm.variables()));
-						}
 					}
-					state.put(name, namedNode);
-					remove = true;
+				} else { 
+					funcBolt = new OperationBolt(namedNode);
+				}
+				
+				BoltDeclarer dec;
+				if (namedNode.forcedUnique()){
+					dec = tb.setBolt(name, funcBolt, 1);
+				} else {
+					dec = tb.setBolt(name, funcBolt);
+				}
+				for (IndependentPair<NamedStream, NamedNode<?>> p : parentStreams) {
+					NamedStream strm = p.firstObject();
+					NamedNode<?> parent = p.secondObject();
+					String parentName = StormUtils.legalizeStormIdentifier(parent.getName());
+					String streamName = StormUtils.legalizeStormIdentifier(strm.identifier());
+					if(namedNode.forcedUnique()){
+						dec.globalGrouping(parentName, streamName);
+					} else if(namedNode.isStateless()){
+						dec.shuffleGrouping(parentName, streamName);
+					} else if(strm.varCount() < 1){
+						dec.allGrouping(parentName, streamName);
+					} else{							
+						dec.customGrouping(parentName, streamName, new ContextVariableGrouping(strm.variables()));
+					}
+				}
+				state.put(name, namedNode);
+				remove = true;
 			}
 			if(!remove){
 				newdisconnected.add(namedNode);

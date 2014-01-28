@@ -121,6 +121,16 @@ public class KestrelWriter implements IOperation<byte[]>{
 	}
 	
 	@Override
+	public boolean isStateless() {
+		return true;
+	}
+
+	@Override
+	public boolean forcedUnique() {
+		return false;
+	}
+	
+	@Override
 	public void write(Kryo kryo, Output output) {
 		kryo.writeClassAndObject(output, this.host);
 	}

@@ -7,8 +7,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.IConsequence;
-import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
@@ -23,7 +21,7 @@ import com.hp.hpl.jena.graph.Node_Variable;
  *
  */
 @SuppressWarnings("serial")
-public class BaseBindingConsequence extends AbstractRIFFunction implements IConsequence {
+public class BaseBindingConsequence extends BaseConsequenceFunction {
 
 	private static final Logger logger = Logger.getLogger(BaseBindingConsequence.class);
 	private String[] inVars;

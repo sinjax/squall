@@ -45,6 +45,16 @@ public class VisJenaGreedyRule {
 
 		@Override
 		public void read(Kryo kryo, Input input) {}
+
+		@Override
+		public boolean isStateless() {
+			return true;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return false;
+		}
 	}
 	static ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
 		
@@ -86,6 +96,16 @@ public class VisJenaGreedyRule {
 		public void read(Kryo kryo, Input input) {
 			// TODO Auto-generated method stub
 			
+		}
+
+		@Override
+		public boolean isStateless() {
+			return false;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return true;
 		}
 	};
 	

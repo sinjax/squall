@@ -79,5 +79,15 @@ import backtype.storm.utils.Utils;
 		public void read(Kryo kryo, Input input) {
 			this.conf = (Config) kryo.readClassAndObject(input);
 		}
+
+		@Override
+		public boolean isStateless() {
+			return true;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return true;
+		}
 		
 	}

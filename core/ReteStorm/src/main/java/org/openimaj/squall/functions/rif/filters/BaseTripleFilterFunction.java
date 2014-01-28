@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.Count;
-import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 
@@ -23,7 +22,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
  *
  */
 @SuppressWarnings("serial")
-public class BaseTripleFilterFunction extends AbstractRIFFunction {
+public class BaseTripleFilterFunction extends BaseFilterFunction {
 
 	private final static Logger logger = Logger.getLogger(BaseTripleFilterFunction.class);
 	private TriplePattern clause;

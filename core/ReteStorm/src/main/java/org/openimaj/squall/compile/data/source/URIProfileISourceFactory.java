@@ -85,6 +85,16 @@ public class URIProfileISourceFactory {
 			this.creator = (Function<InputStream, Stream<Context>>) kryo.readClassAndObject(input);
 			this.location = (URI) kryo.readClassAndObject(input);
 		}
+
+		@Override
+		public boolean isStateless() {
+			return false;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return true;
+		}
 	}
 	
 	private static final class LocationISource implements ISource<Stream<Context>> {
@@ -128,6 +138,16 @@ public class URIProfileISourceFactory {
 		public void read(Kryo kryo, Input input) {
 			this.reader = (Function<URI, Stream<Context>>) kryo.readClassAndObject(input);
 			this.location = (URI) kryo.readClassAndObject(input);
+		}
+
+		@Override
+		public boolean isStateless() {
+			return false;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return true;
 		}
 	}
 

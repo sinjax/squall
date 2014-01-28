@@ -1,7 +1,6 @@
 package org.openimaj.squall.functions.rif.predicates;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.utils.Count;
@@ -138,6 +137,16 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 	@Override
 	public void read(Kryo kryo, Input input) {
 		this.nodes = (Node[]) kryo.readClassAndObject(input);
+	}
+	
+	@Override
+	public boolean isStateless() {
+		return true;
+	}
+	
+	@Override
+	public boolean forcedUnique() {
+		return false;
 	}
 	
 }

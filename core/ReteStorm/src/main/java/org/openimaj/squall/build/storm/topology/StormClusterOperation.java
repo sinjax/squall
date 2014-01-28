@@ -58,4 +58,14 @@ public class StormClusterOperation implements IOperation<StormTopology> {
 		this.conf = (Config) kryo.readClassAndObject(input);
 	}
 
+	@Override
+	public boolean isStateless() {
+		return true;
+	}
+
+	@Override
+	public boolean forcedUnique() {
+		return true;
+	}
+
 }
