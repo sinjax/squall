@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.hp.hpl.jena.graph.Node;
 
@@ -42,7 +43,7 @@ public class ContextVariableGrouping implements CustomStreamGrouping {
 	public List<Integer> chooseTasks(int taskId, List<Object> values) {
 		Context ctx = (Context) values.get(0);// get the Context instance
 		List<Node> nodes = new ArrayList<Node>();
-		Map<String,Node> bindings = ctx.getTyped("bindings");
+		Map<String,Node> bindings = ctx.getTyped(ContextKey.BINDINGS_KEY.toString());
 		for (String bind : this.bindingVars) {
 			nodes.add(bindings.get(bind));
 		}

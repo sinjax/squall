@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.openimaj.squall.orchestrate.ContextAugmentingFunction;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.storm.utils.StormUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.function.Function;
 
 import backtype.storm.task.TopologyContext;
@@ -84,7 +84,7 @@ public abstract class NamedNodeComponent implements IComponent{
 	 */
 	public Context getContext(Tuple t) {
 		Context ctx = (Context) t.getValueByField("context");
-		ctx.put(ContextAugmentingFunction.STREAM_KEY, this.correctedStreamName.get(t.getSourceStreamId()));
+		ctx.put(ContextKey.STREAM_KEY.toString(), this.correctedStreamName.get(t.getSourceStreamId()));
 		return ctx;
 	}
 	

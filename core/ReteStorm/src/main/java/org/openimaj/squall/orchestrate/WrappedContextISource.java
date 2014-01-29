@@ -2,10 +2,10 @@ package org.openimaj.squall.orchestrate;
 
 import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.stream.Stream;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.KryoSerializable;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -24,7 +24,7 @@ public class WrappedContextISource implements ISource<Stream<Context>> {
 	 */
 	public WrappedContextISource(ISource<Stream<Context>> strm, NamedNode<ISource<Stream<Context>>> nn) {
 		this.strm = strm;
-		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
+		this.saf = new ContextAugmentingFunction(ContextKey.PREV_FUNC_KEY.toString(), nn.getName());
 	}
 
 	@Override

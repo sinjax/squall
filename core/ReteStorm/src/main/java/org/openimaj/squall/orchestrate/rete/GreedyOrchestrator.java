@@ -36,6 +36,7 @@ import org.openimaj.squall.orchestrate.exception.PlanningException;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.pair.IndependentPair;
@@ -473,7 +474,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			@Override
 			public Stream<Context> apply() {
 				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
-				.map(new ContextWrapper("triple"));
+				.map(new ContextWrapper(ContextKey.TRIPLE_KEY.toString()));
 //				return null;
 			}
 			

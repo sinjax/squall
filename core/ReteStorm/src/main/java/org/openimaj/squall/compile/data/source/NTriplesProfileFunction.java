@@ -6,6 +6,7 @@ import java.util.Iterator;
 import org.apache.jena.riot.Lang;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.AbstractStream;
 import org.openimaj.util.stream.Stream;
@@ -35,7 +36,7 @@ public class NTriplesProfileFunction implements
 
 		@Override
 		public Context next() {
-			return new Context("triple",iter.next());
+			return new Context(ContextKey.TRIPLE_KEY.toString(),iter.next());
 		}
 	}
 

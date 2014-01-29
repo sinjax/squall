@@ -11,6 +11,7 @@ import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.stream.AbstractStream;
 import org.openimaj.util.stream.Stream;
 
@@ -276,9 +277,9 @@ public abstract class CompiledProductionSystem {
 				for (ClauseEntry axiom = as.get(i = 0); i < as.size(); axiom = as.get(++i)){
 					Context ac = new Context();
 					if (axiom instanceof TriplePattern){
-						ac.put("triple", ((TriplePattern) axiom).asTriple());
+						ac.put(ContextKey.TRIPLE_KEY.toString(), ((TriplePattern) axiom).asTriple());
 					} else if (axiom instanceof Functor){
-						ac.put("atom", (Functor) axiom);
+						ac.put(ContextKey.ATOM_KEY.toString(), (Functor) axiom);
 					} else {
 						continue;
 					}

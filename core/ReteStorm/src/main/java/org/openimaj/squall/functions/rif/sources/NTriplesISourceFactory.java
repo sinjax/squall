@@ -7,6 +7,7 @@ import java.net.URI;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
@@ -37,7 +38,7 @@ public class NTriplesISourceFactory extends ISourceFactory {
 			@Override
 			public Stream<Context> apply() {
 				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
-						.map(new ContextWrapper("triple"));
+						.map(new ContextWrapper(ContextKey.TRIPLE_KEY.toString()));
 //				return null;
 			}
 			

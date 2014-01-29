@@ -10,6 +10,8 @@ import org.openimaj.squall.functions.rif.calculators.NumericRIFValueFunction;
 import org.openimaj.squall.functions.rif.predicates.NumericRIFPredicateFunction;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
+
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
@@ -66,7 +68,7 @@ public class GeoHaversineDistanceFunction extends NumericRIFValueFunction {
 	public List<Context> apply(Context in) {
 		logger.debug(String.format("Context(%s) sent to Value(haversine(%s,%s,%s,%s))" , in, super.nodes[0], super.nodes[1], super.nodes[2], super.nodes[3]));
 		List<Context> ret = new ArrayList<Context>();
-		Map<String,Node> binds = in.getTyped("bindings");
+		Map<String,Node> binds = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
 		Double lat1 = Math.PI * super.extractBinding(binds, super.nodes[0]) / 180d;
 		Double long1 = Math.PI * super.extractBinding(binds, super.nodes[1]) / 180d;
@@ -87,7 +89,7 @@ public class GeoHaversineDistanceFunction extends NumericRIFValueFunction {
 				super.getResultVarNode().getName(),
 				NodeFactory.createLiteral(Double.toString(distance), XSDDatatype.XSDdouble)
 		);
-		newC.put("bindings", newB);
+		newC.put(ContextKey.BINDINGS_KEY.toString(), newB);
 		ret.add(newC);
 		
 		return ret;

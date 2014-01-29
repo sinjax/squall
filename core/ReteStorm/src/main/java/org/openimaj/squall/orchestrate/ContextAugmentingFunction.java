@@ -15,14 +15,6 @@ public class ContextAugmentingFunction implements Function<Context, Context>, Se
 	 * 
 	 */
 	private static final long serialVersionUID = -5178137783782497990L;
-	/**
-	 * The key to extract the last function to process the context.
-	 */
-	public static final String NAME_KEY = "lastFunction";
-	/**
-	 * The key to extract the last stream to carry the context.
-	 */
-	public static final String STREAM_KEY = "stream";
 	
 	private String key;
 	private String value;
@@ -46,7 +38,9 @@ public class ContextAugmentingFunction implements Function<Context, Context>, Se
 	@Override
 	public Context apply(Context in) {
 		if(in == null) return null;
-		in.put(this.key, this.value);
+		if(!in.containsKey(this.key)){
+			in.put(this.key, this.value);
+		}
 		return in;
 	}
 	

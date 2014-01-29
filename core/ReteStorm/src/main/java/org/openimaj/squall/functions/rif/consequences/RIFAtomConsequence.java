@@ -11,6 +11,7 @@ import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -74,7 +75,7 @@ public class RIFAtomConsequence extends BaseConsequenceFunction {
 
 	@Override
 	public List<Context> apply(Context in) {
-		Map<String,Node> bindings = in.getTyped("bindings");
+		Map<String,Node> bindings = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
 		List<Functor> ret = new ArrayList<Functor>();
 		ret.add(BindingsUtils.instantiate(this.clause,bindings));
@@ -84,7 +85,7 @@ public class RIFAtomConsequence extends BaseConsequenceFunction {
 			logger.debug(String.format("completed: [%s] -> %s",this.toString(), bindings));
 			
 			Context out = new Context();
-			out.put("atom", atom);
+			out.put(ContextKey.ATOM_KEY.toString(), atom);
 			out.put("rule", this.id);
 			ctxs.add(out);			
 		}

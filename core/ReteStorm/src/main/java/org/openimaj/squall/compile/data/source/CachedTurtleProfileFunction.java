@@ -9,6 +9,7 @@ import org.apache.jena.riot.Lang;
 import org.apache.log4j.Logger;
 import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.AbstractStream;
@@ -47,7 +48,7 @@ public class CachedTurtleProfileFunction implements Function<InputStream, Stream
 
 		@Override
 		public Context next() {
-			Context context = new Context("triple",iter.next());
+			Context context = new Context(ContextKey.TRIPLE_KEY.toString(),iter.next());
 			return context;
 		}
 	}

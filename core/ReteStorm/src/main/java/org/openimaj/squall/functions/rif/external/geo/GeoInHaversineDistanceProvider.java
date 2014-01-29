@@ -16,6 +16,7 @@ import org.openimaj.squall.compile.rif.provider.RIFExternalFunctionProvider;
 import org.openimaj.squall.functions.rif.predicates.NumericRIFPredicateFunction;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.pair.IndependentPair;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -73,12 +74,12 @@ public class GeoInHaversineDistanceProvider extends RIFExternalFunctionProvider 
 		public List<Context> apply(Context in) {
 			logger  .debug(String.format("Context(%s) sent to Predicate(haversine(lat,long,lat,long) < %s)" , in, super.nodes[0]));
 			List<Context> ret = new ArrayList<Context>();
-			Map<String,Node> binds = in.getTyped("bindings");
+			Map<String,Node> binds = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 			
 			Double maxDist = super.extractBinding(binds, super.nodes[0]);//kilometres
 			
 			List<Context> results = this.haversineFunc.apply(in);
-			binds = results.get(0).getTyped("bindings");
+			binds = results.get(0).getTyped(ContextKey.BINDINGS_KEY.toString());
 			
 			if (super.extractBinding(binds, this.haversineFunc.getResultVarNode()) <= maxDist) {
 				logger  .debug(String.format("GeoHaversine check Passed!"));

@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -42,7 +43,7 @@ public class BaseAtomFilterFunction extends BaseFilterFunction {
 	public List<Context> apply(Context inc) {
 		List<Context> ctxs = new ArrayList<Context>();
 		logger.debug(String.format("Context(%s) sent to Filter(%s)" , inc, this.clause));
-		Functor in = inc.getTyped("atom");
+		Functor in = inc.getTyped(ContextKey.ATOM_KEY.toString());
 		
 		Map<String,Node> binds = BindingsUtils.extractVars(this.clause, in);
 		if (binds == null) return ctxs;
@@ -51,7 +52,7 @@ public class BaseAtomFilterFunction extends BaseFilterFunction {
 		
 		// We have a match!
 		Context out = new Context();
-		out.put("bindings", binds);
+		out.put(ContextKey.BINDINGS_KEY.toString(), binds);
 		ctxs.add(out);
 		return ctxs;
 	}

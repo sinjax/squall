@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoSerializable;
@@ -28,7 +29,7 @@ public class WrappedIFunction implements IFunction<Context, Context>, KryoSerial
 	 * @param nn
 	 */
 	public WrappedIFunction(IFunction<Context,Context> func, NamedNode<IFunction<Context,Context>> nn){
-		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
+		this.saf = new ContextAugmentingFunction(ContextKey.PREV_FUNC_KEY.toString(), nn.getName());
 		this.func = func;
 	}
 	

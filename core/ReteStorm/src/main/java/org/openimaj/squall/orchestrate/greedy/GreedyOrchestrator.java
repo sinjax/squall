@@ -462,7 +462,7 @@ public class GreedyOrchestrator implements Orchestrator{
 //			@Override
 //			public Stream<Context> apply() {
 //				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
-//				.map(new ContextWrapper("triple"));
+//				.map(new ContextWrapper(ContextKey.TRIPLE_KEY.toString()));
 ////				return null;
 //			}
 //			

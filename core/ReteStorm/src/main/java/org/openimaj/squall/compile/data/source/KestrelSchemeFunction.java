@@ -26,6 +26,7 @@ import org.openimaj.squall.utils.JenaUtils;
 import org.openimaj.storm.utils.KestrelParsedURI;
 import org.openimaj.storm.utils.KestrelUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.function.MultiFunction;
 import org.openimaj.util.pair.IndependentPair;
@@ -56,7 +57,7 @@ public class KestrelSchemeFunction implements Function<URI, Stream<Context>> {
 				Collection<Triple> triples = JenaUtils.readNTriples(new ByteArrayInputStream(in));
 				List<Context> ret = new ArrayList<Context>();
 				for (Triple triple : triples) {
-					ret.add(new Context("triple",triple));
+					ret.add(new Context(ContextKey.TRIPLE_KEY.toString(),triple));
 				}
 				
 				return ret;
@@ -104,7 +105,7 @@ public class KestrelSchemeFunction implements Function<URI, Stream<Context>> {
 					@Override
 					public byte[] apply(Context in) {
 						Graph graph = GraphFactory.createGraphMem();
-						Triple typed = in.getTyped("triple");
+						Triple typed = in.getTyped(ContextKey.TRIPLE_KEY.toString());
 						graph.add(typed);
 						ByteArrayOutputStream baos = new ByteArrayOutputStream();
 						RDFDataMgr.write(baos, graph, Lang.NTRIPLES);

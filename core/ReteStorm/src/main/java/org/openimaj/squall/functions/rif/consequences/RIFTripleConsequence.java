@@ -11,6 +11,7 @@ import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -91,7 +92,7 @@ public class RIFTripleConsequence extends BaseConsequenceFunction {
 
 	@Override
 	public List<Context> apply(Context in) {
-		Map<String,Node> bindings = in.getTyped("bindings");
+		Map<String,Node> bindings = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
 		List<Triple> ret = new ArrayList<Triple>();
 		ret.add(BindingsUtils.instantiate(this.clause,bindings));
@@ -101,7 +102,7 @@ public class RIFTripleConsequence extends BaseConsequenceFunction {
 			logger.debug(String.format("completed: [%s] -> %s",this.toString(), bindings));
 			
 			Context out = new Context();
-			out.put("triple", triple);
+			out.put(ContextKey.TRIPLE_KEY.toString(), triple);
 			out.put("rule", this.id);
 			ctxs.add(out);			
 		}

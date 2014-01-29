@@ -48,6 +48,7 @@ import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIF
 import org.openimaj.squall.providers.rif.consequences.RIFForAllBindingConsequenceProvider;
 import org.openimaj.squall.util.MD5Utils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.stream.Stream;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;

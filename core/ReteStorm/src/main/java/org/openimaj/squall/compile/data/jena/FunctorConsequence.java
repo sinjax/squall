@@ -8,6 +8,7 @@ import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IConsequence;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -40,7 +41,7 @@ public class FunctorConsequence extends AbstractFunctorFunction<Context,Context>
 	@Override
 	public List<Context> apply(Context in) {
 		Builtin imp = this.clause.getImplementor();
-		Map<String, Node> typed = in.getTyped("bindings");
+		Map<String, Node> typed = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		BindingVector be = mapToB(typed);
 		final ArrayList<Triple> toret = new ArrayList<Triple>();
 		RuleContext context = new ReteTopologyRuleContext(rule, be){
@@ -62,7 +63,7 @@ public class FunctorConsequence extends AbstractFunctorFunction<Context,Context>
 		}
 		List<Context> ctxs = new ArrayList<Context>();
 		Context out = new Context();
-		out.put("triple", toret);
+		out.put(ContextKey.TRIPLE_KEY.toString(), toret);
 		ctxs.add(out);
 		return ctxs;
 	}

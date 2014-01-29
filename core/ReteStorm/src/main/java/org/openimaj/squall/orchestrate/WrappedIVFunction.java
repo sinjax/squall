@@ -7,6 +7,7 @@ import java.util.Map;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -30,7 +31,7 @@ public class WrappedIVFunction extends IVFunction<Context,Context> {
 	 * @param nn
 	 */
 	public WrappedIVFunction(IVFunction<Context,Context> func, NamedNode<IVFunction<Context,Context>> nn) {
-		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
+		this.saf = new ContextAugmentingFunction(ContextKey.PREV_FUNC_KEY.toString(), nn.getName());
 		this.func = func;
 	}
 	

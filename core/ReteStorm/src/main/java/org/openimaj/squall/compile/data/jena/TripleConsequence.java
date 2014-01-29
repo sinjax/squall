@@ -7,6 +7,7 @@ import java.util.Map;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IConsequence;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
@@ -35,7 +36,7 @@ public class TripleConsequence extends AbstractTripleFunction implements IConseq
 
 	@Override
 	public List<Context> apply(Context in) {
-		Map<String,Node> bindings = in.getTyped("bindings");
+		Map<String,Node> bindings = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		BindingVector env = BindingsUtils.mapToBindings(bindings, ruleVariables);
 		Triple t = env.instantiate(this.clause);
 		List<Triple> ret = new ArrayList<Triple>();
@@ -46,7 +47,7 @@ public class TripleConsequence extends AbstractTripleFunction implements IConseq
 		List<Context> ctxs = new ArrayList<Context>();
 		for (Triple context : ret) {
 			Context out = new Context();
-			out.put("triple", context);			
+			out.put(ContextKey.TRIPLE_KEY.toString(), context);			
 			ctxs.add(out);
 		}
 		return ctxs;

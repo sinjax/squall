@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Node_Concrete;
@@ -46,7 +47,7 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 	@Override
 	public List<Context> apply(Context in) {
 		logger.debug(String.format("Context(%s) sent to Predicate(eq%s)" , in, Arrays.toString(super.nodes)));
-		Map<String,Node> bindings = in.getTyped("bindings");
+		Map<String,Node> bindings = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
 		List<Context> ret = new ArrayList<Context>();
 		int i = 0;

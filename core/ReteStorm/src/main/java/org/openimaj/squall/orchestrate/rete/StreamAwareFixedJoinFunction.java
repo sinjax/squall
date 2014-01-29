@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
 import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
-import org.openimaj.squall.orchestrate.ContextAugmentingFunction;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
@@ -20,6 +19,7 @@ import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.SIVFunction;
 import org.openimaj.squall.compile.data.VariableHolderAnonimisationUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -37,6 +37,11 @@ import com.hp.hpl.jena.graph.Node;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  */
 public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7946505511340986483L;
+
 	private static final Logger logger = Logger.getLogger(StreamAwareFixedJoinFunction.class);
 	
 	// Valid during planning, not needed after
@@ -51,7 +56,7 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 	// Valid at query time, but not needed before
 	private FixedHashSteM leftQueue;
 	private FixedHashSteM rightQueue;
-	private Map<String, List<Context>> outputStreamBuffers;
+	private Collection<Context> outputBuffer;
 	
 	/**
 	 * @param left  
@@ -118,7 +123,7 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		this.rightQueue = null;
 		
 		// Set the output stream buffers to null (created in setup)
-		this.outputStreamBuffers = null;
+		this.outputBuffer = null;
 	}
 	
 	/**
@@ -223,10 +228,7 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		leftQueue = new FixedHashSteM(this.leftOverflow, this.sharedOutVars, this.leftOverflow.getWindowInformation());
 		rightQueue = new FixedHashSteM(this.rightOverflow, this.sharedOutVars, this.rightOverflow.getWindowInformation());
 		
-		this.outputStreamBuffers = new HashMap<String, List<Context>>();
-		for (String name : this.getOutputStreamNames()){
-			this.outputStreamBuffers.put(name, new ArrayList<Context>());
-		}
+		this.outputBuffer = new ArrayList<Context>();
 	}
 
 	@Override
@@ -236,7 +238,7 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		
 		this.leftQueue = null;
 		this.rightQueue = null;
-		this.outputStreamBuffers = null;
+		this.outputBuffer = null;
 	}
 	
 	@SuppressWarnings("unused") // required for deserialisation by reflection
@@ -245,7 +247,7 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		
 		this.leftQueue = null;
 		this.rightQueue = null;
-		this.outputStreamBuffers = null;
+		this.outputBuffer = null;
 	}
 	
 	@Override
@@ -339,8 +341,7 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 	
 	@Override
 	public List<Context> apply(Context in) {
-		this.flushStreamBuffers();
-		String stream = in.getTyped(ContextAugmentingFunction.STREAM_KEY);
+		String stream = in.getTyped(ContextKey.STREAM_KEY.toString());
 		logger.debug(String.format("JOIN: Received input from %s, checking against %s and %s",
 										stream,
 										this.leftOverflow.getSource(),
@@ -349,11 +350,9 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 					);
 		List<Context> ret = new ArrayList<Context>();
 		
-		Map<String, Node> typed;
+		Map<String, Node> typed = in.getTyped(ContextKey.BINDINGS_KEY.toString());
+		logger.debug(String.format("Joining: %s with %s", this, typed));
 		if(stream.equals(this.leftOverflow.getSource())){
-			typed = in.getTyped("bindings");
-			logger.debug(String.format("Joining: %s with %s", this, typed));
-			
 			Map<String, Node> leftbinds = new HashMap<String, Node>();
 			for (String var : typed.keySet()){
 				leftbinds.put(this.leftVarsToOutVars.get(var), typed.get(var));
@@ -363,15 +362,12 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 				for (Map<String, Node> fullbindings : rightQueue.probe(leftbinds)) {
 					logger.debug(String.format("Joined: %s -> %s", typed, fullbindings));
 					Context r = new Context();
-					r.put("bindings",fullbindings);
+					r.put(ContextKey.BINDINGS_KEY.toString(),fullbindings);
 					ret.add(r);
 				}
 			}
 		}
 		else if(stream.equals(this.rightOverflow.getSource())){
-			typed = in.getTyped("bindings");
-			logger.debug(String.format("Joining: %s with %s", this, typed));
-			
 			Map<String, Node> rightbinds = new HashMap<String, Node>();
 			for (String var : typed.keySet()){
 				rightbinds.put(this.rightVarsToOutVars.get(var), typed.get(var));
@@ -381,42 +377,28 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 				for (Map<String, Node> fullbindings : leftQueue.probe(rightbinds)) {
 					logger.debug(String.format("Joined: %s -> %s", typed, fullbindings));
 					Context r = new Context();
-					r.put("bindings",fullbindings);
+					r.put(ContextKey.BINDINGS_KEY.toString(),fullbindings);
 					ret.add(r);
 				}
 			}
 		}
 		
-		this.outputStreamBuffers.get(this.anonimisedDefaultStreamName).addAll(ret);
+		ret.addAll(this.outputBuffer);
+		this.outputBuffer.clear();
 		
 		return ret;
 	}
 	
-	// BUFFEREDOUTPUTSTREAMHOLDER
+	// STREAMS
 	
-	@Override
-	public Set<String> getOutputStreamNames() {
-		Set<String> names = new HashSet<String>();
-		names.add(this.anonimisedDefaultStreamName);
-		names.addAll(this.leftOverflow.getStreamNames());
+	public Set<String> getOutputStreamNames(){
+		Set<String> names = this.leftOverflow.getStreamNames();
 		names.addAll(this.rightOverflow.getStreamNames());
+		names.add(anonimisedDefaultStreamName);
 		return names;
 	}
 	
-	@Override
-	public void flushStreamBuffers() {
-		for (String name : this.outputStreamBuffers.keySet()){
-			this.outputStreamBuffers.get(name).clear();
-		}
-	}
-
-	@Override
-	public List<Context> getStreamBuffer(String streamName) {
-		List<Context> buffer = this.outputStreamBuffers.get(streamName);
-		if (buffer == null) return new ArrayList<Context>();
-		this.outputStreamBuffers.put(streamName, new ArrayList<Context>());
-		return buffer;
-	}
+	// OBJECT
 	
 	@Override
 	public String toString() {
@@ -470,15 +452,17 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		@Override
 		public void handleDurationOverflow(Map<String, Node> overflowedBindings) {
 			Context overflow = new Context();
-			overflow.put("bindings", overflowedBindings);
-			StreamAwareFixedJoinFunction.this.outputStreamBuffers.get(this.getDurationOverflowStreamName()).add(overflow);
+			overflow.put(ContextKey.BINDINGS_KEY.toString(), overflowedBindings);
+			overflow.put(ContextKey.STREAM_KEY.toString(), this.getDurationOverflowStreamName());
+			StreamAwareFixedJoinFunction.this.outputBuffer.add(overflow);
 		}
 
 		@Override
 		public void handleCapacityOverflow(Map<String, Node> overflowedBindings) {
 			Context overflow = new Context();
-			overflow.put("bindings", overflowedBindings);
-			StreamAwareFixedJoinFunction.this.outputStreamBuffers.get(this.getCapacityOverflowStreamName()).add(overflow);
+			overflow.put(ContextKey.BINDINGS_KEY.toString(), overflowedBindings);
+			overflow.put(ContextKey.STREAM_KEY.toString(), this.getCapacityOverflowStreamName());
+			StreamAwareFixedJoinFunction.this.outputBuffer.add(overflow);
 		}
 		
 	}

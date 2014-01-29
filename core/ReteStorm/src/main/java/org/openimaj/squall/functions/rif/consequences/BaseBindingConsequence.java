@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -55,7 +56,7 @@ public class BaseBindingConsequence extends BaseConsequenceFunction {
 	
 	@Override
 	public List<Context> apply(Context in) {
-		Map<String,Node> bindings = in.getTyped("bindings");
+		Map<String,Node> bindings = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		Map<String,Node> ret = BindingsUtils.arrayToMap(
 									BindingsUtils.mapToArray(
 										bindings,
@@ -66,7 +67,7 @@ public class BaseBindingConsequence extends BaseConsequenceFunction {
 		
 		Context out = new Context();
 		logger.debug(this.toString());
-		out.put("bindings", ret);
+		out.put(ContextKey.BINDINGS_KEY.toString(), ret);
 		out.put("rule", this.id);
 		List<Context> ctxs = new ArrayList<Context>();
 		ctxs.add(out);

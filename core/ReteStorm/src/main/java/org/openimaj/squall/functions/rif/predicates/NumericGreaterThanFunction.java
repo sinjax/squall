@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import cern.colt.Arrays;
 
@@ -45,7 +46,7 @@ public class NumericGreaterThanFunction extends NumericRIFPredicateFunction {
 	public List<Context> apply(Context in) {
 		logger  .debug(String.format("Context(%s) sent to Predicate >%s" , in, Arrays.toString(super.nodes)));
 		List<Context> ret = new ArrayList<Context>();
-		Map<String,Node> binds = in.getTyped("bindings");
+		Map<String,Node> binds = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
 		Double current = super.extractBinding(binds, super.nodes[0]);
 		Double next = super.extractBinding(binds, super.nodes[1]);

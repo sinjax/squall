@@ -2,6 +2,7 @@ package org.openimaj.squall.orchestrate;
 
 import java.util.List;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.function.MultiFunction;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -23,7 +24,7 @@ public class WrappedFunction implements MultiFunction<Context,Context>, KryoSeri
 	 * @param nn
 	 */
 	public WrappedFunction(MultiFunction<Context,Context> func, NamedNode<MultiFunction<Context,Context>> nn) {
-		this.saf = new ContextAugmentingFunction(ContextAugmentingFunction.NAME_KEY, nn.getName());
+		this.saf = new ContextAugmentingFunction(ContextKey.PREV_FUNC_KEY.toString(), nn.getName());
 		this.func = func;
 	}
 	

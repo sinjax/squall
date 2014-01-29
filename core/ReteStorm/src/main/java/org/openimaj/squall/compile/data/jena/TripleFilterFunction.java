@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
@@ -38,7 +39,7 @@ public class TripleFilterFunction extends AbstractTripleFunction {
 	public List<Context> apply(Context inc) {
 		List<Context> ctxs = new ArrayList<Context>();
 		logger.debug(String.format("Context(%s) sent to Filter(%s)" , inc, this.clause));
-		Triple in = inc.getTyped("triple");
+		Triple in = inc.getTyped(ContextKey.TRIPLE_KEY.toString());
 //		if(!in.getSubject().matches(this.extended.getMatchSubject())) return null;
 //		if(!in.getPredicate().matches(this.extended.getMatchPredicate())) return null;
 //		if(!in.getObject().matches(this.extended.getMatchObject())) return null;
@@ -51,7 +52,7 @@ public class TripleFilterFunction extends AbstractTripleFunction {
 		
 		// We have a match!
 		Context out = new Context();
-		out.put("bindings", extractVars(in));
+		out.put(ContextKey.BINDINGS_KEY.toString(), extractVars(in));
 		ctxs.add(out);
 		return ctxs ;
 	}

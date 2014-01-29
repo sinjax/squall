@@ -43,22 +43,10 @@ import java.util.Set;
 public interface BufferedOutputStreamHolder<OUT>{
 	
 	/**
-	 * Reports the total number of streams fed by the object
+	 * Reports the names of the set of streams fed by the object
 	 * 
-	 * @return the total number of streams fed by the object
+	 * @return the names of the set of streams fed by the object
 	 */
 	Set<String> getOutputStreamNames();
-	/**
-	 * Provides access to the streams produced by the object, by stream number.
-	 * @param streamName
-	 * 		The number of the stream whose buffered output to return.
-	 * @return
-	 * 		The buffered output of the object on the specified stream.
-	 */
-	List<OUT> getStreamBuffer(String streamName);
-	/**
-	 * Empties the stream buffers.
-	 */
-	void flushStreamBuffers();
 	
 }

@@ -1,6 +1,7 @@
 package org.openimaj.squall.orchestrate;
 
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.function.Function;
 
 /**
@@ -56,7 +57,7 @@ public class NamedStream extends DirectedEdge<NamedNode<?>> {
 	 * @return This function augments a {@link Context} with the name of this {@link NamedStream}
 	 */
 	public Function<Context,Context> getFunction(){
-		return new ContextAugmentingFunction(ContextAugmentingFunction.STREAM_KEY, this.identifier);
+		return new ContextAugmentingFunction(ContextKey.STREAM_KEY.toString(), this.identifier);
 	}
 	
 	/**

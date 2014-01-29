@@ -8,6 +8,7 @@ import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IPredicate;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -39,12 +40,12 @@ public class FunctorFunction extends AbstractFunctorFunction<Context,Context> im
 	@Override
 	public List<Context> apply(Context in) {
 		List<Context> ret = new ArrayList<Context>();
-		Map<String,Node> object = in.getTyped("bindings");
+		Map<String,Node> object = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		BindingVector be = mapToB(object);
 		RuleContext context = new ReteTopologyRuleContext.IgnoreAdd(this.rule, be);
 		if(!clause.evalAsBodyClause(context)) return ret;
 		
-		ret.add(new Context("bindings", bToMap(be)));
+		ret.add(new Context(ContextKey.BINDINGS_KEY.toString(), bToMap(be)));
 		return ret;
 	}
 
