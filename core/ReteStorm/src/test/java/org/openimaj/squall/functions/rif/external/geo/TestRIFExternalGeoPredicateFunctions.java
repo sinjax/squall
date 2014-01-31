@@ -15,7 +15,7 @@ import org.openimaj.rifcore.conditions.data.RIFStringConst;
 import org.openimaj.rifcore.conditions.data.RIFVar;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.IPredicate;
+import org.openimaj.squall.compile.data.InheritsVariables;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.util.data.Context;
 
@@ -136,7 +136,7 @@ public class TestRIFExternalGeoPredicateFunctions {
 		StubAnonRVarHolder stub = new StubAnonRVarHolder(vars);
 		
 		IVFunction<Context, Context> ihdf = (new GeoInHaversineDistanceProvider(null)).apply(e);
-		((IPredicate) ihdf).setSourceVariableHolder(stub);
+		((InheritsVariables) ihdf).setSourceVariables(stub);
 		
 		Context cont = new Context();
 		Map<String,Node> map = new HashMap<String, Node>();

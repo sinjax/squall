@@ -1,12 +1,14 @@
 package org.openimaj.squall.functions.rif.predicates;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.utils.Count;
-import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.IPredicate;
 import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
+import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
+import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -20,7 +22,7 @@ import com.hp.hpl.jena.graph.Node_Concrete;
  *
  */
 @SuppressWarnings("serial")
-public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction implements IPredicate {
+public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction {
 	
 	/**
 	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -53,60 +55,49 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 	}
 	
 	protected Node[] nodes;
-	protected AnonimisedRuleVariableHolder sourceVarHolder;
+	protected Map<Node,BaseRIFValueFunction> funcs;
 	
 	/**
 	 * Constructs a new predicate function that filters bindings predicated on some function of the
 	 * provided variables and any provided constants.  
 	 * @param ns -
 	 * 		The array of nodes to be compared
+	 * @param funcs 
 	 * @throws RIFPredicateException 
 	 */
-	public BaseRIFPredicateFunction(Node[] ns) throws RIFPredicateException {
+	public BaseRIFPredicateFunction(Node[] ns, Map<Node, BaseRIFValueFunction> funcs) throws RIFPredicateException {
 		super();
-		this.sourceVarHolder = null;
-		
-		Count count = new Count();
-		for (int i = 0; i < ns.length; i++){
-			ns[i] = registerVariable(ns[i], count);
-		}
-		if (this.varCount() < 1){
-			throw new RIFPredicateException("RIF translator: Must compare some variable(s).");
-		}
-		
 		this.nodes = ns;
+		this.funcs = funcs;
 	}
 	
-	@Override
-	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
-		this.sourceVarHolder = arvh;
-		Map<String, String> arvhVarMap = arvh.ruleToBaseVarMap();
-		Map<String, String> thisVarMap = this.ruleToBaseVarMap();
-		
-		Map<String, String> directVarMap = new HashMap<String, String>();
-		for (String ruleVar : thisVarMap.keySet()){
-			if (arvhVarMap.containsKey(ruleVar)){
-				directVarMap.put(thisVarMap.get(ruleVar), arvhVarMap.get(ruleVar));
-			}
-		}
-		
+	/**
+	 * @param directVarMap
+	 * @return 
+	 */
+	public int mapNodeVarNames(Map<String, String> directVarMap) {
 		for (int i = 0; i < nodes.length; i++){
-			if (nodes[i].isVariable() && directVarMap.containsKey(nodes[i].getName())) {
-				nodes[i] = NodeFactory.createVariable(
-								directVarMap.get(
-									nodes[i].getName()
-								)
-							);
+			if (nodes[i].isVariable()){
+				if (directVarMap.containsKey(nodes[i].getName())) {
+					nodes[i] = NodeFactory.createVariable(
+									directVarMap.get(
+										nodes[i].getName()
+									)
+								);
+				} else if (this.funcs.containsKey(nodes[i])){
+					// store the function in a variable then map its vars.
+					BaseRIFValueFunction valFunc = this.funcs.get(nodes[i]);
+					valFunc.mapNodeVarNames(directVarMap);
+					// remove the function from the map of functions
+					this.funcs.remove(nodes[i]);
+					// replace the original variable node in the root function with the mapped variable node
+					nodes[i] = valFunc.getResultVarNode();
+					// put the function back into the map of functions with the mapped variable node as the key
+					this.funcs.put(nodes[i], valFunc);
+				}
 			}
 		}
-		
-		if (super.resetVars()){
-			for (String ruleVar : arvh.ruleVariables()){
-				String baseVar = arvhVarMap.get(ruleVar);
-				super.addVariable(baseVar);
-				super.putRuleToBaseVarMapEntry(ruleVar, baseVar);
-			}
-		}
+		return directVarMap.size();
 	}
 	
 	protected Object extractBinding(Map<String, Node> binds, Node node) {
@@ -128,6 +119,29 @@ public abstract class BaseRIFPredicateFunction extends AbstractRIFFunction imple
 		}
 		throw new UnsupportedOperationException("Incorrect node type for comparison: " + node);
 	}
+	
+	@Override
+	public List<Context> apply(Context in) {
+		Map<String, Node> oldBinds = in.getTyped(ContextKey.BINDINGS_KEY.toString());
+		Map<String, Node> newBinds = new HashMap<String, Node>();
+		newBinds.putAll(oldBinds);
+		
+		for (Node n : this.funcs.keySet()){
+			BaseRIFValueFunction valFunc = this.funcs.get(n);
+			List<Context> processedList = valFunc.apply(in);
+			Context processed = processedList.get(0);
+			Map<String, Node> processedBinds = processed.getTyped(ContextKey.BINDINGS_KEY.toString());
+			newBinds.put(n.getName(), processedBinds.get(valFunc.getResultVarNode()));
+		}
+		
+		Context populatedIn = new Context();
+		populatedIn.putAll(in);
+		populatedIn.put(ContextKey.BINDINGS_KEY.toString(), newBinds);
+		
+		return applyRoot(populatedIn);
+	}
+	
+	protected abstract List<Context> applyRoot(Context in);
 	
 	@Override
 	public void write(Kryo kryo, Output output) {

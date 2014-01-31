@@ -1,7 +1,6 @@
 package org.openimaj.squall.compile.rif.provider;
 
-import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.util.data.Context;
+import org.openimaj.squall.compile.data.RuleWrappedFunction;
 import org.openimaj.util.function.Function;
 
 /**
@@ -10,7 +9,7 @@ import org.openimaj.util.function.Function;
  * @param <IN>
  * @param <REG> 
  */
-public abstract class FunctionProvider<IN,REG> implements Function<IN, IVFunction<Context, Context>> {
+public abstract class FunctionProvider<IN,REG> implements Function<IN, RuleWrappedFunction<?>> {
 
 	private FunctionRegistry<REG> reg;
 	
@@ -21,8 +20,8 @@ public abstract class FunctionProvider<IN,REG> implements Function<IN, IVFunctio
 		this.reg = reg;
 	}
 	
-	protected FunctionRegistry<REG> getRegistry(){
-		return this.reg;
+	protected RuleWrappedFunction<?> compileFromRegistry(REG in){
+		return this.reg.compile(in);
 	}
 	
 }

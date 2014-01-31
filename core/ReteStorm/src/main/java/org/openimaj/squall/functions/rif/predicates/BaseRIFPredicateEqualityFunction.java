@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
 
@@ -25,11 +26,14 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 	 * provided variables and any provided constants.  
 	 * @param ns -
 	 * 		The array of nodes to be compared
+	 * @param funcs - 
+	 * 		The map of variable nodes to the functions that generate their values
 	 * @throws RIFPredicateException 
 	 */
-	public BaseRIFPredicateEqualityFunction(Node[] ns) throws RIFPredicateException{
-		super(ns);
+	public BaseRIFPredicateEqualityFunction(Node[] ns, Map<Node, BaseRIFValueFunction> funcs) throws RIFPredicateException{
+		super(ns, funcs);
 		Node val = null;
+		boolean containsVar = false;
 		for (Node n : ns){
 			if (n.isConcrete()){
 				if (val == null){
@@ -37,15 +41,17 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 				}else if (!val.sameValueAs(n)){
 					throw new RIFPredicateException("RIF translator: All constants compared must be semantically equal.");
 				}
+			} else if (n.isVariable()){
+				containsVar = true;
 			}
 		}
-		if (super.varCount() == 0){
+		if (!containsVar){
 			throw new RIFPredicateException("RIF translator: Predicate must compare at least one variable.");
 		}
 	}
-	
+
 	@Override
-	public List<Context> apply(Context in) {
+	protected List<Context> applyRoot(Context in) {
 		logger.debug(String.format("Context(%s) sent to Predicate(eq%s)" , in, Arrays.toString(super.nodes)));
 		Map<String,Node> bindings = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
@@ -61,42 +67,6 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 		
 		logger.debug(String.format("Context(%s) passed Predicate(eq%s)" , in, Arrays.toString(super.nodes)));
 		return ret;
-	}
-
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		StringBuilder anon = new StringBuilder();
-		if (super.sourceVarHolder == null){
-			anon.append("No Source");
-		} else {
-			anon.append(super.sourceVarHolder.identifier(varmap));
-		}
-		if (super.nodes.length > 0){
-			int i = 0;
-			anon.append(super.mapNode(varmap, super.nodes[i]));
-			for (i++; i < super.nodes.length; i++){
-				anon.append(" = ").append(super.mapNode(varmap, super.nodes[i]));;
-			}
-		}
-		return anon.toString();
-	}
-
-	@Override
-	public String identifier() {
-		StringBuilder anon = new StringBuilder();
-		if (super.sourceVarHolder == null){
-			anon.append("No Source");
-		} else {
-			anon.append(super.sourceVarHolder.identifier());
-		}
-		if (super.nodes.length > 0){
-			int i = 0;
-			anon.append(super.stringifyNode(super.nodes[i]));
-			for (i++; i < super.nodes.length; i++){
-				anon.append(" = ").append(super.stringifyNode(super.nodes[i]));;
-			}
-		}
-		return anon.toString();
 	}
 
 }

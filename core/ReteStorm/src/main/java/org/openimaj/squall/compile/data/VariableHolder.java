@@ -30,7 +30,11 @@ public abstract class VariableHolder{
 		return bvars;
 	}
 	
-	protected boolean addVariable(String name){
+	/**
+	 * @param name
+	 * @return
+	 */
+	public boolean addVariable(String name){
 		return this.variables.add(name);
 	}
 	
@@ -49,7 +53,11 @@ public abstract class VariableHolder{
 		return this.variables.size();
 	}
 	
-	protected int indexOfVar(String name){
+	/**
+	 * @param name
+	 * @return
+	 */
+	public int indexOfVar(String name){
 		return this.variables.indexOf(name);
 	}
 	

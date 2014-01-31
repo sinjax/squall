@@ -1,7 +1,9 @@
 package org.openimaj.squall.compile.rif.provider;
 
 import org.openimaj.rifcore.conditions.data.RIFExpr;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.RuleWrappedFunction;
+import org.openimaj.squall.data.RuleWrapped;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -13,7 +15,7 @@ import com.hp.hpl.jena.graph.Node;
 public abstract class RIFExprFunctionRegistry extends FunctionRegistry<RIFExpr> {
 
 	@Override
-	public IVFunction<Context,Context> compile(RIFExpr in) {
+	public RuleWrappedFunction<?> compile(RIFExpr in) {
 		Node node = in.getCommand().getOp().getNode();
 		String funcName = node.isLiteral()
 							? node.getLiteralValue().toString()

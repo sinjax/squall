@@ -64,9 +64,9 @@ public class GeoInHaversineDistanceProvider extends RIFExternalFunctionProvider 
 		}
 		
 		@Override
-		public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
-			super.setSourceVariableHolder(arvh);
-			this.haversineFunc.setSourceVariableHolder(arvh);
+		public void setSourceVariables(AnonimisedRuleVariableHolder arvh) {
+			super.setSourceVariables(arvh);
+			this.haversineFunc.setSourceVariables(arvh);
 			super.nodes[1] = this.haversineFunc.getResultVarNode();
 		}
 

@@ -11,7 +11,7 @@ import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.compile.data.IConsequence;
 import org.openimaj.squall.compile.data.IOperation;
-import org.openimaj.squall.compile.data.IPredicate;
+import org.openimaj.squall.compile.data.InheritsVariables;
 import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.CPSResult;
@@ -340,7 +340,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			NamedNode<?  extends IVFunction<Context, Context>> currentNode,
 			List<IVFunction<Context,Context>> list) {
 		for (IVFunction<Context, Context> pred : list) {
-			((IPredicate) pred).setSourceVariableHolder(currentNode.getData());
+			((InheritsVariables) pred).setSourceVariables(currentNode.getData());
 			NNIVFunction prednode = new NNIVFunction(
 					root,
 					nextPredicateName(),

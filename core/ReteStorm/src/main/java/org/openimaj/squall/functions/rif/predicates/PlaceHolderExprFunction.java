@@ -1,6 +1,7 @@
 package org.openimaj.squall.functions.rif.predicates;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +10,7 @@ import org.openimaj.rifcore.conditions.data.RIFDatum;
 import org.openimaj.rifcore.conditions.data.RIFExpr;
 import org.openimaj.rifcore.conditions.data.RIFList;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -50,7 +52,7 @@ public class PlaceHolderExprFunction extends BaseRIFPredicateFunction {
 	 * @throws RIFPredicateException 
 	 */
 	public PlaceHolderExprFunction(RIFExpr expr) throws RIFPredicateException {
-		super(extractArguments(expr));
+		super(extractArguments(expr), new HashMap<Node, BaseRIFValueFunction>());
 		Node_Concrete op = expr.getCommand().getOp().getNode();
 		this.name = op.isLiteral()
 						? op.getLiteralValue().toString()
@@ -60,46 +62,8 @@ public class PlaceHolderExprFunction extends BaseRIFPredicateFunction {
 	}
 
 	@Override
-	public List<Context> apply(Context in) {
+	protected List<Context> applyRoot(Context in) {
 		return null;
-	}
-
-	@Override
-	public String identifier() {
-		StringBuilder anon = new StringBuilder();
-		if (super.sourceVarHolder == null){
-			anon.append("No Source");
-		} else {
-			anon.append(super.sourceVarHolder.identifier());
-		}
-		anon.append("PlaceHolder:").append(this.name).append("(");
-		if (super.nodes.length > 0){
-			int i = 0;
-			anon.append(super.stringifyNode(super.nodes[i]));
-			for (i++; i < this.varCount(); i++){
-				anon.append(",").append(super.stringifyNode(super.nodes[i]));
-			}
-		}
-		return anon.append(")").toString();
-	}
-
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		StringBuilder anon = new StringBuilder();
-		if (super.sourceVarHolder == null){
-			anon.append("No Source");
-		} else {
-			anon.append(super.sourceVarHolder.identifier(varmap));
-		}
-		anon.append("PlaceHolder:").append(this.name).append("(");
-		if (super.nodes.length > 0){
-			int i = 0;
-			anon.append(super.mapNode(varmap, super.nodes[i]));
-			for (i++; i < this.varCount(); i++){
-				anon.append(",").append(super.mapNode(varmap, super.nodes[i]));
-			}
-		}
-		return anon.append(")").toString();
 	}
 
 }

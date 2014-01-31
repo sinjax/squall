@@ -6,8 +6,8 @@ import java.util.Map;
 import org.openimaj.rifcore.conditions.RIFExternal;
 import org.openimaj.rifcore.conditions.data.RIFExternalExpr;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
-import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.util.data.Context;
+import org.openimaj.squall.data.RuleWrapped;
+import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction;
 import org.openimaj.util.function.Function;
 
 /**
@@ -28,7 +28,7 @@ public class RIFExternalFunctionRegistry {
 	 * @param ext
 	 * @return a function for this external
 	 */
-	public static IVFunction<Context,Context> compile(RIFExternal ext){
+	public static RuleWrapped<? extends BaseRIFPredicateFunction> compile(RIFExternal ext){
 		String name = getOp(ext);
 		if(!providers.containsKey(name)) throw new UnsupportedOperationException("The external '"+name+"' was not provided.");
 		return providers.get(name).apply(ext);

@@ -27,26 +27,34 @@ public abstract class BaseRIFValueFunction extends BaseRIFPredicateFunction {
 	 */
 	private static final long serialVersionUID = -8356260243919339679L;
 	private Node_Variable result;
-	private String ruleVarName;
 	
 	/**
 	 * @param ns
 	 * @param rn 
+	 * @param funcs 
 	 * @throws RIFPredicateException
 	 */
-	public BaseRIFValueFunction(Node[] ns, Node_Variable rn) throws RIFPredicateException {
-		super(ns);
-		this.ruleVarName = rn.getName();
+	public BaseRIFValueFunction(Node[] ns, Node_Variable rn, Map<Node, BaseRIFValueFunction> funcs) throws RIFPredicateException {
+		super(ns, funcs);
+		this.result = rn;
 	}
 	
 	@Override
-	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
-		super.setSourceVariableHolder(arvh);
-		String anonVarName = Integer.toString(arvh.varCount() + 1);
-		this.result = (Node_Variable) NodeFactory.createVariable(anonVarName);
-		super.addVariable(anonVarName);
-		super.putRuleToBaseVarMapEntry(this.ruleVarName, anonVarName);
-		this.ruleVarName = null;
+	public int mapNodeVarNames(Map<String, String> directVarMap) {
+		int varIndex = super.mapNodeVarNames(directVarMap);
+		String anonVarName = Integer.toString(varIndex);
+		while (directVarMap.containsValue(anonVarName)){
+			++varIndex;
+			anonVarName = Integer.toString(varIndex);
+		}
+		if (directVarMap.containsKey(this.result.getName())){
+			this.result = (Node_Variable) NodeFactory.createVariable(directVarMap.get(this.result.getName()));
+		} else {
+			directVarMap.put(this.result.getName(), anonVarName);
+			this.result = (Node_Variable) NodeFactory.createVariable(anonVarName);
+		}
+		
+		return directVarMap.size();
 	}
 	
 	/**

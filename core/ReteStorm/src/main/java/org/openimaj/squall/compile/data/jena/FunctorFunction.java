@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.IPredicate;
+import org.openimaj.squall.compile.data.InheritsVariables;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
 
@@ -24,7 +24,7 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
  * Given a binding environment, output a binding environment
  *
  */
-public class FunctorFunction extends AbstractFunctorFunction<Context,Context> implements IPredicate {
+public class FunctorFunction extends AbstractFunctorFunction<Context,Context> implements InheritsVariables {
 	
 	private Rule rule;
 	
@@ -67,6 +67,6 @@ public class FunctorFunction extends AbstractFunctorFunction<Context,Context> im
 	}
 
 	@Override
-	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {}
+	public void setSourceVariables(AnonimisedRuleVariableHolder arvh) {}
 	
 }

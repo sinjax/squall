@@ -1,10 +1,12 @@
 package org.openimaj.squall.functions.rif.predicates;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
 
@@ -25,8 +27,8 @@ public class NumericGreaterThanFunction extends NumericRIFPredicateFunction {
 	 * @param ns
 	 * @throws RIFPredicateException
 	 */
-	public NumericGreaterThanFunction(Node[] ns) throws RIFPredicateException {
-		super(ns);
+	public NumericGreaterThanFunction(Node[] ns, Map<Node, BaseRIFValueFunction> funcMap) throws RIFPredicateException {
+		super(ns, funcMap);
 	}
 	
 	@SuppressWarnings("javadoc") // required for kryo deserialisation by reflection
@@ -34,7 +36,9 @@ public class NumericGreaterThanFunction extends NumericRIFPredicateFunction {
 		super(new Node[]{
 				NodeFactory.createLiteral("foo"),
 				NodeFactory.createVariable("bar")
-		});
+				},
+				new HashMap<Node, BaseRIFValueFunction>()
+		);
 	}
 
 	/**
@@ -43,7 +47,7 @@ public class NumericGreaterThanFunction extends NumericRIFPredicateFunction {
 	private static final long serialVersionUID = -7935891899097417140L;
 
 	@Override
-	public List<Context> apply(Context in) {
+	public List<Context> applyRoot(Context in) {
 		logger  .debug(String.format("Context(%s) sent to Predicate >%s" , in, Arrays.toString(super.nodes)));
 		List<Context> ret = new ArrayList<Context>();
 		Map<String,Node> binds = in.getTyped(ContextKey.BINDINGS_KEY.toString());
@@ -60,44 +64,6 @@ public class NumericGreaterThanFunction extends NumericRIFPredicateFunction {
 		}
 		ret.add(in);
 		return ret;
-	}
-
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		StringBuilder anon = new StringBuilder();
-		if (super.sourceVarHolder == null){
-			anon.append("No Source");
-		} else {
-			anon.append(super.sourceVarHolder.identifier(varmap));
-		}
-		anon.append("NumericGreaterThan(");
-		if (super.nodes.length > 0){
-			int i = 0;
-			anon.append(super.mapNode(varmap, super.nodes[i]));
-			for (i++; i < super.nodes.length; i++){
-				anon.append(",").append(super.mapNode(varmap, super.nodes[i]));
-			}
-		}
-		return anon.append(")").toString();
-	}
-
-	@Override
-	public String identifier() {
-		StringBuilder anon = new StringBuilder();
-		if (super.sourceVarHolder == null){
-			anon.append("No Source");
-		} else {
-			anon.append(super.sourceVarHolder.identifier());
-		}
-		anon.append("NumericGreaterThan(");
-		if (super.nodes.length > 0){
-			int i = 0;
-			anon.append(super.stringifyNode(super.nodes[i]));
-			for (i++; i < super.nodes.length; i++){
-				anon.append(",").append(super.stringifyNode(super.nodes[i]));
-			}
-		}
-		return anon.append(")").toString();
 	}
 	
 }

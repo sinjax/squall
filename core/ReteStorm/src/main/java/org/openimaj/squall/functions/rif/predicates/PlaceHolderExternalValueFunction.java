@@ -1,13 +1,13 @@
 package org.openimaj.squall.functions.rif.predicates;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import org.openimaj.rifcore.conditions.atomic.RIFAtom;
 import org.openimaj.rifcore.conditions.data.RIFDatum;
 import org.openimaj.rifcore.conditions.data.RIFList;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
+import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -49,7 +49,7 @@ public class PlaceHolderExternalValueFunction extends BaseRIFPredicateFunction {
 	 * @throws RIFPredicateException 
 	 */
 	public PlaceHolderExternalValueFunction(RIFExternalValue expr) throws RIFPredicateException {
-		super(extractArguments(expr));
+		super(extractArguments(expr), new HashMap<Node, BaseRIFValueFunction>());
 		Node_Concrete op = expr.getVal().getOp().getNode();
 		this.name = op.isLiteral()
 						? op.getLiteralValue().toString()
@@ -59,34 +59,8 @@ public class PlaceHolderExternalValueFunction extends BaseRIFPredicateFunction {
 	}
 
 	@Override
-	public List<Context> apply(Context in) {
+	protected List<Context> applyRoot(Context in) {
 		return null;
-	}
-
-	@Override
-	public String identifier() {
-		StringBuilder anon = new StringBuilder("External(PlaceHolder:").append(this.name).append("(");
-		if (super.nodes.length > 0){
-			int i = 0;
-			anon.append(super.stringifyNode(super.nodes[i]));
-			for (i++; i < this.varCount(); i++){
-				anon.append(",").append(super.stringifyNode(super.nodes[i]));
-			}
-		}
-		return anon.append("))").toString();
-	}
-
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		StringBuilder anon = new StringBuilder("External(PlaceHolder:").append(this.name).append("(");
-		if (super.nodes.length > 0){
-			int i = 0;
-			anon.append(super.mapNode(varmap, super.nodes[i]));
-			for (i++; i < this.varCount(); i++){
-				anon.append(",").append(super.mapNode(varmap, super.nodes[i]));
-			}
-		}
-		return anon.append("))").toString();
 	}
 
 }

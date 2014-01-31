@@ -19,11 +19,12 @@ public abstract class NumericRIFValueFunction extends BaseRIFValueFunction {
 	/**
 	 * @param ns
 	 * @param rn
+	 * @param funcs 
 	 * @throws RIFPredicateException
 	 */
-	public NumericRIFValueFunction(Node[] ns, Node_Variable rn)
+	public NumericRIFValueFunction(Node[] ns, Node_Variable rn, Map<Node, BaseRIFValueFunction> funcs)
 			throws RIFPredicateException {
-		super(ns, rn);
+		super(ns, rn, funcs);
 	}
 	
 	@Override

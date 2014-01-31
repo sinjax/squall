@@ -2,6 +2,8 @@ package org.openimaj.squall.functions.rif.predicates;
 
 import java.util.Map;
 
+import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
+
 import com.hp.hpl.jena.graph.Node;
 
 /**
@@ -13,10 +15,11 @@ public abstract class NumericRIFPredicateFunction extends BaseRIFPredicateFuncti
 
 	/**
 	 * @param ns
+	 * @param funcMap 
 	 * @throws RIFPredicateException
 	 */
-	public NumericRIFPredicateFunction(Node[] ns) throws RIFPredicateException {
-		super(ns);
+	public NumericRIFPredicateFunction(Node[] ns, Map<Node, BaseRIFValueFunction> funcMap) throws RIFPredicateException {
+		super(ns, funcMap);
 	}
 	
 	@Override

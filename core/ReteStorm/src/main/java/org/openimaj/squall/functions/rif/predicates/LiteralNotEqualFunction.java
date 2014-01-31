@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
 import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
@@ -29,9 +30,10 @@ public class LiteralNotEqualFunction extends BaseRIFPredicateFunction {
 	 * @param ns
 	 * @throws RIFPredicateException
 	 */
-	public LiteralNotEqualFunction(Node[] ns) throws RIFPredicateException {
-		super(ns);
+	public LiteralNotEqualFunction(Node[] ns, Map<Node, BaseRIFValueFunction> funcMap) throws RIFPredicateException {
+		super(ns, funcMap);
 		Node val = null;
+		boolean containsVar = false;
 		for (Node n : ns){
 			if (n.isConcrete()){
 				if (val == null){
@@ -39,15 +41,17 @@ public class LiteralNotEqualFunction extends BaseRIFPredicateFunction {
 				}else if (val.sameValueAs(n)){
 					throw new RIFPredicateException("RIF translator: All constants compared must be semantically different.");
 				}
+			} else if (n.isVariable()){
+				containsVar = true;
 			}
 		}
-		if (this.varCount() == 0){
+		if (!containsVar){
 			throw new RIFPredicateException("RIF translator: Predicate must compare at least one variable.");
 		}
 	}
 	
 	@Override
-	public List<Context> apply(Context in){
+	public List<Context> applyRoot(Context in){
 		logger .debug(String.format("Context(%s) sent to Predicate(neq(%s))" , in, Arrays.toString(super.nodes)));
 		Map<String,Node> binds = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
@@ -63,44 +67,6 @@ public class LiteralNotEqualFunction extends BaseRIFPredicateFunction {
 		
 		logger.debug(String.format("Context(%s) passed Predicate(eq%s)" , in, Arrays.toString(super.nodes)));
 		return ret;
-	}
-
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		StringBuilder anon = new StringBuilder();
-		if (super.sourceVarHolder == null){
-			anon.append("No Source");
-		} else {
-			anon.append(super.sourceVarHolder.identifier(varmap));
-		}
-		anon.append("LiteralNotEqual(");
-		if (super.nodes.length > 0){
-			int i = 0;
-			anon.append(super.mapNode(varmap, super.nodes[i]));
-			for (i++; i < super.nodes.length; i++){
-				anon.append(",").append(super.mapNode(varmap, super.nodes[i]));;
-			}
-		}
-		return anon.append(")").toString();
-	}
-
-	@Override
-	public String identifier() {
-		StringBuilder anon = new StringBuilder();
-		if (super.sourceVarHolder == null){
-			anon.append("No Source");
-		} else {
-			anon.append(super.sourceVarHolder.identifier());
-		}
-		anon.append("LiteralNotEqual(");
-		if (super.nodes.length > 0){
-			int i = 0;
-			anon.append(super.stringifyNode(super.nodes[i]));
-			for (i++; i < super.nodes.length; i++){
-				anon.append(",").append(super.stringifyNode(super.nodes[i]));;
-			}
-		}
-		return anon.append(")").toString();
 	}
 	
 }

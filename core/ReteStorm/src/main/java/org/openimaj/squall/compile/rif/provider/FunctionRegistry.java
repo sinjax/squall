@@ -3,7 +3,9 @@ package org.openimaj.squall.compile.rif.provider;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.RuleWrappedFunction;
+import org.openimaj.squall.data.RuleWrapped;
 import org.openimaj.util.data.Context;
 
 /**
@@ -11,7 +13,7 @@ import org.openimaj.util.data.Context;
  * @param <IN> 
  *
  */
-public abstract class FunctionRegistry<IN> { 
+public abstract class FunctionRegistry<IN> {
 	
 	private Map<String, FunctionProvider<IN,IN>> registry;
 	
@@ -26,7 +28,7 @@ public abstract class FunctionRegistry<IN> {
 	 * @param in
 	 * @return
 	 */
-	public abstract IVFunction<Context,Context> compile(IN in);
+	public abstract RuleWrappedFunction<?> compile(IN in);
 	
 	protected FunctionProvider<IN,IN> compile(String name){
 		if(!registry.containsKey(name)) throw new UnsupportedOperationException("The function provider for function '"+name+"' was not provided.");

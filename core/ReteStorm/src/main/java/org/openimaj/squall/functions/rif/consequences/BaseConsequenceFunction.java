@@ -1,6 +1,7 @@
 package org.openimaj.squall.functions.rif.consequences;
 
 import org.openimaj.squall.compile.data.IConsequence;
+import org.openimaj.squall.compile.data.RuleWrappedFunction;
 import org.openimaj.squall.compile.data.rif.AbstractRIFFunction;
 
 /**
