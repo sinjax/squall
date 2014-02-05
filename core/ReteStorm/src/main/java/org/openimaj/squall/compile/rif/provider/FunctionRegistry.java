@@ -3,10 +3,8 @@ package org.openimaj.squall.compile.rif.provider;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.RuleWrappedFunction;
-import org.openimaj.squall.data.RuleWrapped;
-import org.openimaj.util.data.Context;
+import org.openimaj.squall.compile.rif.provider.predicates.PredicateFunctionProvider;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -15,13 +13,13 @@ import org.openimaj.util.data.Context;
  */
 public abstract class FunctionRegistry<IN> {
 	
-	private Map<String, FunctionProvider<IN,IN>> registry;
+	private Map<String, PredicateFunctionProvider<IN, IN>> registry;
 	
 	/**
 	 * 
 	 */
 	public FunctionRegistry () {
-		this.registry = new HashMap<String, FunctionProvider<IN,IN>>();
+		this.registry = new HashMap<String, PredicateFunctionProvider<IN, IN>>();
 	}
 
 	/**
@@ -30,7 +28,7 @@ public abstract class FunctionRegistry<IN> {
 	 */
 	public abstract RuleWrappedFunction<?> compile(IN in);
 	
-	protected FunctionProvider<IN,IN> compile(String name){
+	protected PredicateFunctionProvider<IN, IN> compile(String name){
 		if(!registry.containsKey(name)) throw new UnsupportedOperationException("The function provider for function '"+name+"' was not provided.");
 		return this.registry.get(name);
 	}
@@ -39,7 +37,7 @@ public abstract class FunctionRegistry<IN> {
 	 * @param name
 	 * @param prov
 	 */
-	public void register(String name, FunctionProvider<IN,IN> prov){
+	public void register(String name, PredicateFunctionProvider<IN, IN> prov){
 		this.registry.put(name, prov);
 	}
 

@@ -10,7 +10,7 @@ import org.openimaj.rifcore.conditions.data.RIFDatum;
 import org.openimaj.rifcore.conditions.data.RIFExpr;
 import org.openimaj.rifcore.conditions.data.RIFList;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -21,7 +21,7 @@ import com.hp.hpl.jena.graph.Node_Concrete;
  *
  */
 @SuppressWarnings("serial")
-public class PlaceHolderExprFunction extends BaseRIFPredicateFunction {
+public class PlaceHolderExprFunction extends BasePredicateFunction {
 	
 	private static Node[] extractArguments(RIFExpr expr) {
 		List<Node> vars = new ArrayList<Node>();
@@ -52,7 +52,7 @@ public class PlaceHolderExprFunction extends BaseRIFPredicateFunction {
 	 * @throws RIFPredicateException 
 	 */
 	public PlaceHolderExprFunction(RIFExpr expr) throws RIFPredicateException {
-		super(extractArguments(expr), new HashMap<Node, BaseRIFValueFunction>());
+		super(extractArguments(expr), new HashMap<Node, BaseValueFunction>());
 		Node_Concrete op = expr.getCommand().getOp().getNode();
 		this.name = op.isLiteral()
 						? op.getLiteralValue().toString()

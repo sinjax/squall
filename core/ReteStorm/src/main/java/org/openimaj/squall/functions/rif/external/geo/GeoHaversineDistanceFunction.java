@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction;
 import org.openimaj.squall.functions.rif.calculators.NumericRIFValueFunction;
-import org.openimaj.squall.functions.rif.predicates.NumericRIFPredicateFunction;
-import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction.RuleWrappedValueFunction;
+import org.openimaj.squall.functions.rif.predicates.NumericPredicateFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
 
@@ -34,19 +36,27 @@ public class GeoHaversineDistanceFunction extends NumericRIFValueFunction {
 	
 	/**
 	 * @param ns
-	 * @throws RIFPredicateException
+	 * @param rn
+	 * @param funcMap
+	 * @return
+	 * @throws RIFPredicateException 
 	 */
-	public GeoHaversineDistanceFunction(Node[] ns) throws RIFPredicateException {
-		this(ns, (Node_Variable) NodeFactory.createVariable(DEFAULT_RESULT_VAR));
+	public static RuleWrappedGeoHaversineDistanceFunction ruleWrapped(
+																Node[] ns,
+																Node_Variable rn,
+																Map<Node, RuleWrappedValueFunction<?>> funcMap
+															) throws RIFPredicateException{
+		return new RuleWrappedGeoHaversineDistanceFunction(ns, rn, funcMap);
 	}
 	
 	/**
 	 * @param ns
 	 * @param rn 
+	 * @param funcs 
 	 * @throws RIFPredicateException
 	 */
-	public GeoHaversineDistanceFunction(Node[] ns, Node_Variable rn) throws RIFPredicateException {
-		super(ns, rn);
+	public GeoHaversineDistanceFunction(Node[] ns, Node_Variable rn, Map<Node, BaseValueFunction> funcs) throws RIFPredicateException {
+		super(ns, rn, funcs);
 		if (ns.length < 4){
 			throw new RIFPredicateException("Too few values defined for HaversineDistance predicate:\nUsage: geoHaversineDistance(point A lat, point A long, point B lat, point B long)");
 		}
@@ -57,7 +67,10 @@ public class GeoHaversineDistanceFunction extends NumericRIFValueFunction {
 		super(new Node[]{
 				NodeFactory.createVariable("foo"),
 				NodeFactory.createVariable("bar")
-		}, (Node_Variable) NodeFactory.createVariable(DEFAULT_RESULT_VAR));
+			},
+			(Node_Variable) NodeFactory.createVariable(DEFAULT_RESULT_VAR),
+			new HashMap<Node, BaseValueFunction>()
+		);
 	}
 
 	private double haversin(double pheta){
@@ -65,15 +78,15 @@ public class GeoHaversineDistanceFunction extends NumericRIFValueFunction {
 	}
 
 	@Override
-	public List<Context> apply(Context in) {
+	public List<Context> applyRoot(Context in) {
 		logger.debug(String.format("Context(%s) sent to Value(haversine(%s,%s,%s,%s))" , in, super.nodes[0], super.nodes[1], super.nodes[2], super.nodes[3]));
 		List<Context> ret = new ArrayList<Context>();
 		Map<String,Node> binds = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
-		Double lat1 = Math.PI * super.extractBinding(binds, super.nodes[0]) / 180d;
-		Double long1 = Math.PI * super.extractBinding(binds, super.nodes[1]) / 180d;
-		Double lat2 = Math.PI * super.extractBinding(binds, super.nodes[2]) / 180d;
-		Double long2 = Math.PI * super.extractBinding(binds, super.nodes[3]) / 180d;
+		Double lat1 = Math.PI * super.extractBinding(binds, 0) / 180d;
+		Double long1 = Math.PI * super.extractBinding(binds, 1) / 180d;
+		Double lat2 = Math.PI * super.extractBinding(binds, 2) / 180d;
+		Double long2 = Math.PI * super.extractBinding(binds, 3) / 180d;
 		
 		Double distance = 2 * earthRadius * Math.asin(
 												Math.sqrt(
@@ -94,27 +107,18 @@ public class GeoHaversineDistanceFunction extends NumericRIFValueFunction {
 		
 		return ret;
 	}
+	
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 *
+	 */
+	public static class RuleWrappedGeoHaversineDistanceFunction extends RuleWrappedValueFunction<GeoHaversineDistanceFunction> {
 
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		StringBuilder anon = new StringBuilder("GeoHaversineDistance(");
-		anon.append(super.mapNode(varmap, super.nodes[0])).append(",")
-			.append(super.mapNode(varmap, super.nodes[1])).append(",")
-			.append(super.mapNode(varmap, super.nodes[2])).append(",")
-			.append(super.mapNode(varmap, super.nodes[3]));
-		anon.append(")");
-		return anon.toString();
-	}
-
-	@Override
-	public String identifier() {
-		StringBuilder anon = new StringBuilder("GeoHaversineDistance(");
-		anon.append(super.stringifyNode(super.nodes[0])).append(",")
-			.append(super.stringifyNode(super.nodes[1])).append(",")
-			.append(super.stringifyNode(super.nodes[2])).append(",")
-			.append(super.stringifyNode(super.nodes[3]));
-		anon.append(")");
-		return anon.toString();
+		protected RuleWrappedGeoHaversineDistanceFunction(Node[] ns, Node_Variable rn, Map<Node, RuleWrappedValueFunction<?>> funcMap) throws RIFPredicateException {
+			super("HaversineDistance", ns, rn, funcMap);
+			this.wrap(new GeoHaversineDistanceFunction(ns, rn, super.getRulelessFuncMap()));
+		}
+		
 	}
 	
 }

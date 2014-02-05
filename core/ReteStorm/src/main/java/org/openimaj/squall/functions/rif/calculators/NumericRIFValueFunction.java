@@ -9,7 +9,7 @@ import com.hp.hpl.jena.graph.Node_Variable;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public abstract class NumericRIFValueFunction extends BaseRIFValueFunction {
+public abstract class NumericRIFValueFunction extends BaseValueFunction {
 
 	/**
 	 * 
@@ -22,15 +22,15 @@ public abstract class NumericRIFValueFunction extends BaseRIFValueFunction {
 	 * @param funcs 
 	 * @throws RIFPredicateException
 	 */
-	public NumericRIFValueFunction(Node[] ns, Node_Variable rn, Map<Node, BaseRIFValueFunction> funcs)
+	public NumericRIFValueFunction(Node[] ns, Node_Variable rn, Map<Node, BaseValueFunction> funcs)
 			throws RIFPredicateException {
 		super(ns, rn, funcs);
 	}
 	
 	@Override
-	protected Double extractBinding(Map<String, Node> binds, Node node) {
+	protected Double extractBinding(Map<String, Node> binds, int nodeIndex) {
 		try{
-			return ((Number) super.extractBinding(binds, node)).doubleValue();
+			return ((Number) super.extractBinding(binds, nodeIndex)).doubleValue();
 		}
 		catch (ClassCastException e){
 			throw new UnsupportedOperationException("Incorrect datatype for numeric comparison");

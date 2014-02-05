@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.rif.provider;
+package org.openimaj.squall.compile.rif.provider.predicates;
 
 import java.util.Map;
 
@@ -6,8 +6,11 @@ import org.apache.log4j.Logger;
 import org.openimaj.rifcore.conditions.atomic.RIFAtom;
 import org.openimaj.rifcore.conditions.data.RIFExternalExpr;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
-import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction.RuleWrappedValueFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RIFPredicateException;
 import org.openimaj.squall.functions.rif.predicates.LiteralNotEqualFunction;
+import org.openimaj.squall.functions.rif.predicates.LiteralNotEqualFunction.RuleWrappedLiteralNotEqualFunction;
 import org.openimaj.util.pair.IndependentPair;
 
 import com.hp.hpl.jena.graph.Node;
@@ -28,7 +31,7 @@ public class LiteralNotEqualProvider extends RIFExternalFunctionProvider {
 	}
 
 	@Override
-	public RuleWrappedLiteralNotEqualFunction apply(RIFExternalExpr in) {
+	public RuleWrappedValueFunction<? extends BaseValueFunction> apply(RIFExternalExpr in) {
 		Node opNode = in.getExpr().getCommand().getOp().getNode();
 		throw new UnsupportedOperationException(String.format("Cannot use the filtering predicate %s to supply a value.",
 																opNode.isLiteral()
@@ -41,19 +44,10 @@ public class LiteralNotEqualProvider extends RIFExternalFunctionProvider {
 		RIFAtom atom = in.getVal();
 		try {
 			IndependentPair<Node[], Map<Node, RuleWrappedValueFunction<?>>> data = extractNodesAndSubFunctions(atom);
-			return new RuleWrappedLiteralNotEqualFunction(data.firstObject(), data.secondObject());
+			return LiteralNotEqualFunction.ruleWrapped(data.firstObject(), data.secondObject());
 		} catch (RIFPredicateException e) {
 			throw new UnsupportedOperationException(e);
 		}
-	}
-	
-	protected static class RuleWrappedLiteralNotEqualFunction extends RuleWrappedPredicateFunction<LiteralNotEqualFunction> {
-
-		public RuleWrappedLiteralNotEqualFunction(Node[] ns, Map<Node, RuleWrappedValueFunction<?>> funcMap) throws RIFPredicateException {
-			super("LiteralNotEqual", ns, funcMap);
-			this.wrap(new LiteralNotEqualFunction(ns, super.getRulelessFuncMap()));
-		}
-		
 	}
 
 }

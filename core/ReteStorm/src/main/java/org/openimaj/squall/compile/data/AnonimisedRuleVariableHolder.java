@@ -2,9 +2,12 @@ package org.openimaj.squall.compile.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -44,11 +47,7 @@ public abstract class AnonimisedRuleVariableHolder extends VariableHolder {
 	 * 		underlying variables.
 	 */
 	public Map<String, String> ruleToBaseVarMap(){
-		Map<String, String> rtvm = new HashMap<String, String>();
-		for (String rvar : this.ruleToVarMap.keySet()){
-			rtvm.put(rvar, this.ruleToVarMap.get(rvar));
-		}
-		return rtvm;
+		return Collections.unmodifiableMap(this.ruleToVarMap);
 	}
 	
 	/**
@@ -67,30 +66,6 @@ public abstract class AnonimisedRuleVariableHolder extends VariableHolder {
 	 */
 	protected String getBaseFromRuleVar(String key){
 		return this.ruleToVarMap.get(key);
-	}
-	
-	/**
-	 * Replaces this {@link VariableHolder}'s ruleToBaseVarMap (returned by ruleToBaseVarMap()) with the variable varmap.
-	 * @param toMirror 
-	 * @return 
-	 */
-	public boolean mirrorInRule(AnonimisedRuleVariableHolder toMirror){
-		if (toMirror.identifier() != this.identifier()) return false;
-		
-		Map<String,String> mirroredBaseToRuleVarMap = new HashMap<String,String>();
-		for (String ruleVar : toMirror.ruleToBaseVarMap().keySet()){
-			mirroredBaseToRuleVarMap.put(toMirror.ruleToBaseVarMap().get(ruleVar), ruleVar);
-		}
-		Map<String, String> newR2BVarMap = new HashMap<String, String>();
-		for (String baseVar : this.variables()){
-			String newRuleVar = mirroredBaseToRuleVarMap.get(baseVar);
-			if (newRuleVar == null) return false;
-			newR2BVarMap.put(newRuleVar, baseVar);
-		}
-		
-		this.ruleToVarMap = newR2BVarMap;
-		
-		return true;
 	}
 	
 	/**

@@ -7,9 +7,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.openimaj.squall.compile.JoinComponent.CPSJoinComponent;
+import org.openimaj.squall.compile.JoinComponent.RuleWrappedFunctionJoinComponent;
 import org.openimaj.squall.compile.OptionalProductionSystems;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.RuleWrappedFunction;
 import org.openimaj.squall.data.ISource;
+import org.openimaj.squall.data.RuleWrapped;
+import org.openimaj.squall.functions.rif.consequences.BaseConsequenceFunction;
+import org.openimaj.squall.functions.rif.consequences.BaseConsequenceFunction.RuleWrappedConsequenceFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.stream.AbstractStream;
@@ -60,18 +68,18 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * Predicates confirm or deny certain bindings. Empty means no predicates
 	 */
-	List<IVFunction<Context,Context>> predicates;
+	List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>> predicates;
 	
 	
 	/**
 	 * Aggregations consume lists of bindings and produce bindings. Empty means no aggregations
 	 */
-	List<IVFunction<List<Context>, Context>> aggregations;
+	List<RuleWrapped<? extends IFunction<List<Context>, Context>>> aggregations;
 	 
 	/**
 	 * Consequences consume bindings and perform some operation
 	 */
-	List<IVFunction<Context, Context>> consequences;
+	List<RuleWrappedConsequenceFunction<? extends BaseConsequenceFunction>> consequences;
 	
 	/**
 	 * Reentrant {@link CompiledProductionSystem} instance expect their Consequences to be re-consumed 
@@ -86,9 +94,9 @@ public abstract class CompiledProductionSystem {
 		streamSources = new ArrayList<ISource<Stream<Context>>>();
 		systems = new ArrayList<OptionalProductionSystems>();
 		joinlist = new ArrayList<JoinComponent<?>>();
-		predicates = new ArrayList<IVFunction<Context, Context>>();
-		aggregations = new ArrayList<IVFunction<List<Context>, Context>>();
-		consequences = new ArrayList<IVFunction<Context,Context>>();
+		predicates = new ArrayList<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>();
+		aggregations = new ArrayList<RuleWrapped<? extends IFunction<List<Context>, Context>>>();
+		consequences = new ArrayList<RuleWrappedConsequenceFunction<? extends BaseConsequenceFunction>>();
 	}
 	
 	/**
@@ -145,15 +153,15 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @param filter add this filter as a {@link JoinComponent}
 	 */
-	public void addJoinComponent(IVFunction<Context,Context> filter) {
-		this.addJoinComponent(new JoinComponent.IVFunctionJoinComponent(filter));
+	public void addJoinComponent(RuleWrappedFunction<? extends IFunction<Context,Context>> filter) {
+		this.addJoinComponent(new RuleWrappedFunctionJoinComponent(filter));
 	}
 	
 	/**
 	 * @param filter add this filter as a {@link JoinComponent}
 	 */
 	public void addJoinComponent(CompiledProductionSystem filter) {
-		this.addJoinComponent(new JoinComponent.CPSJoinComponent(filter));
+		this.addJoinComponent(new CPSJoinComponent(filter));
 	}
 	
 	/**
@@ -173,7 +181,7 @@ public abstract class CompiledProductionSystem {
 	 * @param predicate
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem addPredicate(IVFunction<Context,Context> predicate){
+	public CompiledProductionSystem addPredicate(RuleWrappedPredicateFunction<? extends BasePredicateFunction> predicate){
 		this.predicates.add(predicate);
 		return this;
 	}
@@ -182,7 +190,7 @@ public abstract class CompiledProductionSystem {
 	 * @param item
 	 * @return return this system (useful for chaining)
 	 */
-	public CompiledProductionSystem addConsequence(IVFunction<Context, Context> item){
+	public CompiledProductionSystem addConsequence(RuleWrappedConsequenceFunction<? extends BaseConsequenceFunction> item){
 		this.consequences.add(item);
 		return this;
 	}
@@ -194,6 +202,9 @@ public abstract class CompiledProductionSystem {
 		return this.joinlist;
 	}
 	
+	/**
+	 * @return
+	 */
 	public boolean isReentrant(){
 		return this.isReentrant;
 	}
@@ -201,7 +212,7 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @return the predicates of this system
 	 */
-	public List<IVFunction<Context, Context>> getPredicates() {
+	public List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>> getPredicates() {
 		return this.predicates;
 	}
 
@@ -215,7 +226,7 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @return the consequences of this compiled system
 	 */
-	public List<IVFunction<Context, Context>> getConsequences() {
+	public List<RuleWrappedConsequenceFunction<? extends BaseConsequenceFunction>> getConsequences() {
 		return this.consequences;
 	}
 
@@ -318,7 +329,7 @@ public abstract class CompiledProductionSystem {
 	/**
 	 * @return the bindings aggregations
 	 */
-	public List<IVFunction<List<Context>, Context>> getAggregations() {
+	public List<RuleWrapped<? extends IFunction<List<Context>, Context>>> getAggregations() {
 		return this.aggregations;
 	}
 	

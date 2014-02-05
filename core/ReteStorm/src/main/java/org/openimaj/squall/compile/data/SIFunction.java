@@ -6,6 +6,7 @@ package org.openimaj.squall.compile.data;
  * @param <I>
  * @param <O>
  */
-public abstract class SIVFunction<I, O> extends IVFunction<I, O> implements BufferedOutputStreamHolder<O> {
+public interface SIFunction<I, O> extends IFunction<I, O>,
+		BufferedOutputStreamHolder<O> {
 
 }

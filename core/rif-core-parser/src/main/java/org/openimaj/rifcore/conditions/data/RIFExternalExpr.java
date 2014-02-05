@@ -2,7 +2,7 @@ package org.openimaj.rifcore.conditions.data;
 
 import org.openimaj.rifcore.conditions.RIFExternal;
 
-import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
+import com.hp.hpl.jena.graph.Node_Variable;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
@@ -27,7 +27,7 @@ public class RIFExternalExpr extends RIFFunction implements RIFExternal {
 	}
 
 	@Override
-	public Node_RuleVariable getNode() {
+	public Node_Variable getNode() {
 		return this.expr.getNode();
 	}
 	

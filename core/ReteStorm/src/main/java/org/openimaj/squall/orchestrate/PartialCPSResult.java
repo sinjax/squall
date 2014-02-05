@@ -4,7 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openimaj.squall.compile.JoinComponent;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.RuleWrappedFunction;
+import org.openimaj.squall.data.RuleWrapped;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;
 import org.openimaj.squall.orchestrate.exception.CompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.IncompleteCPSPlanningException;
 import org.openimaj.util.data.Context;
@@ -16,18 +20,19 @@ import org.openimaj.util.pair.IndependentPair;
  */
 public class PartialCPSResult implements CPSResult {
 
-	List<IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>> options;
+	List<IndependentPair<List<JoinComponent<?>>, List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>>> options;
 	
 	/**
 	 * 
 	 */
 	public PartialCPSResult(){
-		this.options = new ArrayList<IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>>();
+		this.options = new ArrayList<IndependentPair<List<JoinComponent<?>>, List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>>>();
 	}
 	
-	public void add(List<JoinComponent<?>> jcs, List<IVFunction<Context, Context>> preds){
+	@Override
+	public void add(List<JoinComponent<?>> jcs, List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>> preds){
 		this.options.add(
-				new IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>(
+				new IndependentPair<List<JoinComponent<?>>, List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>>(
 						jcs, preds
 				)
 		);
@@ -39,12 +44,12 @@ public class PartialCPSResult implements CPSResult {
 	}
 	
 	@Override
-	public List<NamedNode<? extends IVFunction<Context, Context>>> getResults() throws IncompleteCPSPlanningException{
+	public List<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>> getResults() throws IncompleteCPSPlanningException{
 		throw new IncompleteCPSPlanningException("This CPS does not provide any consequences, and so has not yet been provided with a plan.");
 	}
 
 	@Override
-	public List<IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>> getProcessingOptions()
+	public List<IndependentPair<List<JoinComponent<?>>, List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>>> getProcessingOptions()
 			throws CompleteCPSPlanningException {
 		return this.options;
 	}

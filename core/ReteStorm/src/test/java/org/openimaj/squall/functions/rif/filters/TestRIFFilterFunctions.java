@@ -7,7 +7,8 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.RuleWrappedFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -22,7 +23,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
  */
 public class TestRIFFilterFunctions {
 	
-	private IVFunction<Context, Context> filter;
+	private RuleWrappedFunction<? extends IFunction<Context, Context>> filter;
 	private Context context;
 	
 	/**
@@ -50,7 +51,7 @@ public class TestRIFFilterFunctions {
 				NodeFactory.createLiteral("bar")
 		);
 		
-		this.filter = new BaseTripleFilterFunction(tp);
+		this.filter = BaseTripleFilterFunction.ruleWrapped(tp);
 		
 		this.context.put("triple",t);
 	}
@@ -76,7 +77,7 @@ public class TestRIFFilterFunctions {
 				}
 		);
 		
-		this.filter = new BaseAtomFilterFunction(fp);
+		this.filter = BaseAtomFilterFunction.ruleWrapped(fp);
 		
 		this.context.put("atom",f);
 	}
@@ -86,7 +87,7 @@ public class TestRIFFilterFunctions {
 	 */
 	@After
 	public void after(){
-		List<Context> results = filter.apply(context);
+		List<Context> results = filter.getWrapped().apply(context);
 		assertFalse(results == null);
 		System.out.println(results);
 	}

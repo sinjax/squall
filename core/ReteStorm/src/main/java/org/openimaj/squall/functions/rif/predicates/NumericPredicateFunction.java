@@ -2,7 +2,7 @@ package org.openimaj.squall.functions.rif.predicates;
 
 import java.util.Map;
 
-import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction;
 
 import com.hp.hpl.jena.graph.Node;
 
@@ -11,21 +11,21 @@ import com.hp.hpl.jena.graph.Node;
  *
  */
 @SuppressWarnings("serial")
-public abstract class NumericRIFPredicateFunction extends BaseRIFPredicateFunction {
+public abstract class NumericPredicateFunction extends BasePredicateFunction {
 
 	/**
 	 * @param ns
 	 * @param funcMap 
 	 * @throws RIFPredicateException
 	 */
-	public NumericRIFPredicateFunction(Node[] ns, Map<Node, BaseRIFValueFunction> funcMap) throws RIFPredicateException {
+	public NumericPredicateFunction(Node[] ns, Map<Node, BaseValueFunction> funcMap) throws RIFPredicateException {
 		super(ns, funcMap);
 	}
 	
 	@Override
-	protected Double extractBinding(Map<String, Node> binds, Node node) {
+	protected Double extractBinding(Map<String, Node> binds, int nodeIndex) {
 		try{
-			return ((Number) super.extractBinding(binds, node)).doubleValue();
+			return ((Number) super.extractBinding(binds, nodeIndex)).doubleValue();
 		}
 		catch (ClassCastException e){
 			throw new UnsupportedOperationException("Incorrect datatype for numeric comparison");

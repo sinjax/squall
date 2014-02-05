@@ -11,8 +11,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.IConsequence;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.InheritsVariables;
+import org.openimaj.squall.compile.data.RuleWrappedFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -55,7 +56,7 @@ public class TestRIFConsequenceFunctions {
 	
 	private List<Node_Variable> vars;
 	private AnonimisedRuleVariableHolder arvh;
-	private IVFunction<Context, Context> func;
+	private RuleWrappedFunction<? extends IFunction<Context, Context>> func;
 	
 	/**
 	 * 
@@ -74,7 +75,7 @@ public class TestRIFConsequenceFunctions {
 	 */
 	@Test
 	public void testBaseBindingConsequence(){
-		this.func = new BaseBindingConsequence(vars, "Fake_Rule");
+		this.func = BaseBindingConsequence.ruleWrapped(vars, "Fake_Rule");
 	}
 	
 	/**
@@ -88,7 +89,7 @@ public class TestRIFConsequenceFunctions {
 				NodeFactory.createVariable("bar")
 		);
 		
-		this.func = new RIFTripleConsequence(tp, "Fake_Rule");
+		this.func = RIFTripleConsequence.ruleWrapped(tp, "Fake_Rule");
 	}
 	
 	/**
@@ -104,7 +105,7 @@ public class TestRIFConsequenceFunctions {
 				}
 		);
 		
-		this.func = new RIFAtomConsequence(f, "Fake_Rule");
+		this.func = RIFAtomConsequence.ruleWrapped(f, "Fake_Rule");
 	}
 	
 	/**
@@ -112,7 +113,7 @@ public class TestRIFConsequenceFunctions {
 	 */
 	@After
 	public void after(){
-		((IConsequence) func).setSourceVariableHolder(arvh);
+		((InheritsVariables) func).setSourceVariables(arvh);
 		
 		Context cont = new Context();
 		Map<String, Node> binds = new HashMap<String, Node>();
@@ -120,7 +121,7 @@ public class TestRIFConsequenceFunctions {
 		binds.put("2", NodeFactory.createLiteral("bar"));
 		cont.put("bindings", binds);
 		
-		List<Context> results = this.func.apply(cont);
+		List<Context> results = this.func.getWrapped().apply(cont);
 		assertFalse(results == null);
 		System.out.println(results);
 	}

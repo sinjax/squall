@@ -1,14 +1,11 @@
 package org.openimaj.squall.functions.rif.consequences;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.Count;
-import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
-import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
@@ -30,22 +27,25 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
 public class RIFTripleConsequence extends BaseConsequenceFunction {
 
 	private static final Logger logger = Logger.getLogger(RIFTripleConsequence.class);
+	
+	/**
+	 * @param clause
+	 * @param rID
+	 * @return
+	 */
+	public static RuleWrappedRIFTripleConsequence ruleWrapped(TriplePattern clause, String rID){
+		return new RuleWrappedRIFTripleConsequence(clause, rID);
+	}
+	
 	private TriplePattern clause;
-	private String id;
 
 	/**
-	 * @param tp
+	 * @param clause 
 	 * @param ruleID
 	 */
-	public RIFTripleConsequence(TriplePattern tp, String ruleID) {
-		super();
-		Count count = new Count();
-		this.clause = new TriplePattern(
-			registerVariable(tp.getSubject(), count),
-			registerVariable(tp.getPredicate(), count),
-			registerVariable(tp.getObject(), count)
-		);
-		id = ruleID;
+	public RIFTripleConsequence(TriplePattern clause, String ruleID) {
+		super(ruleID);
+		this.clause = clause;
 	}
 	
 	private Node getMappedNode(Node node, Map<String, String> varmap){
@@ -61,33 +61,12 @@ public class RIFTripleConsequence extends BaseConsequenceFunction {
 	}
 	
 	@Override
-	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
-		Map<String, String> ruleToBaseVarMap = this.ruleToBaseVarMap();
-		Map<String, String> subRuleToBaseVarMap = arvh.ruleToBaseVarMap();
-		Map<String, String> thisToARVHVarMap = new HashMap<String, String>();
-		for (String rVar : ruleToBaseVarMap().keySet()){
-			thisToARVHVarMap.put(ruleToBaseVarMap.get(rVar), subRuleToBaseVarMap.get(rVar));
-		}
-		
+	public void mapVarNames(Map<String, String> varMap) {
 		this.clause = new TriplePattern(
-							getMappedNode(this.clause.getSubject(), thisToARVHVarMap),
-							getMappedNode(this.clause.getPredicate(), thisToARVHVarMap),
-							getMappedNode(this.clause.getObject(), thisToARVHVarMap)
-						);
-	}
-	
-	@Override
-	protected Node registerVariable(Node n, Count count) {
-		n = super.registerVariable(n, count);
-		if(Functor.isFunctor(n)){
-			Functor f = (Functor)n.getLiteralValue();
-			Node[] newArgs = new Node[f.getArgLength()];
-			for (int i = 0; i < f.getArgs().length; i++){
-				newArgs[i] = super.registerVariable(f.getArgs()[i], count);
-			}
-			return Functor.makeFunctorNode(f.getName(), newArgs);
-		}
-		return n;
+				getMappedNode(this.clause.getSubject(), varMap),
+				getMappedNode(this.clause.getPredicate(), varMap),
+				getMappedNode(this.clause.getObject(), varMap)
+			);
 	}
 
 	@Override
@@ -103,47 +82,92 @@ public class RIFTripleConsequence extends BaseConsequenceFunction {
 			
 			Context out = new Context();
 			out.put(ContextKey.TRIPLE_KEY.toString(), triple);
-			out.put("rule", this.id);
+			out.put("rule", super.getRuleID());
 			ctxs.add(out);			
 		}
 		return ctxs;
 	}
-
-
-	@Override
-	public String identifier() {
-		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
-	}
-	
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("CONSEQUENCE: clause %s",this.clause.toString());
-	}
 	
 	@SuppressWarnings("unused") // required for deserialisation by reflection
-	private RIFTripleConsequence(){}
+	private RIFTripleConsequence(){
+		super("No Rule Name");
+	}
 
 	@Override
 	public void write(Kryo kryo, Output output) {
+		super.write(kryo, output);
 		kryo.writeClassAndObject(output, this.clause);
-		output.writeString(this.id);
 	}
 
 	@Override
 	public void read(Kryo kryo, Input input) {
+		super.read(kryo, input);
 		this.clause = (TriplePattern) kryo.readClassAndObject(input);
-		this.id = input.readString();
 	}
 
 	@Override
 	public boolean isReentrant() {
 		return true;
+	}
+	
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 *
+	 */
+	public static class RuleWrappedRIFTripleConsequence extends RuleWrappedConsequenceFunction<RIFTripleConsequence> {
+		
+		protected RuleWrappedRIFTripleConsequence(TriplePattern clause, String rID) {
+			super(new TripleConsARVH(clause, rID));
+			super.wrap(new RIFTripleConsequence(((TripleConsARVH) super.getVariableHolder()).clause, rID));
+		}
+		
+		protected static class TripleConsARVH extends ConsequenceARVH {
+
+			private final TriplePattern clause;
+			
+			protected TripleConsARVH(TriplePattern clause, String rID) {
+				super(rID);
+				Count count = new Count();
+				this.clause = new TriplePattern(
+					registerVariable(clause.getSubject(), count),
+					registerVariable(clause.getPredicate(), count),
+					registerVariable(clause.getObject(), count)
+				);
+			}
+			
+			@Override
+			protected Node registerVariable(Node n, Count count) {
+				n = super.registerVariable(n, count);
+				if(Functor.isFunctor(n)){
+					Functor f = (Functor)n.getLiteralValue();
+					Node[] newArgs = new Node[f.getArgLength()];
+					for (int i = 0; i < f.getArgs().length; i++){
+						newArgs[i] = super.registerVariable(f.getArgs()[i], count);
+					}
+					return Functor.makeFunctorNode(f.getName(), newArgs);
+				}
+				return n;
+			}
+
+			@Override
+			public String identifier(Map<String, String> varmap) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String identifier() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+			
+			@Override
+			public String toString() {
+				return String.format("CONSEQUENCE: clause %s",this.clause.toString());
+			}
+			
+		}
+		
 	}
 	
 }

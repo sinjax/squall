@@ -5,11 +5,6 @@ package org.openimaj.squall.compile.data;
  *
  */
 public interface IConsequence {
-
-	/**
-	 * @param arvh
-	 */
-	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh);
 	
 	/**
 	 * @return

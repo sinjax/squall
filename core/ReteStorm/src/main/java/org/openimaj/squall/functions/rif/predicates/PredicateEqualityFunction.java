@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction.RuleWrappedValueFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
 
@@ -18,8 +19,22 @@ import com.hp.hpl.jena.graph.Node_Concrete;
  *
  */
 @SuppressWarnings("serial")
-public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
-	private static final Logger logger = Logger.getLogger(BaseRIFPredicateFunction.class);
+public class PredicateEqualityFunction extends BasePredicateFunction {
+	
+	private static final Logger logger = Logger.getLogger(BasePredicateFunction.class);
+	
+	/**
+	 * @param ns
+	 * @param funcMap
+	 * @return
+	 * @throws RIFPredicateException 
+	 */
+	public static RuleWrappedEqualityFunction ruleWrapped(
+													Node[] ns,
+													Map<Node, RuleWrappedValueFunction<?>> funcMap
+												) throws RIFPredicateException{
+		return new RuleWrappedEqualityFunction(ns, funcMap);
+	}
 	
 	/**
 	 * Constructs a new equality-checking predicate function that filters bindings predicated on equality between the
@@ -30,7 +45,7 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 	 * 		The map of variable nodes to the functions that generate their values
 	 * @throws RIFPredicateException 
 	 */
-	public BaseRIFPredicateEqualityFunction(Node[] ns, Map<Node, BaseRIFValueFunction> funcs) throws RIFPredicateException{
+	public PredicateEqualityFunction(Node[] ns, Map<Node, BaseValueFunction> funcs) throws RIFPredicateException{
 		super(ns, funcs);
 		Node val = null;
 		boolean containsVar = false;
@@ -57,9 +72,9 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 		
 		List<Context> ret = new ArrayList<Context>();
 		int i = 0;
-		Object match = super.extractBinding(bindings, super.nodes[i]);
+		Object match = super.extractBinding(bindings, i);
 		for (i++; i < super.nodes.length; i++){
-			if (!match.equals(super.extractBinding(bindings, super.nodes[i]))){
+			if (!match.equals(super.extractBinding(bindings, i))){
 				return ret;
 			}
 		}
@@ -67,6 +82,19 @@ public class BaseRIFPredicateEqualityFunction extends BaseRIFPredicateFunction {
 		
 		logger.debug(String.format("Context(%s) passed Predicate(eq%s)" , in, Arrays.toString(super.nodes)));
 		return ret;
+	}
+	
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 *
+	 */
+	public static class RuleWrappedEqualityFunction extends RuleWrappedPredicateFunction<PredicateEqualityFunction> {
+
+		protected RuleWrappedEqualityFunction(Node[] ns, Map<Node, RuleWrappedValueFunction<?>> funcMap) throws RIFPredicateException {
+			super("equal", ns, funcMap);
+			this.wrap(new PredicateEqualityFunction(ns, super.getRulelessFuncMap()));
+		}
+		
 	}
 
 }

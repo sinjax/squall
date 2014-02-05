@@ -1,11 +1,8 @@
-package org.openimaj.squall.compile.rif.provider;
+package org.openimaj.squall.compile.rif.provider.predicates;
 
 import org.openimaj.rifcore.conditions.data.RIFExpr;
-import org.openimaj.squall.compile.data.IFunction;
-import org.openimaj.squall.compile.data.RuleWrappedFunction;
-import org.openimaj.squall.data.RuleWrapped;
-import org.openimaj.util.data.Context;
-
+import org.openimaj.squall.compile.rif.provider.FunctionRegistry;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction.RuleWrappedValueFunction;
 import com.hp.hpl.jena.graph.Node;
 
 /**
@@ -15,12 +12,12 @@ import com.hp.hpl.jena.graph.Node;
 public abstract class RIFExprFunctionRegistry extends FunctionRegistry<RIFExpr> {
 
 	@Override
-	public RuleWrappedFunction<?> compile(RIFExpr in) {
+	public RuleWrappedValueFunction<?> compile(RIFExpr in) {
 		Node node = in.getCommand().getOp().getNode();
 		String funcName = node.isLiteral()
 							? node.getLiteralValue().toString()
 							: node.getURI();
-		return super.compile(funcName).apply(in);
+		return (RuleWrappedValueFunction<?>) super.compile(funcName).apply(in);
 	}
 
 }

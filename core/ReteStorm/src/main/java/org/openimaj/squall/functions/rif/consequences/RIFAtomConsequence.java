@@ -1,14 +1,11 @@
 package org.openimaj.squall.functions.rif.consequences;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.Count;
-import org.openimaj.rdf.storm.utils.VariableIndependentReteRuleToStringUtils;
-import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.rif.BindingsUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
@@ -28,43 +25,33 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
 public class RIFAtomConsequence extends BaseConsequenceFunction {
 	
 	private static final Logger logger = Logger.getLogger(RIFAtomConsequence.class);
+	
+	/**
+	 * @param clause
+	 * @param rID
+	 * @return
+	 */
+	public static RuleWrappedRIFAtomConsequence ruleWrapped(Functor clause, String rID){
+		return new RuleWrappedRIFAtomConsequence(clause, rID);
+	}
+	
 	private Functor clause;
-	private String id;
 
 	/**
 	 * @param tp
 	 * @param ruleID
 	 */
 	public RIFAtomConsequence(Functor tp, String ruleID) {
-		super();
-		Count count = new Count();
-		Node[] newArgs = new Node[tp.getArgLength()];
-		for (int i = 0; i < tp.getArgs().length; i++){
-			newArgs[i] = registerVariable(tp.getArgs()[i], count);
-		}
-		this.clause = new Functor(tp.getName(), newArgs);
-		id = ruleID;
+		super(ruleID);
+		this.clause = tp;
 	}
 	
 	@Override
-	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {
-		Map<String, String> ruleToBaseVarMap = this.ruleToBaseVarMap();
-		Map<String, String> subRuleToBaseVarMap = arvh.ruleToBaseVarMap();
-		Map<String, String> baseToRuleVarMap = new HashMap<String, String>();
-		for (String rVar : ruleToBaseVarMap().keySet()){
-			baseToRuleVarMap.put(ruleToBaseVarMap.get(rVar), rVar);
-		}
-		
+	public void mapVarNames(Map<String, String> varMap) {
 		Node[] args = new Node[this.clause.getArgLength()];
 		for (int i = 0; i < args.length; i++){
 			if (this.clause.getArgs()[i].isVariable()){
-				args[i] = NodeFactory.createVariable(
-								subRuleToBaseVarMap.get(
-									baseToRuleVarMap.get(
-										this.clause.getArgs()[i].getName()
-									)
-								)
-							);
+				args[i] = NodeFactory.createVariable(varMap.get(this.clause.getArgs()[i].getName()));
 			} else {
 				args[i] = this.clause.getArgs()[i];
 			}
@@ -86,41 +73,27 @@ public class RIFAtomConsequence extends BaseConsequenceFunction {
 			
 			Context out = new Context();
 			out.put(ContextKey.ATOM_KEY.toString(), atom);
-			out.put("rule", this.id);
+			out.put("rule", super.getRuleID());
 			ctxs.add(out);			
 		}
 		return ctxs;
 	}
-
-	@Override
-	public String identifier() {
-		return VariableIndependentReteRuleToStringUtils.clauseEntryToString(clause);
-	}
-	
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("CONSEQUENCE: clause %s",this.clause.toString());
-	}
 	
 	@SuppressWarnings("unused") // required for deserialisation by reflection
-	private RIFAtomConsequence(){}
+	private RIFAtomConsequence(){
+		super("No Rule Name");
+	}
 
 	@Override
 	public void write(Kryo kryo, Output output) {
+		super.write(kryo, output);
 		kryo.writeClassAndObject(output, this.clause);
-		output.writeString(this.id);
 	}
 
 	@Override
 	public void read(Kryo kryo, Input input) {
+		super.read(kryo, input);
 		this.clause = (Functor) kryo.readClassAndObject(input);
-		this.id = input.readString();
 	}
 
 	@Override
@@ -128,4 +101,50 @@ public class RIFAtomConsequence extends BaseConsequenceFunction {
 		return true;
 	}
 
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 *
+	 */
+	public static class RuleWrappedRIFAtomConsequence extends RuleWrappedConsequenceFunction<RIFAtomConsequence> {
+		
+		protected RuleWrappedRIFAtomConsequence(Functor clause, String rID){
+			super(new AtomConsARVH(clause, rID));
+			this.wrap(new RIFAtomConsequence(((AtomConsARVH) super.getVariableHolder()).clause, rID));
+		}
+		
+		protected static class AtomConsARVH extends ConsequenceARVH {
+
+			private final Functor clause;
+			
+			protected AtomConsARVH(Functor clause, String rID) {
+				super(rID);
+				Count count = new Count();
+				Node[] newArgs = new Node[clause.getArgLength()];
+				for (int i = 0; i < clause.getArgs().length; i++){
+					newArgs[i] = registerVariable(clause.getArgs()[i], count);
+				}
+				this.clause = new Functor(clause.getName(), newArgs);
+			}
+			
+			@Override
+			public String identifier(Map<String, String> varmap) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			@Override
+			public String identifier() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+			
+			@Override
+			public String toString() {
+				return String.format("CONSEQUENCE: clause %s",this.clause.toString());
+			}
+			
+		}
+		
+	}
+	
 }

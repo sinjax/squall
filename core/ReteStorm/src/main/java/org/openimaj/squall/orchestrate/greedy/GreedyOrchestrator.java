@@ -1,19 +1,30 @@
 package org.openimaj.squall.orchestrate.greedy;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.openimaj.rifcore.RIFRuleSet;
+import org.openimaj.rifcore.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.OptionalProductionSystems;
-import org.openimaj.squall.compile.data.IConsequence;
+import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.InheritsVariables;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
 import org.openimaj.squall.data.ISource;
+import org.openimaj.squall.data.RuleWrapped;
+import org.openimaj.squall.functions.rif.consequences.BaseConsequenceFunction;
+import org.openimaj.squall.functions.rif.consequences.BaseConsequenceFunction.RuleWrappedConsequenceFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;
 import org.openimaj.squall.orchestrate.CPSResult;
 import org.openimaj.squall.orchestrate.CompleteCPSResult;
 import org.openimaj.squall.orchestrate.NNIVFunction;
@@ -28,10 +39,22 @@ import org.openimaj.squall.orchestrate.exception.CompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.MultiConsequenceSubCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.PlanningException;
 import org.openimaj.squall.orchestrate.rete.StreamAwareFixedJoinFunction;
+import org.openimaj.squall.orchestrate.rete.StreamAwareFixedJoinFunction.RuleWrappedStreamAwareFixedJoinFunction;
+import org.openimaj.squall.utils.JenaUtils;
+import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
+import org.openimaj.util.data.ContextKey;
+import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.pair.IndependentPair;
+import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
+import org.xml.sax.SAXException;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import com.hp.hpl.jena.graph.Triple;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -78,7 +101,8 @@ public class GreedyOrchestrator implements Orchestrator{
 		OrchestratedProductionSystem ret = new OrchestratedProductionSystem();		
 		
 		orchestrateSources(sys,ret);
-		List<NamedNode<? extends IVFunction<Context, Context>>> finalsys = new ArrayList<NamedNode<? extends IVFunction<Context,Context>>>();
+		List<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>> finalsys =
+				new ArrayList<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>>();
 		try {
 			CPSResult result = orchestrate(ret,sys);
 			finalsys = result.getResults();
@@ -124,9 +148,9 @@ public class GreedyOrchestrator implements Orchestrator{
 		}
 	}
 
-	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op, List<NamedNode<? extends IVFunction<Context, Context>>> finalsys) {
+	private void orchestrateOperation(OrchestratedProductionSystem ret, IOperation<Context> op, List<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>> finalsys) {
 		NamedNode<?> opNode = new NGNOperation(ret, "OPERATION", op);
-		for (NamedNode<? extends IVFunction<Context, Context>> sys : finalsys){
+		for (NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>> sys : finalsys){
 			NamedStream str = new NamedStream(sys.getName());
 			sys.connectOutgoingEdge(str);
 			opNode.connectIncomingEdge(str);
@@ -210,10 +234,9 @@ public class GreedyOrchestrator implements Orchestrator{
 				CPSResult subResult = orchestrate(root,cps);
 				try {
 					// ... orchestrate the subCPS and then for each resulting processing option for that subCPS ...
-					for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>
-							combinedCPS : subResult.getProcessingOptions()){
+					for (IndependentPair<List<JoinComponent<?>>, List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>> combinedCPS : subResult.getProcessingOptions()){
 						// ... for each processing option determined prior to the processing of this set of options (UNION, Or(), etc) ...
-						for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>
+						for (IndependentPair<List<JoinComponent<?>>, List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>>
 								jCPS : joinedCPSs.getProcessingOptions()){
 							// ... construct the new list of join components for this new option from those of the subCPS's current processing option
 							// and those of the current prior processing option for the current CPS.
@@ -222,7 +245,8 @@ public class GreedyOrchestrator implements Orchestrator{
 								newJoinComps.addAll(jCPS.getFirstObject());
 							// ... construct the new list of predicates for this new option from the predicates of the subCPS's current processing option
 							// and those of the current prior processing option for the current CPS.
-							List<IVFunction<Context,Context>> newPreds = new ArrayList<IVFunction<Context, Context>>(); 
+							List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>> newPreds =
+									new ArrayList<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>(); 
 								newPreds.addAll(combinedCPS.getSecondObject());
 								newPreds.addAll(jCPS.getSecondObject());
 							// ... add the combinations of join components and predicates of the two CPS processing options to the list of new, combined
@@ -248,8 +272,7 @@ public class GreedyOrchestrator implements Orchestrator{
 			} else if (joinedCPSs.getProcessingOptions().isEmpty()) {
 				return unionedRules;
 			} else {
-				for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>
-						jCPS : joinedCPSs.getProcessingOptions()) {
+				for (IndependentPair<List<JoinComponent<?>>, List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>> jCPS : joinedCPSs.getProcessingOptions()) {
 					if (!(jCPS.firstObject().isEmpty() && jCPS.secondObject().isEmpty())){
 						throw new UnsupportedOperationException("Cannot interpret a subCPS with a consequence being optionally directly joined with JoinComponents."
 																+ "Translate elements such as sub-queries into an optional CPS containing the sub-query CPS as a join component.");
@@ -263,6 +286,41 @@ public class GreedyOrchestrator implements Orchestrator{
 			
 			return unionedRules;
 		}
+	}
+
+	private CompleteCPSResult orchestrateConsequences(
+			OrchestratedProductionSystem root,
+			PartialCPSResult partialCPS,
+			List<RuleWrappedConsequenceFunction<? extends BaseConsequenceFunction>> functions,
+			boolean isReentrant) {
+		CompleteCPSResult consequencesList = new CompleteCPSResult();
+		List<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>> bodies = orchestratePredicates(root, partialCPS);
+		for (RuleWrappedConsequenceFunction<? extends BaseConsequenceFunction> function : functions){
+			((InheritsVariables) function).setSourceVariables(bodies.get(0).getVariableHolder());
+			NNIVFunction<RuleWrappedConsequenceFunction<? extends BaseConsequenceFunction>> consequenceNode =
+					new NNIVFunction<RuleWrappedConsequenceFunction<? extends BaseConsequenceFunction>>(
+							root,
+							nextConsequenceName(), 
+							function
+					);
+			
+			if (isReentrant && function.getWrapped().isReentrant()){
+				try{
+					consequenceNode.connectOutgoingEdge(root.reentrant);
+				} catch (NullPointerException e) {
+					root.reentrant = new NamedStream(GreedyOrchestrator.REENTRANT_STREAM);
+					consequenceNode.connectOutgoingEdge(root.reentrant);
+				}
+			}
+			
+			for (NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>> body : bodies) {
+				NamedStream str = new NamedStream(body.getName());
+				body.connectOutgoingEdge(str);
+				consequenceNode.connectIncomingEdge(str);
+			}
+			consequencesList.add(consequenceNode);
+		}
+		return consequencesList;
 	}
 
 	@SuppressWarnings("unused")
@@ -280,53 +338,18 @@ public class GreedyOrchestrator implements Orchestrator{
 		return "source_" + ret.root.size();
 	}
 
-	private CompleteCPSResult orchestrateConsequences(
-			OrchestratedProductionSystem root,
-			PartialCPSResult partialCPS,
-			List<IVFunction<Context, Context>> functions,
-			boolean isReentrant) {
-		CompleteCPSResult consequencesList = new CompleteCPSResult();
-		List<NamedNode<? extends IVFunction<Context, Context>>> bodies = orchestratePredicates(root, partialCPS);
-		for (IVFunction<Context, Context> function : functions){
-			IConsequence cons = (IConsequence) function;
-			cons.setSourceVariableHolder(bodies.get(0).getData());
-			NNIVFunction consequenceNode = new NNIVFunction(
-				root,
-				nextConsequenceName(), 
-				function
-			);
-			
-			if (isReentrant && cons.isReentrant()){
-				try{
-					consequenceNode.connectOutgoingEdge(root.reentrant);
-				} catch (NullPointerException e) {
-					root.reentrant = new NamedStream(GreedyOrchestrator.REENTRANT_STREAM);
-					consequenceNode.connectOutgoingEdge(root.reentrant);
-				}
-			}
-			
-			for (NamedNode<? extends IVFunction<Context, Context>> body : bodies) {
-				NamedStream str = new NamedStream(body.getName());
-				body.connectOutgoingEdge(str);
-				consequenceNode.connectIncomingEdge(str);
-			}
-			consequencesList.add(consequenceNode);
-		}
-		return consequencesList;
-	}
-
 	private String nextConsequenceName() {
 		return String.format("CONSEQUENCE_%d",consequence++ );
 	}
 
-	private List<NamedNode<?  extends IVFunction<Context, Context>>> orchestratePredicates(
+	private List<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>> orchestratePredicates(
 			OrchestratedProductionSystem root,
 			PartialCPSResult partialCPS) {
 		
-		List<NamedNode<? extends IVFunction<Context, Context>>> newFinalNodes = new ArrayList<NamedNode<? extends IVFunction<Context,Context>>>();
+		List<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>> newFinalNodes = 
+				new ArrayList<NamedNode<? extends RuleWrapped<? extends IFunction<Context,Context>>>>();
 		try {
-			for (IndependentPair<List<JoinComponent<?>>, List<IVFunction<Context, Context>>>
-					currentCPS : partialCPS.getProcessingOptions()){
+			for (IndependentPair<List<JoinComponent<?>>, List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>> currentCPS : partialCPS.getProcessingOptions()){
 				newFinalNodes.add(orchestratePredicates(root, orchestrateJoinComponents(root, currentCPS.getFirstObject()), currentCPS.getSecondObject()));
 			}
 		} catch (CompleteCPSPlanningException e) {
@@ -335,17 +358,18 @@ public class GreedyOrchestrator implements Orchestrator{
 		return newFinalNodes;
 	}
 	
-	private NamedNode<?  extends IVFunction<Context, Context>> orchestratePredicates(
+	private NamedNode<?  extends RuleWrapped<? extends IFunction<Context, Context>>> orchestratePredicates(
 			OrchestratedProductionSystem root,
-			NamedNode<?  extends IVFunction<Context, Context>> currentNode,
-			List<IVFunction<Context,Context>> list) {
-		for (IVFunction<Context, Context> pred : list) {
-			((InheritsVariables) pred).setSourceVariables(currentNode.getData());
-			NNIVFunction prednode = new NNIVFunction(
-					root,
-					nextPredicateName(),
-					pred
-			);
+			NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>> currentNode,
+			List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>> list) {
+		for (RuleWrappedPredicateFunction<? extends BasePredicateFunction> pred : list) {
+			NNIVFunction<RuleWrappedPredicateFunction<? extends BasePredicateFunction>> prednode =
+					new NNIVFunction<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>(
+							root,
+							nextPredicateName(),
+							pred
+					);
+			prednode.getData().setSourceVariables(currentNode.getVariableHolder());
 			NamedStream str = new NamedStream(currentNode.getName());
 			currentNode.connectOutgoingEdge(str);
 			prednode.connectIncomingEdge(str);
@@ -358,16 +382,16 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("PREDICATE_%d",predicate ++ );
 	}
 	
-	private NamedNode<? extends IVFunction<Context, Context>> orchestrateJoinComponents(
+	private NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>> orchestrateJoinComponents(
 			OrchestratedProductionSystem root, 
 			List<JoinComponent<?>> list
 	) {
 		
-		NamedNode<? extends IVFunction<Context, Context>> ret = null;
+		NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>> ret = null;
 		for (JoinComponent<?> jc : list) {
-			NamedNode<? extends IVFunction<Context,Context>> next;
+			NamedNode<? extends RuleWrapped<? extends IFunction<Context,Context>>> next;
 			if(jc.isFunction()){				
-				IVFunction<Context, Context> typedComponent = jc.getTypedComponent();
+				RuleWrapped<? extends IFunction<Context, Context>> typedComponent = jc.getTypedComponent();
 				next = createFilterNode(root, typedComponent);
 			} else if (jc.isCPS()){
 				CompiledProductionSystem cps = jc.getTypedComponent();
@@ -394,28 +418,30 @@ public class GreedyOrchestrator implements Orchestrator{
 		return ret ;
 	}
 
-	private NamedNode<? extends IVFunction<Context, Context>> createJoinNode(
+	private NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>> createJoinNode(
 			OrchestratedProductionSystem root,
-			NamedNode<? extends IVFunction<Context, Context>> left,
-			NamedNode<? extends IVFunction<Context, Context>> right) {
+			NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>> left,
+			NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>> right) {
 		
-		StreamAwareFixedJoinFunction join = new StreamAwareFixedJoinFunction(left.getData(), wi, right.getData(), wi);
-		NNIVFunction joined = new NNIVFunction(root, nextJoinName(), join);
+		RuleWrappedStreamAwareFixedJoinFunction join =
+				StreamAwareFixedJoinFunction.ruleWrapped(left.getData(), right.getData());
+		NNIVFunction<RuleWrappedStreamAwareFixedJoinFunction> joined =
+				new NNIVFunction<RuleWrappedStreamAwareFixedJoinFunction>(root, nextJoinName(), join);
 		
-		List<String> lsv = join.leftSharedVars();
+		List<String> lsv = join.getWrapped().leftSharedVars();
 		String[] leftSharedVars = lsv.toArray(new String[lsv.size()]);
 		
-		List<String> rsv = join.rightSharedVars();
+		List<String> rsv = join.getWrapped().rightSharedVars();
 		String[] rightSharedVars = rsv.toArray(new String[rsv.size()]);
 		
 		NamedStream leftStream = new NamedStream(left.getVariableHolder().identifier(), leftSharedVars);
 		left.connectOutgoingEdge(leftStream);
-		join.setLeftStreamName(leftStream.identifier());
+		join.getWrapped().setLeftStream(leftStream.identifier(), this.wi);
 		joined.connectIncomingEdge(leftStream);
 		
 		NamedStream rightStream = new NamedStream(right.getVariableHolder().identifier(), rightSharedVars);
 		right.connectOutgoingEdge(rightStream);
-		join.setRightStreamName(rightStream.identifier());
+		join.getWrapped().setRightStream(rightStream.identifier(), this.wi);
 		joined.connectIncomingEdge(rightStream);
 		
 		return joined;
@@ -425,14 +451,15 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("JOIN_%d",join ++ );
 	}
 
-	private NNIVFunction createFilterNode(
+	private NNIVFunction<RuleWrapped<? extends IFunction<Context,Context>>> createFilterNode(
 			OrchestratedProductionSystem root,
-			IVFunction<Context,Context> filterFunc) {
-		NNIVFunction currentNode = new NNIVFunction(
-				root, 
-				nextFilterName(), 
-				filterFunc
-		);
+			RuleWrapped<? extends IFunction<Context,Context>> filterFunc) {
+		NNIVFunction<RuleWrapped<? extends IFunction<Context,Context>>> currentNode =
+				new NNIVFunction<RuleWrapped<? extends IFunction<Context,Context>>>(
+						root, 
+						nextFilterName(), 
+						filterFunc
+				);
 		for (NamedSourceNode input : root.root) {
 			NamedStream str = new NamedStream(input.getName());
 			input.connectOutgoingEdge(str);
@@ -445,75 +472,114 @@ public class GreedyOrchestrator implements Orchestrator{
 		return String.format("FILTER_%d",filter ++);
 	}
 	
-//	/**
-//	 * Draws an example {@link GreedyOrchestrator} from RIF rules
-//	 * @param args
-//	 */
-//	public static void main(String[] args) {
-//		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
-//			
-//			private InputStream nTripleStream;
-//
-//			@Override
-//			public Stream<Context> apply(Stream<Context> in) {
-//				return apply();
-//			}
-//			
-//			@Override
-//			public Stream<Context> apply() {
-//				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
-//				.map(new ContextWrapper(ContextKey.TRIPLE_KEY.toString()));
-////				return null;
-//			}
-//			
-//			@Override
-//			public void setup() { 
-//				nTripleStream = GreedyOrchestrator.class.getResourceAsStream("/test.rdfs");
-//			}
-//			
-//			@Override
-//			public void cleanup() { }
-//		};
-//		
-//		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
-//		RIFRuleSet rules = null;
-//		try {
-//			rules = profs.parse(
-//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RL.rif"),
-////					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLSimpleRules.rif"),
-////					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLDatatypeRules.rif"),
-////					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLListRules.rif"),
-//					new URI("http://www.w3.org/ns/entailment/Core")
-//				);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		} catch (SAXException e) {
-//			e.printStackTrace();
-//		} catch (URISyntaxException e) {
-//			e.printStackTrace();
-//		}
-//		
-//		List<ISource<Stream<Context>>> sources = new ArrayList<ISource<Stream<Context>>>();
-//		sources.add(tripleContextStream);
-//		
-//		GreedyOrchestrator go = new GreedyOrchestrator();
-//		IOperation<Context> op = new IOperation<Context>() {
-//			
-//			@Override
-//			public void setup() { }
-//			
-//			@Override
-//			public void cleanup() { }
-//			
-//			@Override
-//			public void perform(Context object) { }
-//		};
-//		OrchestratedProductionSystem ops = go.orchestrate(
-//				new RIFCoreRuleCompiler().compile(rules), op);
-//		
-//		OPSDisplayUtils.display(ops);
-//		
-//		
-//	}
+	/**
+	 * Draws an example {@link GreedyOrchestrator} from RIF rules
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
+			
+			private InputStream nTripleStream;
+
+			@Override
+			public Stream<Context> apply(Stream<Context> in) {
+				return apply();
+			}
+			
+			@Override
+			public Stream<Context> apply() {
+				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
+				.map(new ContextWrapper(ContextKey.TRIPLE_KEY.toString()));
+//				return null;
+			}
+			
+			@Override
+			public void setup() { 
+				nTripleStream = GreedyOrchestrator.class.getResourceAsStream("/test.rdfs");
+			}
+			
+			@Override
+			public void cleanup() {
+				try {
+					this.nTripleStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				this.nTripleStream = null;
+			}
+
+			@Override
+			public void write(Kryo kryo, Output output) {}
+
+			@Override
+			public void read(Kryo kryo, Input input) {}
+
+			@Override
+			public boolean isStateless() {
+				return false;
+			}
+
+			@Override
+			public boolean forcedUnique() {
+				return true;
+			}
+		};
+		
+		RIFEntailmentImportProfiles profs = new RIFEntailmentImportProfiles();
+		RIFRuleSet rules = null;
+		try {
+			rules = profs.parse(
+					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RL.rif"),
+//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLSimpleRules.rif"),
+//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLDatatypeRules.rif"),
+//					new URI("http://users.ecs.soton.ac.uk/dm11g08/semantics/rif/ontology-rules/OWL2RLListRules.rif"),
+					new URI("http://www.w3.org/ns/entailment/Core")
+				);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		
+		List<ISource<Stream<Context>>> sources = new ArrayList<ISource<Stream<Context>>>();
+		sources.add(tripleContextStream);
+		
+		GreedyOrchestrator go = new GreedyOrchestrator();
+		IOperation<Context> op = new IOperation<Context>() {
+			
+			@Override
+			public void setup() { }
+			
+			@Override
+			public void cleanup() { }
+			
+			@Override
+			public void perform(Context object) { }
+
+			@Override
+			public void write(Kryo kryo, Output output) {}
+
+			@Override
+			public void read(Kryo kryo, Input input) {}
+
+			@Override
+			public boolean isStateless() {
+				return true;
+			}
+
+			@Override
+			public boolean forcedUnique() {
+				return false;
+			}
+		};
+		OrchestratedProductionSystem ops = go.orchestrate(
+				new RIFCoreRuleCompiler().compile(rules), op);
+		
+		OPSDisplayUtils.display(ops);
+		
+		
+	}
 
 }

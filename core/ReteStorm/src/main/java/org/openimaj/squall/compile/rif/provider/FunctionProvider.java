@@ -9,19 +9,6 @@ import org.openimaj.util.function.Function;
  * @param <IN>
  * @param <REG> 
  */
-public abstract class FunctionProvider<IN,REG> implements Function<IN, RuleWrappedFunction<?>> {
-
-	private FunctionRegistry<REG> reg;
-	
-	/**
-	 * @param reg
-	 */
-	public FunctionProvider (FunctionRegistry<REG> reg){
-		this.reg = reg;
-	}
-	
-	protected RuleWrappedFunction<?> compileFromRegistry(REG in){
-		return this.reg.compile(in);
-	}
+public interface FunctionProvider<IN> extends Function<IN, RuleWrappedFunction<?>> {
 	
 }

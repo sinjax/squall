@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,9 @@ import org.junit.Test;
 import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction.RuleWrappedValueFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RIFPredicateException;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -53,7 +56,7 @@ public class TestRIFPredicateFunctions {
 	
 	private List<Node_Variable> vars;
 	private AnonimisedRuleVariableHolder arvh;
-	private IVFunction<Context,Context> func;
+	private RuleWrappedPredicateFunction<? extends BasePredicateFunction> func;
 	
 	/**
 	 * 
@@ -73,20 +76,20 @@ public class TestRIFPredicateFunctions {
 	public void testBaseRIFPredicateEqualityFunction(){
 		this.func = null;
 		try {
-			this.func = new BaseRIFPredicateEqualityFunction(new Node[]{
+			this.func = PredicateEqualityFunction.ruleWrapped(new Node[]{
 					NodeFactory.createLiteral("a"),
 					NodeFactory.createLiteral("a")
-			});
+			}, new HashMap<Node, RuleWrappedValueFunction<?>>());
 		} catch (RIFPredicateException e) {
 			System.out.println(e.getMessage());
 		}
 		assertTrue(this.func == null);
 		
 		try {
-			this.func = new BaseRIFPredicateEqualityFunction(new Node[]{
+			this.func = PredicateEqualityFunction.ruleWrapped(new Node[]{
 					NodeFactory.createLiteral("a"),
 					this.vars.get(0)
-			});
+			}, new HashMap<Node, RuleWrappedValueFunction<?>>());
 		} catch (RIFPredicateException e) {
 			System.out.println(e.getMessage());
 		}

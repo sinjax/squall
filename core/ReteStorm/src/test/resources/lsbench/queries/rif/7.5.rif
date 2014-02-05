@@ -138,18 +138,29 @@
 			  	            </Exists>
 			  	          </formula>
 			  	          <formula>
-			  	            <External>
+			  	          	<External>
 			  	              <content>
 			  	                <Atom>
 				  	      	      <op>
-				  	      	        <Const type="&rif;iri">http://www.ins.cwi.nl/sib/rif-builtin-predicate/geo-in-haversine-distance</Const>
+				  	      	        <Const type="&rif;iri">http://www.w3.org/2007/rif-builtin-predicate#numeric-greater-than</Const>
 				  	      	      </op>
 				  	      	      <args ordered="yes">
 				  	      	        <Const type="&xs;integer">10000</Const>
-				  	      	        <Var>userlong</Var>
-				  	      	        <Var>userlat</Var>
-				  	      	      	<Var>photolong</Var>
-				  	      	      	<Var>photolat</Var>
+				  	      	        <External>
+					  	              <content>
+					  	                <Expr>
+						  	      	      <op>
+						  	      	        <Const type="&rif;iri">http://www.ins.cwi.nl/sib/rif-builtin-function/geo-haversine-distance</Const>
+						  	      	      </op>
+						  	      	      <args ordered="yes">
+						  	      	        <Var>userlong</Var>
+						  	      	        <Var>userlat</Var>
+						  	      	      	<Var>photolong</Var>
+						  	      	      	<Var>photolat</Var>
+						  	      	      </args>
+						  	      	    </Expr>
+					  	              </content>
+					  	            </External>
 				  	      	      </args>
 				  	      	    </Atom>
 			  	              </content>

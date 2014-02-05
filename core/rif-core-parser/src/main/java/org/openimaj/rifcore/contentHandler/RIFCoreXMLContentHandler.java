@@ -721,6 +721,9 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							lastSibling.push(null);
 							
 							RIFExpr expr = new RIFExpr();
+							currentAtom = new RIFAtom();
+							currentMetaHolder = currentAtom;
+							expr.setCommand(currentAtom, names.peek());
 							try {
 								((RIFExternalExpr)currentExternal.peek()).setExpr(expr);
 							} catch (ClassCastException e){
@@ -761,6 +764,9 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 							lastSibling.push(null);
 							
 							RIFExpr expr = new RIFExpr();
+							currentAtom = new RIFAtom();
+							currentMetaHolder = currentAtom;
+							expr.setCommand(currentAtom, names.peek());
 							try {
 								((RIFExternalExpr)currentExternal.peek()).setExpr(expr);
 							} catch (ClassCastException e){
@@ -773,12 +779,6 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 					}
 					break;
 				case GROUND_EXPR:
-					currentAtom = new RIFAtom();
-					try {
-						((RIFExternalExpr)currentExternal.peek()).getExpr().setCommand(currentAtom, names.peek());
-					} catch (ClassCastException e){
-						throw new SAXException("RIF-Core: 'External' as predicate must be a formula statement outside of an atomic construct.");
-					}
 				case GROUND_ATOM:
 					switch (localName.charAt(0)){
 						case 'i':
@@ -807,12 +807,6 @@ public class RIFCoreXMLContentHandler extends RIFXMLContentHandler {
 					}
 					break;
 				case EXPR:
-					currentAtom = new RIFAtom();
-					try {
-						((RIFExternalExpr)currentExternal.peek()).getExpr().setCommand(currentAtom, names.peek());
-					} catch (ClassCastException e){
-						throw new SAXException("RIF-Core: 'External' as predicate must be a formula statement outside of an atomic construct.");
-					}
 				case ATOM:
 					switch (localName.charAt(0)){
 						case 'i':

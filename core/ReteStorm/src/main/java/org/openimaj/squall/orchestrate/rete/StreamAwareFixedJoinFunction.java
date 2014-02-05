@@ -15,9 +15,11 @@ import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.IVFunction;
-import org.openimaj.squall.compile.data.SIVFunction;
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.RuleWrappedFunction;
+import org.openimaj.squall.compile.data.SIFunction;
 import org.openimaj.squall.compile.data.VariableHolderAnonimisationUtils;
+import org.openimaj.squall.data.RuleWrapped;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
 
@@ -36,7 +38,7 @@ import com.hp.hpl.jena.graph.Node;
  * 
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  */
-public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> {
+public class StreamAwareFixedJoinFunction implements SIFunction<Context, Context> {
 	/**
 	 * 
 	 */
@@ -44,8 +46,6 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 
 	private static final Logger logger = Logger.getLogger(StreamAwareFixedJoinFunction.class);
 	
-	// Valid during planning, not needed after
-	private List<AnonimisedRuleVariableHolder> contributors;
 	// Valid at all stages
 	private List<String> sharedOutVars;
 	private Map<String,String> leftVarsToOutVars;
@@ -59,66 +59,37 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 	private Collection<Context> outputBuffer;
 	
 	/**
-	 * @param left  
-	 * @param leftwi 
+	 * @param left
 	 * @param right
-	 * @param rightwi 
+	 * @return
+	 */
+	public static RuleWrappedStreamAwareFixedJoinFunction ruleWrapped(
+						RuleWrapped<? extends IFunction<Context, Context>> left,
+						RuleWrapped<? extends IFunction<Context, Context>> right
+	){
+		return new RuleWrappedStreamAwareFixedJoinFunction(left, right);
+	}
+	
+	/**
+	 * @param sharedOutVars 
+	 * @param leftVarsToOutVars 
+	 * @param rightVarsToOutVars 
+	 * @param anonimisedDefaultStreamName 
 	 */
 	public StreamAwareFixedJoinFunction(
-			IVFunction<Context,Context> left,
-			WindowInformation leftwi,
-			IVFunction<Context,Context> right,
-			WindowInformation rightwi
+			List<String> sharedOutVars,
+			Map<String, String> leftVarsToOutVars,
+			Map<String, String> rightVarsToOutVars,
+			String anonimisedDefaultStreamName
 	) {
-		super();
+		this.sharedOutVars = sharedOutVars;
+		this.leftVarsToOutVars = leftVarsToOutVars;
+		this.rightVarsToOutVars = rightVarsToOutVars;
+		this.anonimisedDefaultStreamName = anonimisedDefaultStreamName;
 		
-		// Construct the ordered list of contibuting atomic VariableHolders
-		this.contributors = new ArrayList<AnonimisedRuleVariableHolder>();
-		this.contributors.addAll(left.contributors());
-		this.contributors.addAll(right.contributors());
-		this.contributors = VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors);
-		
-		// Find the mapping from current rule variables to underlying output variables.
-		VariableHolderAnonimisationUtils.extractSaneRuleAndAnonVarsAndMapping(this);
-		
-		// Construct the anonimised representation of the function.
-		StringBuilder anon = new StringBuilder();
-		for (AnonimisedRuleVariableHolder atomicVH : this.contributors){
-			Map<String, String> varmap = new HashMap<String, String>();
-			for (String ruleVar : atomicVH.ruleVariables()){
-				varmap.put(atomicVH.ruleToBaseVarMap().get(ruleVar), this.ruleToBaseVarMap().get(ruleVar));
-			}
-			anon.append(atomicVH.identifier(varmap));
-		}
-		this.anonimisedDefaultStreamName = anon.toString();
-		
-		// Find joined underlying output variables from rule variables and their mapping to underlying variables.
-		List<String> joinedRuleVars = VariableHolderAnonimisationUtils.extractJoinFields(this.contributors);
-		this.sharedOutVars = new ArrayList<String>();
-		for (String ruleVar : joinedRuleVars){
-			if (left.ruleToBaseVarMap().containsKey(ruleVar) && right.ruleToBaseVarMap().containsKey(ruleVar)){
-				this.sharedOutVars.add(this.ruleToBaseVarMap().get(ruleVar));
-			}
-		}
-		
-		// Find the mapping from underlying input variables to underlying output variables. 
-		this.leftVarsToOutVars = new HashMap<String, String>();
-		this.rightVarsToOutVars = new HashMap<String, String>();
-		for (String ruleVar : this.ruleVariables()){
-			String leftInputVar = left.ruleToBaseVarMap().get(ruleVar);
-			String rightInputVar = right.ruleToBaseVarMap().get(ruleVar);
-			if (leftInputVar != null){
-				this.leftVarsToOutVars.put(leftInputVar, this.ruleToBaseVarMap().get(ruleVar));
-			}
-			if (rightInputVar != null){
-				this.rightVarsToOutVars.put(rightInputVar, this.ruleToBaseVarMap().get(ruleVar));
-			}
-		}
-		
-		// Set the OverflowHandlers for the left and right queues, as well as explicitly setting the queues to null
-		// (queues are created in setup).
-		this.leftOverflow = new BindingsOverflowHandler(left.identifier(), leftwi);
-		this.rightOverflow = new BindingsOverflowHandler(right.identifier(), rightwi);
+		// set all other variables explicitly to null
+		this.leftOverflow = null;
+		this.rightOverflow = null;
 		this.leftQueue = null;
 		this.rightQueue = null;
 		
@@ -163,68 +134,33 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 	/**
 	 * updates the name of the source stream feeding the left side of the join.
 	 * @param lsn - new stream name.
+	 * @param wi 
 	 */
-	public void setLeftStreamName(String lsn){
-		this.leftOverflow.updateSource(lsn);
+	public void setLeftStream(String lsn, WindowInformation wi){
+		if (this.leftOverflow == null){
+			this.leftOverflow = new BindingsOverflowHandler(lsn, wi);
+		} else {
+			throw new RuntimeException("Cannot have more than one stream feeding the lefthand side of a Join.");
+		}
 	}
 	
 	/**
 	 * updates the name of the source stream feeding the right side of the join.
 	 * @param rsn - new stream name
+	 * @param wi 
 	 */
-	public void setRightStreamName(String rsn){
-		this.rightOverflow.updateSource(rsn);
-	}
-	
-	// VARIABLEHOLDER
-	
-	@Override
-	public String[] variables() {
-		if (super.varCount() > 0) return super.variables();
-		
-		for (String bvar : this.leftVarsToOutVars.values()){
-			this.addVariable(bvar);
+	public void setRightStream(String rsn, WindowInformation wi){
+		if (this.rightOverflow == null){
+			this.rightOverflow = new BindingsOverflowHandler(rsn, wi);
+		} else {
+			throw new RuntimeException("Cannot have more than one stream feeding the righthand side of a Join.");
 		}
-		for (String bvar : this.rightVarsToOutVars.values()){
-			if (this.indexOfVar(bvar) < 0){
-				this.addVariable(bvar);
-			}
-		}
-		
-		return super.variables();
-	}
-	
-	@Override
-	public String identifier() {
-		return this.anonimisedDefaultStreamName;
-	}
-	
-	@Override
-	public Collection<AnonimisedRuleVariableHolder> contributors() {
-		return this.contributors;
-	}
-	
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		StringBuilder anon = new StringBuilder();
-		for (AnonimisedRuleVariableHolder atomicVH : VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors())){
-			Map<String, String> subvarmap = new HashMap<String, String>();
-			for (String ruleVar : atomicVH.ruleVariables()){
-				String aVHBaseVar = atomicVH.ruleToBaseVarMap().get(ruleVar);
-				String thisBaseVar = this.ruleToBaseVarMap().get(ruleVar);
-				String desiredBaseVar = varmap.get(thisBaseVar);
-				subvarmap.put(aVHBaseVar, desiredBaseVar);
-			}
-			anon.append(atomicVH.identifier(subvarmap));
-		}
-		return anon.toString();
 	}
 	
 	// INITIALISABLE
 	
 	@Override
 	public void setup() {
-		super.setup();
 		leftQueue = new FixedHashSteM(this.leftOverflow, this.sharedOutVars, this.leftOverflow.getWindowInformation());
 		rightQueue = new FixedHashSteM(this.rightOverflow, this.sharedOutVars, this.rightOverflow.getWindowInformation());
 		
@@ -233,18 +169,12 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 
 	@Override
 	public void cleanup() {
-		super.cleanup();
-		this.contributors = null;
-		
 		this.leftQueue = null;
 		this.rightQueue = null;
 		this.outputBuffer = null;
 	}
 	
-	@SuppressWarnings("unused") // required for deserialisation by reflection
 	private StreamAwareFixedJoinFunction(){
-		this.contributors = null;
-		
 		this.leftQueue = null;
 		this.rightQueue = null;
 		this.outputBuffer = null;
@@ -339,6 +269,28 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 	
 	// MULTIFUNCTION
 	
+	private Map<String, Node> getOutVarsMapping(Map<String,String> inToOutMapping, Map<String, Node> inBinds){
+		Map<String, Node> leftbinds = new HashMap<String, Node>();
+		for (String var : inBinds.keySet()){
+			leftbinds.put(inToOutMapping.get(var), inBinds.get(var));
+		}
+		return leftbinds;
+	}
+	
+	private List<Context> buildAndProbe(Map<String, Node> inBinds, FixedHashSteM buildSteM, FixedHashSteM probeSteM){
+		List<Context> ret = new ArrayList<Context>();
+		if (buildSteM.build(inBinds)){
+			logger.debug("Joining Left Stream");
+			for (Map<String, Node> fullbindings : probeSteM.probe(inBinds)) {
+				logger.debug(String.format("Joined: %s -> %s", inBinds, fullbindings));
+				Context r = new Context();
+				r.put(ContextKey.BINDINGS_KEY.toString(),fullbindings);
+				ret.add(r);
+			}
+		}
+		return ret;
+	}
+	
 	@Override
 	public List<Context> apply(Context in) {
 		String stream = in.getTyped(ContextKey.STREAM_KEY.toString());
@@ -353,34 +305,12 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		Map<String, Node> typed = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		logger.debug(String.format("Joining: %s with %s", this, typed));
 		if(stream.equals(this.leftOverflow.getSource())){
-			Map<String, Node> leftbinds = new HashMap<String, Node>();
-			for (String var : typed.keySet()){
-				leftbinds.put(this.leftVarsToOutVars.get(var), typed.get(var));
-			}
-			if (leftQueue.build(leftbinds)){
-				logger.debug("Joining Left Stream");
-				for (Map<String, Node> fullbindings : rightQueue.probe(leftbinds)) {
-					logger.debug(String.format("Joined: %s -> %s", typed, fullbindings));
-					Context r = new Context();
-					r.put(ContextKey.BINDINGS_KEY.toString(),fullbindings);
-					ret.add(r);
-				}
-			}
+			Map<String, Node> leftbinds = this.getOutVarsMapping(this.leftVarsToOutVars, typed);
+			ret = this.buildAndProbe(leftbinds, this.leftQueue, this.rightQueue);
 		}
 		else if(stream.equals(this.rightOverflow.getSource())){
-			Map<String, Node> rightbinds = new HashMap<String, Node>();
-			for (String var : typed.keySet()){
-				rightbinds.put(this.rightVarsToOutVars.get(var), typed.get(var));
-			}
-			if (rightQueue.build(rightbinds)){
-				logger.debug("Joining Right Stream");
-				for (Map<String, Node> fullbindings : leftQueue.probe(rightbinds)) {
-					logger.debug(String.format("Joined: %s -> %s", typed, fullbindings));
-					Context r = new Context();
-					r.put(ContextKey.BINDINGS_KEY.toString(),fullbindings);
-					ret.add(r);
-				}
-			}
+			Map<String, Node> rightbinds = this.getOutVarsMapping(this.rightVarsToOutVars, typed);
+			ret = this.buildAndProbe(rightbinds, this.rightQueue, this.leftQueue);
 		}
 		
 		ret.addAll(this.outputBuffer);
@@ -412,6 +342,8 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 									this.sharedOutVars.toString());
 	}
 	
+	// private nested class
+	
 	private class BindingsOverflowHandler implements CapacityOverflowHandler<Map<String, Node>>, DurationOverflowHandler<Map<String,Node>> {
 		
 		private String source;
@@ -420,10 +352,6 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 		public BindingsOverflowHandler(String s, WindowInformation wi){
 			this.source = s;
 			this.wi = wi;
-		}
-		
-		public void updateSource(String s){
-			this.source = s;
 		}
 		
 		public String getSource(){
@@ -463,6 +391,114 @@ public class StreamAwareFixedJoinFunction extends SIVFunction<Context, Context> 
 			overflow.put(ContextKey.BINDINGS_KEY.toString(), overflowedBindings);
 			overflow.put(ContextKey.STREAM_KEY.toString(), this.getCapacityOverflowStreamName());
 			StreamAwareFixedJoinFunction.this.outputBuffer.add(overflow);
+		}
+		
+	}
+	
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 * 
+	 * Wrapper that holds rule information
+	 *
+	 */
+	public static class RuleWrappedStreamAwareFixedJoinFunction extends RuleWrappedFunction<StreamAwareFixedJoinFunction> {
+		
+		private RuleWrappedStreamAwareFixedJoinFunction(
+						RuleWrapped<? extends IFunction<Context, Context>> left,
+						RuleWrapped<? extends IFunction<Context, Context>> right
+					){
+			super(new JoinFuncARVH(left, right));
+			JoinFuncARVH jfarvh = (JoinFuncARVH) super.getVariableHolder();
+			this.wrap(new StreamAwareFixedJoinFunction(
+							jfarvh.sharedOutVars,
+							jfarvh.leftVarsToOutVars,
+							jfarvh.rightVarsToOutVars,
+							jfarvh.anonimisedDefaultStreamName
+					));
+		}
+		
+		protected static class JoinFuncARVH extends ARVHComponent {
+			
+			private final List<AnonimisedRuleVariableHolder> contributors;
+			private final List<String> sharedOutVars;
+			private final Map<String, String> leftVarsToOutVars;
+			private final Map<String, String> rightVarsToOutVars;
+			private final String anonimisedDefaultStreamName;
+			
+			protected JoinFuncARVH(
+							RuleWrapped<? extends IFunction<Context, Context>> left,
+							RuleWrapped<? extends IFunction<Context, Context>> right
+						){
+				// Construct the ordered list of contibuting atomic VariableHolders
+				List<AnonimisedRuleVariableHolder> prelimContributors = new ArrayList<AnonimisedRuleVariableHolder>();
+				prelimContributors.addAll(left.contributors());
+				prelimContributors.addAll(right.contributors());
+				this.contributors = VariableHolderAnonimisationUtils.sortVariableHolders(prelimContributors);
+				
+				// Find the mapping from current rule variables to underlying output variables.
+				VariableHolderAnonimisationUtils.extractSaneRuleAndAnonVarsAndMapping(this);
+				
+				// Construct the anonimised representation of the function.
+				StringBuilder anon = new StringBuilder();
+				for (AnonimisedRuleVariableHolder atomicVH : this.contributors){
+					Map<String, String> varmap = new HashMap<String, String>();
+					for (String ruleVar : atomicVH.ruleVariables()){
+						varmap.put(atomicVH.ruleToBaseVarMap().get(ruleVar), this.ruleToBaseVarMap().get(ruleVar));
+					}
+					anon.append(atomicVH.identifier(varmap));
+				}
+				this.anonimisedDefaultStreamName = anon.toString();
+				
+				// Find joined underlying output variables from rule variables and their mapping to underlying variables.
+				List<String> joinedRuleVars = VariableHolderAnonimisationUtils.extractJoinFields(this.contributors);
+				this.sharedOutVars = new ArrayList<String>();
+				for (String ruleVar : joinedRuleVars){
+					if (left.ruleToBaseVarMap().containsKey(ruleVar) && right.ruleToBaseVarMap().containsKey(ruleVar)){
+						this.sharedOutVars.add(this.ruleToBaseVarMap().get(ruleVar));
+					}
+				}
+				
+				// Find the mapping from underlying input variables to underlying output variables. 
+				this.leftVarsToOutVars = new HashMap<String, String>();
+				this.rightVarsToOutVars = new HashMap<String, String>();
+				for (String ruleVar : this.ruleVariables()){
+					String leftInputVar = left.ruleToBaseVarMap().get(ruleVar);
+					String rightInputVar = right.ruleToBaseVarMap().get(ruleVar);
+					if (leftInputVar != null){
+						this.leftVarsToOutVars.put(leftInputVar, this.ruleToBaseVarMap().get(ruleVar));
+					}
+					if (rightInputVar != null){
+						this.rightVarsToOutVars.put(rightInputVar, this.ruleToBaseVarMap().get(ruleVar));
+					}
+				}
+			}
+			
+			@Override
+			public Collection<AnonimisedRuleVariableHolder> contributors() {
+				return this.contributors;
+			}
+			
+			@Override
+			public String identifier() {
+				return this.anonimisedDefaultStreamName;
+			}
+			
+			@Override
+			public String identifier(Map<String, String> varmap) {
+				StringBuilder anon = new StringBuilder();
+				for (AnonimisedRuleVariableHolder atomicVH : VariableHolderAnonimisationUtils.sortVariableHolders(this.contributors())){
+					Map<String, String> subvarmap = new HashMap<String, String>();
+					for (String ruleVar : atomicVH.ruleVariables()){
+						String aVHBaseVar = atomicVH.ruleToBaseVarMap().get(ruleVar);
+						String thisBaseVar = this.ruleToBaseVarMap().get(ruleVar);
+						String desiredBaseVar = varmap.get(thisBaseVar);
+						subvarmap.put(aVHBaseVar, desiredBaseVar);
+					}
+					anon.append(atomicVH.identifier(subvarmap));
+				}
+				return anon.toString();
+			}
+			
 		}
 		
 	}

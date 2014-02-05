@@ -17,34 +17,44 @@ import com.hp.hpl.jena.graph.NodeFactory;
 public abstract class RuleWrappedFunction<T extends IFunction<Context, Context>> extends
 		RuleWrapped<T> {
 
-	protected Node registerVariable(Node n, Count count){
-		if(n.isVariable()){
-			String name = this.getBaseFromRuleVar(n.getName());
-			if (name == null){
-				count.inc();
-				name = Integer.toString(count.getCount());
+	/**
+	 * @param arvh
+	 */
+	public RuleWrappedFunction(ARVHComponent arvh) {
+		super(arvh);
+	}
+	
+	protected static abstract class ARVHComponent extends AnonimisedRuleVariableHolder {
+		
+		protected Node registerVariable(Node n, Count count){
+			if(n.isVariable()){
+				String name = this.getBaseFromRuleVar(n.getName());
+				if (name == null){
+					count.inc();
+					name = Integer.toString(count.getCount());
+				}
+				Node var = NodeFactory.createVariable(name);
+				this.addVariable(name);
+				this.putRuleToBaseVarMapEntry(n.getName(), name);
+				return var ;
 			}
-			Node var = NodeFactory.createVariable(name);
-			this.addVariable(name);
-			this.putRuleToBaseVarMapEntry(n.getName(), name);
-			return var ;
+			return n;
 		}
-		return n;
+		
+		protected String stringifyNode(Node node){
+			return node.isVariable() ? "?"+node.getName() : node.toString();
+		}
+		
+		protected String mapNode(Map<String,String> varmap, Node node){
+			String nodeString = this.stringifyNode(node);
+			String mappedString;
+			return node.isVariable()
+					? (mappedString = varmap.get(nodeString)) == null
+						? "VAR"
+						: mappedString
+					: nodeString;
+		}
+		
 	}
-	
-	protected String stringifyNode(Node node){
-		return node.isVariable() ? "?"+node.getName() : node.toString();
-	}
-	
-	protected String mapNode(Map<String,String> varmap, Node node){
-		String nodeString = this.stringifyNode(node);
-		String mappedString;
-		return node.isVariable()
-				? (mappedString = varmap.get(nodeString)) == null
-					? "VAR"
-					: mappedString
-				: nodeString;
-	}
-	
 
 }

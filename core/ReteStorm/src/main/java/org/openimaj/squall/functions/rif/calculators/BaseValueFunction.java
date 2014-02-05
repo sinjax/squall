@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.VariableHolder;
-import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -20,7 +20,7 @@ import com.hp.hpl.jena.graph.Node_Variable;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public abstract class BaseRIFValueFunction extends BaseRIFPredicateFunction {
+public abstract class BaseValueFunction extends BasePredicateFunction {
 	
 	/**
 	 * 
@@ -34,7 +34,7 @@ public abstract class BaseRIFValueFunction extends BaseRIFPredicateFunction {
 	 * @param funcs 
 	 * @throws RIFPredicateException
 	 */
-	public BaseRIFValueFunction(Node[] ns, Node_Variable rn, Map<Node, BaseRIFValueFunction> funcs) throws RIFPredicateException {
+	public BaseValueFunction(Node[] ns, Node_Variable rn, Map<Node, BaseValueFunction> funcs) throws RIFPredicateException {
 		super(ns, funcs);
 		this.result = rn;
 	}
@@ -77,6 +77,45 @@ public abstract class BaseRIFValueFunction extends BaseRIFPredicateFunction {
 	public void read(Kryo kryo, Input input) {
 		super.read(kryo, input);
 		this.result = (Node_Variable) kryo.readClassAndObject(input);
+	}
+	
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 *
+	 * @param <T>
+	 */
+	public static abstract class RuleWrappedValueFunction<T extends BaseValueFunction>
+									extends RuleWrappedPredicateFunction<T> {
+		
+		private String resultName; 
+		
+		/**
+		 * @param fn
+		 * @param ns
+		 * @param nr
+		 * @param funcMap
+		 */
+		protected RuleWrappedValueFunction(String fn, Node[] ns, Node_Variable nr, Map<Node, RuleWrappedValueFunction<?>> funcMap){
+			super(fn, ns, funcMap);
+			this.resultName = nr.getName();
+			super.addVariable(this.resultName);
+			super.putRuleToBaseVarMapEntry(this.resultName, this.resultName);
+		}
+	
+		@Override
+		public boolean setSourceVariables(AnonimisedRuleVariableHolder arvh) {
+			BaseValueFunction valFunc = (BaseValueFunction) super.getWrapped();
+			if (super.setSourceVariables(arvh)){
+				String newBaseResultName = valFunc.getResultVarNode().getName();
+				super.addVariable(this.resultName);
+				super.putRuleToBaseVarMapEntry(this.resultName, newBaseResultName);
+				
+				return true;
+			}
+			return false;
+			
+		}
+		
 	}
 	
 }

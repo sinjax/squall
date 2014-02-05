@@ -7,7 +7,7 @@ import org.openimaj.rifcore.conditions.atomic.RIFAtom;
 import org.openimaj.rifcore.conditions.data.RIFDatum;
 import org.openimaj.rifcore.conditions.data.RIFList;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
-import org.openimaj.squall.functions.rif.calculators.BaseRIFValueFunction;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -18,7 +18,7 @@ import com.hp.hpl.jena.graph.Node_Concrete;
  *
  */
 @SuppressWarnings("serial")
-public class PlaceHolderExternalValueFunction extends BaseRIFPredicateFunction {
+public class PlaceHolderExternalValueFunction extends BasePredicateFunction {
 	
 	private static Node[] extractArguments(RIFExternalValue expr) {
 		List<Node> vars = new ArrayList<Node>();
@@ -49,7 +49,7 @@ public class PlaceHolderExternalValueFunction extends BaseRIFPredicateFunction {
 	 * @throws RIFPredicateException 
 	 */
 	public PlaceHolderExternalValueFunction(RIFExternalValue expr) throws RIFPredicateException {
-		super(extractArguments(expr), new HashMap<Node, BaseRIFValueFunction>());
+		super(extractArguments(expr), new HashMap<Node, BaseValueFunction>());
 		Node_Concrete op = expr.getVal().getOp().getNode();
 		this.name = op.isLiteral()
 						? op.getLiteralValue().toString()

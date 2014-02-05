@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.rif.provider;
+package org.openimaj.squall.compile.rif.provider.predicates;
 
 
 /**
@@ -9,6 +9,9 @@ public class RIFCoreExprFunctionRegistry extends RIFExprFunctionRegistry {
 	
 	private static RIFCoreExprFunctionRegistry REG;
 	
+	/**
+	 * @return
+	 */
 	public static RIFCoreExprFunctionRegistry getRegistry(){
 		if (REG == null){
 			REG = new RIFCoreExprFunctionRegistry();

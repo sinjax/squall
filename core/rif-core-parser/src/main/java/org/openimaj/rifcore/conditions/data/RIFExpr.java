@@ -2,7 +2,9 @@ package org.openimaj.rifcore.conditions.data;
 
 import java.util.List;
 import org.openimaj.rifcore.conditions.atomic.RIFAtom;
-import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
+
+import com.hp.hpl.jena.graph.NodeFactory;
+import com.hp.hpl.jena.graph.Node_Variable;
 
 
 /**
@@ -12,13 +14,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Node_RuleVariable;
 public class RIFExpr extends RIFFunction {
 
 	private RIFAtom command;
-	private Node_RuleVariable node;
-	
-	/**
-	 * 
-	 */
-	public RIFExpr(){
-	}
+	private Node_Variable node;
 	
 	/**
 	 * @param c
@@ -29,7 +25,7 @@ public class RIFExpr extends RIFFunction {
 		
 		String name = "Expr("+c.toString()+")";
 		while (list.contains(name)) name += "*";
-		this.node = new Node_RuleVariable(name,list.size());
+		this.node = (Node_Variable) NodeFactory.createVariable(name);
 		list.add(name);
 	}
 	
@@ -41,7 +37,7 @@ public class RIFExpr extends RIFFunction {
 	}
 
 	@Override
-	public Node_RuleVariable getNode() {
+	public Node_Variable getNode() {
 		return this.node;
 	}
 	

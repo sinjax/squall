@@ -1,37 +1,41 @@
 package org.openimaj.squall.orchestrate;
 
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
+import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IOperation;
-import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.data.Initialisable;
+import org.openimaj.squall.data.RuleWrapped;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
 /**
- * A {@link NamedNode} that holds an {@link IVFunction}
+ * A {@link NamedNode} that holds an {@link RuleWrapped} {@link IFunction}
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
+ * @param <T> the type of RuleWrapper held by the Named Node
  */
-public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
+public class NNIVFunction<T extends RuleWrapped<? extends IFunction<Context,Context>>> extends NamedNode<T>{
 
-	private IVFunction<Context, Context> varfunc;
-	private IVFunction<Context, Context> wrapped;
+	private T varFunc;
+	private WrappedIFunction wrapped;
 
 	/**
 	 * @param parent
 	 * @param name
 	 * @param func
 	 */
-	public NNIVFunction(OrchestratedProductionSystem parent, String name, IVFunction<Context, Context> func) {
+	public NNIVFunction(OrchestratedProductionSystem parent,
+						String name,
+						T func) {
 		super(parent, name);
-		this.varfunc = func;
-		this.wrapped = new WrappedIVFunction(func, this);
+		this.varFunc = func;
+		this.wrapped = new WrappedIFunction(this.varFunc.getWrapped(), (NamedNode<?>) this);
 	}
 	
 	@Override
-	public IVFunction<Context, Context> getData() {
-		return this.varfunc;
+	public T getData() {
+		return this.varFunc;
 	}
 
 	@Override
@@ -50,7 +54,7 @@ public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
 	}
 
 	@Override
-	public IVFunction<Context, Context> getFunction() {
+	public IFunction<Context, Context> getFunction() {
 		return this.wrapped;
 	}
 
@@ -71,7 +75,7 @@ public class NNIVFunction extends NamedNode<IVFunction<Context, Context>>{
 
 	@Override
 	public AnonimisedRuleVariableHolder getVariableHolder() {
-		return this.wrapped;
+		return this.varFunc;
 	}
 
 	@Override

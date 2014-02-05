@@ -1,6 +1,7 @@
 package org.openimaj.squall.compile;
 
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
+import org.openimaj.squall.compile.data.RuleWrappedFunction;
 import org.openimaj.util.data.Context;
 
 
@@ -11,7 +12,7 @@ import org.openimaj.util.data.Context;
  */
 public abstract class JoinComponent<T>{
 	/**
-	 * @return is this component a {@link IVFunction}
+	 * @return is this component a {@link RuleWrapped} {@link IFunction}
 	 */
 	public abstract boolean isFunction();
 	/**
@@ -60,14 +61,14 @@ public abstract class JoinComponent<T>{
 	 * @author Sina Samangooei (ss@ecs.soton.ac.uk)
 	 *
 	 */
-	public static class IVFunctionJoinComponent extends JoinComponent<IVFunction<Context,Context>> {
+	public static class RuleWrappedFunctionJoinComponent extends JoinComponent<RuleWrappedFunction<? extends IFunction<Context,Context>>> {
 
-		private IVFunction<Context, Context> cps;
+		private RuleWrappedFunction<? extends IFunction<Context, Context>> cps;
 		
 		/**
 		 * @param cps
 		 */
-		public IVFunctionJoinComponent(IVFunction<Context, Context> cps) {
+		public RuleWrappedFunctionJoinComponent(RuleWrappedFunction<? extends IFunction<Context, Context>> cps) {
 			this.cps = cps;
 		}
 
@@ -82,7 +83,7 @@ public abstract class JoinComponent<T>{
 		}
 
 		@Override
-		public IVFunction<Context, Context> getComponent() {
+		public RuleWrappedFunction<? extends IFunction<Context, Context>> getComponent() {
 			return this.cps;
 		}
 

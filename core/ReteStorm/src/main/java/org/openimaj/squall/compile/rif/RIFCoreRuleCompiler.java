@@ -33,25 +33,29 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.source.URIProfileISourceFactory;
-import org.openimaj.squall.compile.rif.provider.RIFExternalFunctionRegistry;
+import org.openimaj.squall.compile.rif.provider.consequences.RIFForAllBindingConsequenceProvider;
+import org.openimaj.squall.compile.rif.provider.filters.RIFMemberFunctionProvider;
+import org.openimaj.squall.compile.rif.provider.predicates.RIFCoreExprFunctionRegistry;
+import org.openimaj.squall.compile.rif.provider.predicates.RIFEqualFunctionProvider;
+import org.openimaj.squall.compile.rif.provider.predicates.RIFExprFunctionRegistry;
+import org.openimaj.squall.compile.rif.provider.predicates.RIFExternalFunctionRegistry;
+import org.openimaj.squall.compile.rif.provider.predicates.ValueFunctionResultEqualityFunctionProvider;
 import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.data.ISource;
-import org.openimaj.squall.functions.rif.RIFExprLibrary;
+import org.openimaj.squall.functions.rif.calculators.BaseValueFunction.RuleWrappedValueFunction;
 import org.openimaj.squall.functions.rif.consequences.RIFAtomConsequence;
 import org.openimaj.squall.functions.rif.consequences.RIFTripleConsequence;
-import org.openimaj.squall.functions.rif.core.RIFCoreExprLibrary;
-import org.openimaj.squall.functions.rif.core.RIFCorePredicateEqualityFunction;
-import org.openimaj.squall.functions.rif.core.RIFMemberFilterFunction;
 import org.openimaj.squall.functions.rif.filters.BaseAtomFilterFunction;
 import org.openimaj.squall.functions.rif.filters.BaseTripleFilterFunction;
-import org.openimaj.squall.functions.rif.predicates.BaseRIFPredicateFunction.RIFPredicateException;
-import org.openimaj.squall.providers.rif.consequences.RIFForAllBindingConsequenceProvider;
+import org.openimaj.squall.functions.rif.predicates.PredicateEqualityFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RIFPredicateException;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;
 import org.openimaj.squall.util.MD5Utils;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.data.ContextKey;
 import org.openimaj.util.stream.Stream;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
+import com.hp.hpl.jena.graph.Node_Variable;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
@@ -63,7 +67,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Functor;
 public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 	
 	// Set the default RIF Expr library:
-	private static final RIFExprLibrary RIF_LIB = new RIFCoreExprLibrary();
+	private static final RIFExprFunctionRegistry RIF_LIB = RIFCoreExprFunctionRegistry.getRegistry();
 	private static final Logger logger = Logger.getLogger(RIFCoreRuleCompiler.class);
 	
 	@Override
@@ -147,9 +151,9 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 			List<ClauseEntry> triples = translate((RIFAtomic) formula, ccps);
 			for (ClauseEntry tp : triples){
 				if (tp instanceof TriplePattern)
-					ccps.addJoinComponent(new BaseTripleFilterFunction((TriplePattern) tp));
+					ccps.addJoinComponent(BaseTripleFilterFunction.ruleWrapped((TriplePattern) tp));
 				else if (tp instanceof Functor)
-					ccps.addJoinComponent(new BaseAtomFilterFunction((Functor) tp));
+					ccps.addJoinComponent(BaseAtomFilterFunction.ruleWrapped((Functor) tp));
 			}
 		} else if (formula instanceof RIFAnd){
 			for (RIFFormula f : (RIFAnd) formula){
@@ -170,14 +174,14 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 			translate(member.getInstance(),ccps);
 			translate(member.getInClass(),ccps);
 			ccps.addJoinComponent(
-				new RIFMemberFilterFunction(member)
+				new RIFMemberFunctionProvider().apply(member)
 			);
 		} else if (formula instanceof RIFEqual){
 			RIFEqual equal = (RIFEqual) formula;
 			translate(equal.getLeft(),ccps);
 			translate(equal.getRight(),ccps);
 			ccps.addPredicate(
-				new RIFCorePredicateEqualityFunction(equal)
+				new RIFEqualFunctionProvider(RIF_LIB).apply(equal)
 			);
 		} else if (formula instanceof RIFExists){
 			translateBody(((RIFExists) formula).getFormula(), ccps);
@@ -194,9 +198,9 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 			List<ClauseEntry> triples = translate((RIFAtomic) formula, ccps);
 			for (ClauseEntry tp : triples){
 				if (tp instanceof TriplePattern)
-					ccps.addConsequence(new RIFTripleConsequence((TriplePattern) tp, ruleID));
+					ccps.addConsequence(RIFTripleConsequence.ruleWrapped((TriplePattern) tp, ruleID));
 				else if (tp instanceof Functor)
-					ccps.addConsequence(new RIFAtomConsequence((Functor) tp, ruleID));
+					ccps.addConsequence(RIFAtomConsequence.ruleWrapped((Functor) tp, ruleID));
 				ccps.setReentrant(true);
 			}
 		} else if (formula instanceof RIFAnd){
@@ -236,7 +240,7 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 				switch (atom.getArgsSize()){
 					case 1:
 						object = translate(atom.getOp(), ccps);
-						predicate = NodeFactory.createURI(RIFMemberFilterFunction.RDF_TYPE_URI);
+						predicate = NodeFactory.createURI(RIFMemberFunctionProvider.RDF_TYPE_URI);
 						clauses.add(new TriplePattern(subject, predicate, object));
 						break;
 					case 2:
@@ -292,15 +296,20 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 	protected Node translate(RIFData data, ContextCPS ccps) throws UnsupportedOperationException {
 		if (data instanceof RIFDatum){
 			RIFDatum datum = (RIFDatum) data;
-			Node ret = datum.getNode();
+			Node ret;
 			if (datum instanceof RIFFunction){
+				RuleWrappedValueFunction<?> rwFunc;
 				if (datum instanceof RIFExpr){
-					ccps.addPredicate(RIF_LIB.compile((RIFExpr) datum));
+					rwFunc = RIF_LIB.compile((RIFExpr) datum);
 				} else if (datum instanceof RIFExternalExpr){
-					ccps.addPredicate(RIFExternalFunctionRegistry.compile((RIFExternal) datum));
+					rwFunc = RIFExternalFunctionRegistry.compile((RIFExternalExpr) datum);
 				} else {
 					throw new UnsupportedOperationException("RIF translation: Currently no support for functions other than Expr and External Expr.");
 				}
+				ret = NodeFactory.createVariable(datum.getNode().getName() + "_Result");
+				ccps.addPredicate(new ValueFunctionResultEqualityFunctionProvider((Node_Variable) ret).apply(rwFunc));
+			} else {
+				ret = datum.getNode();
 			}
 			return ret;
 		} else if (data instanceof RIFList){ // Handle Lists

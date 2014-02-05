@@ -3,6 +3,8 @@ package org.openimaj.squall.functions.rif.external.geo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,12 +13,20 @@ import java.util.Map;
 import org.junit.Test;
 import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.rifcore.conditions.atomic.RIFAtom;
+import org.openimaj.rifcore.conditions.data.RIFExpr;
+import org.openimaj.rifcore.conditions.data.RIFExternalExpr;
+import org.openimaj.rifcore.conditions.data.RIFIRIConst;
 import org.openimaj.rifcore.conditions.data.RIFStringConst;
 import org.openimaj.rifcore.conditions.data.RIFVar;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.InheritsVariables;
 import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.rif.provider.predicates.NumericGreaterThanProvider;
+import org.openimaj.squall.compile.rif.provider.predicates.RIFCoreExprFunctionRegistry;
+import org.openimaj.squall.functions.rif.external.ExternalLoader;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
@@ -102,40 +112,62 @@ public class TestRIFExternalGeoPredicateFunctions {
 	@Test
 	public void testInHaversineDistance(){
 		List<Context> ret = performHaversineTest(6000,140.0,140.0,0.0,0.0);
+		System.out.println(ret.toString());
 		assertTrue(ret.isEmpty());
 	}
 
 	private List<Context> performHaversineTest(double dist, double lat1, double long1, double lat2, double long2) {
-		RIFExternalValue e = new RIFExternalValue();
-		RIFAtom a = new RIFAtom();
-		e.setVal(a);
+		ExternalLoader.loadExternals();
+		
+		RIFExternalExpr ee = new RIFExternalExpr();
+		RIFExpr e = new RIFExpr();
+		ee.setExpr(e);
+		RIFAtom ae = new RIFAtom();
+		e.setCommand(ae, new ArrayList<String>());
+		
+		RIFIRIConst ce = new RIFIRIConst();
+		ae.setOp(ce);
+		
+		try {
+			ce.setData(new URI("http://www.ins.cwi.nl/sib/rif-builtin-function/geo-haversine-distance"));
+		} catch (URISyntaxException e1) {
+			e1.printStackTrace();
+		}
+		
+		RIFVar ve2 = new RIFVar();
+		ve2.setName("lat1");
+		ae.addArg(ve2);
+		RIFVar ve3 = new RIFVar();
+		ve3.setName("long1");
+		ae.addArg(ve3);
+		RIFVar ve4 = new RIFVar();
+		ve4.setName("lat2");
+		ae.addArg(ve4);
+		RIFVar ve5 = new RIFVar();
+		ve5.setName("long2");
+		ae.addArg(ve5);
+		
+		RIFExternalValue ev = new RIFExternalValue();
+		RIFAtom av = new RIFAtom();
+		ev.setVal(av);
 		
 		RIFStringConst c = new RIFStringConst();
-		a.setOp(c);
+		av.setOp(c);
 		
-		RIFVar v1 = new RIFVar();
-		v1.setName("dist");
-		a.addArg(v1);
-		RIFVar v2 = new RIFVar();
-		v2.setName("lat1");
-		a.addArg(v2);
-		RIFVar v3 = new RIFVar();
-		v3.setName("long1");
-		a.addArg(v3);
-		RIFVar v4 = new RIFVar();
-		v4.setName("lat2");
-		a.addArg(v4);
-		RIFVar v5 = new RIFVar();
-		v5.setName("long2");
-		a.addArg(v5);
+		RIFVar vv1 = new RIFVar();
+		vv1.setName("dist");
+		av.addArg(vv1);
+		av.addArg(ee);
 		
-		List<Node_Variable> vars = new ArrayList<Node_Variable>();
-		for (int i = 0; i < a.getArgsSize(); i++){
-			vars.add(((RIFVar)a.getArg(i)).getNode());
-		}
-		StubAnonRVarHolder stub = new StubAnonRVarHolder(vars);
+		List<Node_Variable> vvars = new ArrayList<Node_Variable>();
+		vvars.add(((RIFVar)av.getArg(0)).getNode());
+		vvars.add(((RIFVar)ae.getArg(0)).getNode());
+		vvars.add(((RIFVar)ae.getArg(1)).getNode());
+		vvars.add(((RIFVar)ae.getArg(2)).getNode());
+		vvars.add(((RIFVar)ae.getArg(3)).getNode());
+		StubAnonRVarHolder stub = new StubAnonRVarHolder(vvars);
 		
-		IVFunction<Context, Context> ihdf = (new GeoInHaversineDistanceProvider(null)).apply(e);
+		RuleWrappedPredicateFunction<? extends BasePredicateFunction> ihdf = (new NumericGreaterThanProvider(RIFCoreExprFunctionRegistry.getRegistry())).apply(ev);
 		((InheritsVariables) ihdf).setSourceVariables(stub);
 		
 		Context cont = new Context();
@@ -148,7 +180,7 @@ public class TestRIFExternalGeoPredicateFunctions {
 		map.put("4", NodeFactory.createLiteral(""+lat2, XSDDatatype.XSDdouble));
 		map.put("5", NodeFactory.createLiteral(""+long2, XSDDatatype.XSDdouble));
 		
-		List<Context> ret = ihdf.apply(cont);
+		List<Context> ret = ihdf.getWrapped().apply(cont);
 		return ret;
 	}
 	
