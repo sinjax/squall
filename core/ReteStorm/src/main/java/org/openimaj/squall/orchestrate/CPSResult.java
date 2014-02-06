@@ -27,7 +27,7 @@ public interface CPSResult {
 	 * @return
 	 * @throws IncompleteCPSPlanningException
 	 */
-	public List<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>> getResults() throws IncompleteCPSPlanningException;
+	public List<RuleWrapped<? extends NamedNode<? extends IFunction<Context, Context>>>> getResults() throws IncompleteCPSPlanningException;
 	
 	/**
 	 * @param jcs

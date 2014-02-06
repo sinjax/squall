@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -22,28 +22,28 @@ import com.esotericsoftware.kryo.io.Output;
  *
  */
 @SuppressWarnings("serial")
-public abstract class CombinedIVFunction<A,B> extends IVFunction<A,B> {
+public abstract class CombinedIVFunction<A,B> implements IFunction<A,B> {
 
-	private List<IVFunction<A, B>> functions;
+	private List<IFunction<A, B>> functions;
 
 	/**
 	 */
 	public CombinedIVFunction() {
 		super();
-		this.functions = new ArrayList<IVFunction<A,B>>();
+		this.functions = new ArrayList<IFunction<A,B>>();
 	}
 	
 	/**
 	 * @param func add a function to apply
 	 */
-	public void addFunction(IVFunction<A,B> func){
+	public void addFunction(IFunction<A,B> func){
 		this.functions.add(func);
 	}
 	
-	protected Iterable<IVFunction<A,B>> functions(){
-		return new Iterable<IVFunction<A,B>>(){
+	protected Iterable<IFunction<A,B>> functions(){
+		return new Iterable<IFunction<A,B>>(){
 			@Override
-			public Iterator<IVFunction<A,B>> iterator() {
+			public Iterator<IFunction<A,B>> iterator() {
 				return CombinedIVFunction.this.functions.iterator();
 			}
 			
@@ -53,7 +53,7 @@ public abstract class CombinedIVFunction<A,B> extends IVFunction<A,B> {
 	@Override
 	public List<B> apply(A in) {
 		List<B> out = initial();
-		for (IVFunction<A,B> func: this.functions) {
+		for (IFunction<A,B> func: this.functions) {
 			out = combine(out,func.apply(in));
 		}
 		return out;
@@ -63,36 +63,36 @@ public abstract class CombinedIVFunction<A,B> extends IVFunction<A,B> {
 
 	protected abstract List<B> initial() ;
 	
-	@Override
-	public String identifier() {
-		StringBuilder out = new StringBuilder("Combined:");
-		for (int i = 0; i < this.functions.size(); i++) {
-			out.append("\n")
-			   .append(this.functions.get(i).identifier());
-		}
-		return out.toString();
-	}
-	
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		StringBuilder out = new StringBuilder("Combined:");
-		for (int i = 0; i < this.functions.size(); i++) {
-			out.append("\n")
-			   .append(this.functions.get(i).identifier(varmap));
-		}
-		return out.toString();
-	}
+//	@Override
+//	public String identifier() {
+//		StringBuilder out = new StringBuilder("Combined:");
+//		for (int i = 0; i < this.functions.size(); i++) {
+//			out.append("\n")
+//			   .append(this.functions.get(i).identifier());
+//		}
+//		return out.toString();
+//	}
+//	
+//	@Override
+//	public String identifier(Map<String, String> varmap) {
+//		StringBuilder out = new StringBuilder("Combined:");
+//		for (int i = 0; i < this.functions.size(); i++) {
+//			out.append("\n")
+//			   .append(this.functions.get(i).identifier(varmap));
+//		}
+//		return out.toString();
+//	}
 	
 	@Override
 	public void setup() {
-		for (IVFunction<A, B> func : this.functions) {
+		for (IFunction<A, B> func : this.functions) {
 			func.setup();
 		}
 	}
 	
 	@Override
 	public void cleanup() {
-		for (IVFunction<A, B> func : this.functions) {
+		for (IFunction<A, B> func : this.functions) {
 			func.cleanup();
 		}
 	}
@@ -115,13 +115,13 @@ public abstract class CombinedIVFunction<A,B> extends IVFunction<A,B> {
 	public void read(Kryo kryo, Input input) {
 		int size = input.readInt();
 		for (int i = 0; i < size; i++){
-			this.functions.add((IVFunction<A, B>) kryo.readClassAndObject(input));
+			this.functions.add((IFunction<A, B>) kryo.readClassAndObject(input));
 		}
 	}
 	
 	@Override
 	public boolean isStateless() {
-		for (IVFunction<A, B> func : this.functions){
+		for (IFunction<A, B> func : this.functions){
 			if (!func.isStateless()){
 				return false;
 			}
@@ -131,7 +131,7 @@ public abstract class CombinedIVFunction<A,B> extends IVFunction<A,B> {
 
 	@Override
 	public boolean forcedUnique() {
-		for (IVFunction<A, B> func : this.functions){
+		for (IFunction<A, B> func : this.functions){
 			if (func.forcedUnique()){
 				return true;
 			}

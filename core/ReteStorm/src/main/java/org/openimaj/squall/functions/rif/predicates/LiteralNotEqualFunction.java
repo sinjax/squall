@@ -66,20 +66,20 @@ public class LiteralNotEqualFunction extends BasePredicateFunction {
 	
 	@Override
 	public List<Context> applyRoot(Context in){
-		logger .debug(String.format("Context(%s) sent to Predicate(neq(%s))" , in, Arrays.toString(super.nodes)));
+		logger .debug(String.format("Context(%s) sent to Predicate(neq(%s))" , in, Arrays.toString(super.getNodes())));
 		Map<String,Node> binds = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
 		List<Context> ret = new ArrayList<Context>();
 		int i = 0;
 		Object match = super.extractBinding(binds, i);
-		for (i++; i < super.nodes.length; i++){
+		for (i++; i < super.getNodeCount(); i++){
 			if (match.equals(super.extractBinding(binds, i))){
 				return ret;
 			}
 		}
 		ret.add(in);
 		
-		logger.debug(String.format("Context(%s) passed Predicate(eq%s)" , in, Arrays.toString(super.nodes)));
+		logger.debug(String.format("Context(%s) passed Predicate(eq%s)" , in, Arrays.toString(super.getNodes())));
 		return ret;
 	}
 	

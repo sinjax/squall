@@ -11,7 +11,7 @@ import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
  *
  * @param <T>
  */
-public abstract class RuleWrapped<T> extends AnonimisedRuleVariableHolder {
+public class RuleWrapped<T> extends AnonimisedRuleVariableHolder {
 
 	private T wrapped;
 	private AnonimisedRuleVariableHolder arvh;
@@ -21,6 +21,15 @@ public abstract class RuleWrapped<T> extends AnonimisedRuleVariableHolder {
 	 */
 	public RuleWrapped(AnonimisedRuleVariableHolder arvh){
 		this.arvh = arvh;
+	}
+	
+	/**
+	 * @param arvh
+	 * @param toWrap
+	 */
+	public RuleWrapped(AnonimisedRuleVariableHolder arvh, T toWrap){
+		this(arvh);
+		this.wrap(toWrap);
 	}
 	
 	protected void wrap(T toWrap){

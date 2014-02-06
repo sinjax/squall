@@ -1,6 +1,7 @@
 package org.openimaj.squall.compile.jena;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +13,7 @@ import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.rete.StreamAwareFixedJoinFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.JoinStream;
+import org.openimaj.util.function.Function;
 import org.openimaj.util.function.Operation;
 import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.SplitStream;
@@ -77,9 +79,17 @@ public class TestJenaRuleCompilerFunctions {
 		TripleFilterFunction tf1 = new TripleFilterFunction(rule, p1);
 		TripleFilterFunction tf2 = new TripleFilterFunction(rule, p2);
 		
+		List<String> sharedOut = new ArrayList<String>();
+			sharedOut.add("1");
+		Map<String, String> left2out = new HashMap<String, String>();
+			left2out.put("d","1");
+		Map<String, String> right2out = new HashMap<String, String>();
+			right2out.put("d","1");
+		String name = "join";
+		
 		// Join the two filters
 		WindowInformation wi = new WindowInformation(1000,30, TimeUnit.SECONDS);
-		StreamAwareFixedJoinFunction j = StreamAwareFixedJoinFunction.ruleWrapped(tf1, tf2);
+		StreamAwareFixedJoinFunction j = new StreamAwareFixedJoinFunction(sharedOut, left2out, right2out, name);
 		NamedStream leftStream = new NamedStream("left");
 		NamedStream rightStream = new NamedStream("right");
 		j.setLeftStream(leftStream.identifier(), wi);

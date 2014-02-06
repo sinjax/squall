@@ -18,7 +18,7 @@ import org.openimaj.util.pair.IndependentPair;
  *
  */
 @SuppressWarnings("serial")
-public class CompleteCPSResult extends ArrayList<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>>
+public class CompleteCPSResult extends ArrayList<RuleWrapped<? extends NamedNode<? extends IFunction<Context, Context>>>>
 							implements CPSResult {
 
 	@Override
@@ -27,7 +27,7 @@ public class CompleteCPSResult extends ArrayList<NamedNode<? extends RuleWrapped
 	}
 
 	@Override
-	public List<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>> getResults()
+	public List<RuleWrapped<? extends NamedNode<? extends IFunction<Context, Context>>>> getResults()
 			throws IncompleteCPSPlanningException {
 		return this;
 	}

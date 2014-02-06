@@ -79,7 +79,7 @@ public class GeoHaversineDistanceFunction extends NumericRIFValueFunction {
 
 	@Override
 	public List<Context> applyRoot(Context in) {
-		logger.debug(String.format("Context(%s) sent to Value(haversine(%s,%s,%s,%s))" , in, super.nodes[0], super.nodes[1], super.nodes[2], super.nodes[3]));
+		logger.debug(String.format("Context(%s) sent to haversine(%s,%s,%s,%s)" , in, super.getNode(0), super.getNode(1), super.getNode(2), super.getNode(3)));
 		List<Context> ret = new ArrayList<Context>();
 		Map<String,Node> binds = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		

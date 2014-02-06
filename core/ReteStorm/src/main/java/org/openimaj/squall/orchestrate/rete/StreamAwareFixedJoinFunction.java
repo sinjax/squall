@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
 import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
+import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.WindowInformation;
 import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
@@ -64,8 +65,8 @@ public class StreamAwareFixedJoinFunction implements SIFunction<Context, Context
 	 * @return
 	 */
 	public static RuleWrappedStreamAwareFixedJoinFunction ruleWrapped(
-						RuleWrapped<? extends IFunction<Context, Context>> left,
-						RuleWrapped<? extends IFunction<Context, Context>> right
+						RuleWrapped<?> left,
+						RuleWrapped<?> right
 	){
 		return new RuleWrappedStreamAwareFixedJoinFunction(left, right);
 	}
@@ -404,8 +405,8 @@ public class StreamAwareFixedJoinFunction implements SIFunction<Context, Context
 	public static class RuleWrappedStreamAwareFixedJoinFunction extends RuleWrappedFunction<StreamAwareFixedJoinFunction> {
 		
 		private RuleWrappedStreamAwareFixedJoinFunction(
-						RuleWrapped<? extends IFunction<Context, Context>> left,
-						RuleWrapped<? extends IFunction<Context, Context>> right
+						RuleWrapped<?> left,
+						RuleWrapped<?> right
 					){
 			super(new JoinFuncARVH(left, right));
 			JoinFuncARVH jfarvh = (JoinFuncARVH) super.getVariableHolder();
@@ -426,8 +427,8 @@ public class StreamAwareFixedJoinFunction implements SIFunction<Context, Context
 			private final String anonimisedDefaultStreamName;
 			
 			protected JoinFuncARVH(
-							RuleWrapped<? extends IFunction<Context, Context>> left,
-							RuleWrapped<? extends IFunction<Context, Context>> right
+							RuleWrapped<?> left,
+							RuleWrapped<?> right
 						){
 				// Construct the ordered list of contibuting atomic VariableHolders
 				List<AnonimisedRuleVariableHolder> prelimContributors = new ArrayList<AnonimisedRuleVariableHolder>();

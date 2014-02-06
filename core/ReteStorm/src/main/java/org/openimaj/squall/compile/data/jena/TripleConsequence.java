@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IConsequence;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
@@ -57,9 +56,6 @@ public class TripleConsequence extends AbstractTripleFunction implements IConseq
 	public String toString() {
 		return this.clause.toString();
 	}
-
-	@Override
-	public void setSourceVariableHolder(AnonimisedRuleVariableHolder arvh) {}
 
 	@Override
 	public boolean isReentrant() {

@@ -44,7 +44,7 @@ public class PartialCPSResult implements CPSResult {
 	}
 	
 	@Override
-	public List<NamedNode<? extends RuleWrapped<? extends IFunction<Context, Context>>>> getResults() throws IncompleteCPSPlanningException{
+	public List<RuleWrapped<? extends NamedNode<? extends IFunction<Context, Context>>>> getResults() throws IncompleteCPSPlanningException{
 		throw new IncompleteCPSPlanningException("This CPS does not provide any consequences, and so has not yet been provided with a plan.");
 	}
 

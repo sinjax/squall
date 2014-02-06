@@ -174,5 +174,10 @@ public class BaseTripleFilterFunction extends BaseFilterFunction {
 		}
 		
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("FILTER: %s",this.clause);
+	}
 
 }

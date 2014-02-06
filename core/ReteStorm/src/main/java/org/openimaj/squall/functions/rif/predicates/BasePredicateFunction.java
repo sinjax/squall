@@ -57,8 +57,8 @@ public abstract class BasePredicateFunction extends AbstractRIFFunction {
 		
 	}
 	
-	protected Node[] nodes;
-	protected Map<Node,BaseValueFunction> funcs;
+	private Node[] nodes;
+	private Map<Node,BaseValueFunction> funcs;
 	
 	/**
 	 * Constructs a new predicate function that filters bindings predicated on some function of the
@@ -71,6 +71,22 @@ public abstract class BasePredicateFunction extends AbstractRIFFunction {
 	public BasePredicateFunction(Node[] ns, Map<Node, BaseValueFunction> funcs) throws RIFPredicateException {
 		this.nodes = ns;
 		this.funcs = funcs;
+	}
+	
+	protected Node getNode(int index){
+		return this.nodes[index];
+	}
+	
+	protected Node[] getNodes(){
+		Node[] ret = new Node[this.nodes.length];
+		for (int i = 0; i < ret.length; i++){
+			ret[i] = this.nodes[i];
+		}
+		return ret;
+	}
+	
+	protected int getNodeCount(){
+		return this.nodes.length;
 	}
 	
 	/**

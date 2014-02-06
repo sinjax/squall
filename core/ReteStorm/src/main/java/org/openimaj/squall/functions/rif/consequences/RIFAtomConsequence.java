@@ -46,14 +46,16 @@ public class RIFAtomConsequence extends BaseConsequenceFunction {
 		this.clause = tp;
 	}
 	
+	protected Functor getClause(){
+		return this.clause;
+	}
+	
 	@Override
 	public void mapVarNames(Map<String, String> varMap) {
-		Node[] args = new Node[this.clause.getArgLength()];
+		Node[] args = this.clause.getArgs();
 		for (int i = 0; i < args.length; i++){
-			if (this.clause.getArgs()[i].isVariable()){
-				args[i] = NodeFactory.createVariable(varMap.get(this.clause.getArgs()[i].getName()));
-			} else {
-				args[i] = this.clause.getArgs()[i];
+			if (args[i].isVariable()){
+				args[i] = NodeFactory.createVariable(varMap.get(args[i].getName()));
 			}
 		}
 		
@@ -112,18 +114,17 @@ public class RIFAtomConsequence extends BaseConsequenceFunction {
 			this.wrap(new RIFAtomConsequence(((AtomConsARVH) super.getVariableHolder()).clause, rID));
 		}
 		
-		protected static class AtomConsARVH extends ConsequenceARVH {
+		/**
+		 * @author davidlmonks
+		 *
+		 */
+		public static class AtomConsARVH extends ConsequenceARVH {
 
 			private final Functor clause;
 			
 			protected AtomConsARVH(Functor clause, String rID) {
 				super(rID);
-				Count count = new Count();
-				Node[] newArgs = new Node[clause.getArgLength()];
-				for (int i = 0; i < clause.getArgs().length; i++){
-					newArgs[i] = registerVariable(clause.getArgs()[i], count);
-				}
-				this.clause = new Functor(clause.getName(), newArgs);
+				this.clause = clause;
 			}
 			
 			@Override

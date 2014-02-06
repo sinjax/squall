@@ -12,7 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.functions.rif.calculators.BaseValueFunction.RuleWrappedValueFunction;
 import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RIFPredicateException;
 import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;

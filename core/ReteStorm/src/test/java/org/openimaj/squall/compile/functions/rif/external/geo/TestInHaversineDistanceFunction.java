@@ -20,7 +20,6 @@ import org.openimaj.rifcore.conditions.data.RIFVar;
 import org.openimaj.rifcore.conditions.formula.RIFExternalValue;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.InheritsVariables;
-import org.openimaj.squall.compile.data.IVFunction;
 import org.openimaj.squall.compile.rif.provider.predicates.GeoHaversineDistanceProvider;
 import org.openimaj.squall.compile.rif.provider.predicates.NumericGreaterThanProvider;
 import org.openimaj.squall.compile.rif.provider.predicates.RIFCoreExprFunctionRegistry;

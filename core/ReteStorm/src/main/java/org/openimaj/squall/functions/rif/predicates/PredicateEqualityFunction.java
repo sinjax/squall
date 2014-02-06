@@ -67,20 +67,20 @@ public class PredicateEqualityFunction extends BasePredicateFunction {
 
 	@Override
 	protected List<Context> applyRoot(Context in) {
-		logger.debug(String.format("Context(%s) sent to Predicate(eq%s)" , in, Arrays.toString(super.nodes)));
+		logger.debug(String.format("Context(%s) sent to Predicate(eq%s)" , in, Arrays.toString(super.getNodes())));
 		Map<String,Node> bindings = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
 		List<Context> ret = new ArrayList<Context>();
 		int i = 0;
 		Object match = super.extractBinding(bindings, i);
-		for (i++; i < super.nodes.length; i++){
+		for (i++; i < super.getNodeCount(); i++){
 			if (!match.equals(super.extractBinding(bindings, i))){
 				return ret;
 			}
 		}
 		ret.add(in);
 		
-		logger.debug(String.format("Context(%s) passed Predicate(eq%s)" , in, Arrays.toString(super.nodes)));
+		logger.debug(String.format("Context(%s) passed Predicate(eq%s)" , in, Arrays.toString(super.getNodes())));
 		return ret;
 	}
 	

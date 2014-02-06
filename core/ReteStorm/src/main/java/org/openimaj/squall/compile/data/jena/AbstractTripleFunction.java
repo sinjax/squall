@@ -1,9 +1,7 @@
 package org.openimaj.squall.compile.data.jena;
 
-import java.util.Map;
-
 import org.apache.log4j.Logger;
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.util.data.Context;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -21,7 +19,7 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public abstract class AbstractTripleFunction extends IVFunction<Context, Context> {
+public abstract class AbstractTripleFunction implements IFunction<Context, Context> {
 	private final static Logger logger = Logger.getLogger(AbstractTripleFunction.class);
 
 	protected TriplePattern clause;
@@ -54,8 +52,8 @@ public abstract class AbstractTripleFunction extends IVFunction<Context, Context
 	
 	private Node registerVariable(Node n) {
 		if(n.isVariable()){
-			this.addVariable(n.getName());
-			this.putRuleToBaseVarMapEntry(n.getName(), n.getName());
+//			this.addVariable(n.getName());
+//			this.putRuleToBaseVarMapEntry(n.getName(), n.getName());
 			return Node.ANY ;
 		}
 		else if(Functor.isFunctor(n)){
@@ -69,71 +67,71 @@ public abstract class AbstractTripleFunction extends IVFunction<Context, Context
 		return n;
 	}
 
-	protected String stringifyNode(Node node){
-		return node.isVariable() ? "?"+this.indexOfVar(node.getName()) : node.toString();
-	}
-	
-	protected String mapNode(Map<String,String> varmap, Node node){
-		String nodeString = this.stringifyNode(node);
-		String mappedString;
-		return node.isVariable()
-				? (mappedString = varmap.get(nodeString)) == null
-					? "VAR"
-					: mappedString
-				: nodeString;
-	}
-	
-	@Override
-	public String identifier() {
-		String subject = this.stringifyNode(this.clause.getSubject()),
-			   predicate = this.stringifyNode(this.clause.getPredicate()),
-			   object;
-		if (Functor.isFunctor(this.clause.getObject())){
-			StringBuilder obj = new StringBuilder();
-			Functor f = (Functor) this.clause.getObject().getLiteralValue();
-			obj.append(f.getName()).append("(")
-			   .append(this.stringifyNode(f.getArgs()[0]));
-			for (int i = 1; i < f.getArgLength(); i++){
-				obj.append(",").append(this.stringifyNode(f.getArgs()[i]));
-			}
-			obj.append(")");
-			object = obj.toString();
-		}else{
-			object = this.stringifyNode(this.clause.getObject());
-		}
-		
-		StringBuilder name = new StringBuilder("(");
-		name.append(subject).append(" ")
-			.append(predicate).append(" ")
-			.append(object).append(")");
-		return name.toString();
-	}
-	
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		String subject = this.mapNode(varmap, this.clause.getSubject()),
-			   predicate = this.mapNode(varmap, this.clause.getPredicate()),
-			   object;
-		if (Functor.isFunctor(this.clause.getObject())){
-			StringBuilder obj = new StringBuilder();
-			Functor f = (Functor) this.clause.getObject().getLiteralValue();
-			obj.append(f.getName()).append("(")
-			   .append(this.mapNode(varmap, f.getArgs()[0]));
-			for (int i = 1; i < f.getArgLength(); i++){
-				obj.append(",").append(this.mapNode(varmap, f.getArgs()[i]));
-			}
-			obj.append(")");
-			object = obj.toString();
-		}else{
-			object = this.mapNode(varmap, this.clause.getObject());
-		}
-		
-		StringBuilder name = new StringBuilder("(");
-		name.append(subject).append(" ")
-			.append(predicate).append(" ")
-			.append(object).append(")");
-		return name.toString();
-	}
+//	protected String stringifyNode(Node node){
+//		return node.isVariable() ? "?"+this.indexOfVar(node.getName()) : node.toString();
+//	}
+//	
+//	protected String mapNode(Map<String,String> varmap, Node node){
+//		String nodeString = this.stringifyNode(node);
+//		String mappedString;
+//		return node.isVariable()
+//				? (mappedString = varmap.get(nodeString)) == null
+//					? "VAR"
+//					: mappedString
+//				: nodeString;
+//	}
+//	
+//	@Override
+//	public String identifier() {
+//		String subject = this.stringifyNode(this.clause.getSubject()),
+//			   predicate = this.stringifyNode(this.clause.getPredicate()),
+//			   object;
+//		if (Functor.isFunctor(this.clause.getObject())){
+//			StringBuilder obj = new StringBuilder();
+//			Functor f = (Functor) this.clause.getObject().getLiteralValue();
+//			obj.append(f.getName()).append("(")
+//			   .append(this.stringifyNode(f.getArgs()[0]));
+//			for (int i = 1; i < f.getArgLength(); i++){
+//				obj.append(",").append(this.stringifyNode(f.getArgs()[i]));
+//			}
+//			obj.append(")");
+//			object = obj.toString();
+//		}else{
+//			object = this.stringifyNode(this.clause.getObject());
+//		}
+//		
+//		StringBuilder name = new StringBuilder("(");
+//		name.append(subject).append(" ")
+//			.append(predicate).append(" ")
+//			.append(object).append(")");
+//		return name.toString();
+//	}
+//	
+//	@Override
+//	public String identifier(Map<String, String> varmap) {
+//		String subject = this.mapNode(varmap, this.clause.getSubject()),
+//			   predicate = this.mapNode(varmap, this.clause.getPredicate()),
+//			   object;
+//		if (Functor.isFunctor(this.clause.getObject())){
+//			StringBuilder obj = new StringBuilder();
+//			Functor f = (Functor) this.clause.getObject().getLiteralValue();
+//			obj.append(f.getName()).append("(")
+//			   .append(this.mapNode(varmap, f.getArgs()[0]));
+//			for (int i = 1; i < f.getArgLength(); i++){
+//				obj.append(",").append(this.mapNode(varmap, f.getArgs()[i]));
+//			}
+//			obj.append(")");
+//			object = obj.toString();
+//		}else{
+//			object = this.mapNode(varmap, this.clause.getObject());
+//		}
+//		
+//		StringBuilder name = new StringBuilder("(");
+//		name.append(subject).append(" ")
+//			.append(predicate).append(" ")
+//			.append(object).append(")");
+//		return name.toString();
+//	}
 	
 	@Override
 	public void setup() {}

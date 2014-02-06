@@ -14,7 +14,7 @@ import com.hp.hpl.jena.graph.NodeFactory;
  *
  * @param <T>
  */
-public abstract class RuleWrappedFunction<T extends IFunction<Context, Context>> extends
+public class RuleWrappedFunction<T extends IFunction<Context, Context>> extends
 		RuleWrapped<T> {
 
 	/**

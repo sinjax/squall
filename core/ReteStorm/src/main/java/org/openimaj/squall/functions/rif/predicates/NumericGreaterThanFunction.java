@@ -62,12 +62,12 @@ public class NumericGreaterThanFunction extends NumericPredicateFunction {
 
 	@Override
 	public List<Context> applyRoot(Context in) {
-		logger  .debug(String.format("Context(%s) sent to Predicate >%s" , in, Arrays.toString(super.nodes)));
+		logger  .debug(String.format("Context(%s) sent to Predicate >%s" , in, Arrays.toString(super.getNodes())));
 		List<Context> ret = new ArrayList<Context>();
 		Map<String,Node> binds = in.getTyped(ContextKey.BINDINGS_KEY.toString());
 		
 		Double current = super.extractBinding(binds, 0);
-		for (int i = 1; i < super.nodes.length; i++){
+		for (int i = 1; i < super.getNodeCount(); i++){
 			Double next = super.extractBinding(binds, i);
 			if(current <= next) {
 				logger  .debug(String.format("Numeric Greater Than check failed on comparison"));

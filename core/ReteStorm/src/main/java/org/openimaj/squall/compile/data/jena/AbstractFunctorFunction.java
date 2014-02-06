@@ -2,7 +2,7 @@ package org.openimaj.squall.compile.data.jena;
 
 import java.util.Map;
 
-import org.openimaj.squall.compile.data.IVFunction;
+import org.openimaj.squall.compile.data.IFunction;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -21,7 +21,7 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
  * @param <T1>
  * @param <T2>
  */
-public abstract class AbstractFunctorFunction<T1, T2> extends IVFunction<T1, T2> {
+public abstract class AbstractFunctorFunction<T1, T2> implements IFunction<T1, T2> {
 	
 	protected Functor clause;
 	private Node_RuleVariable[] ruleVariables;
@@ -43,47 +43,47 @@ public abstract class AbstractFunctorFunction<T1, T2> extends IVFunction<T1, T2>
 	private void registerVariables(Functor clause){
 		for (Node iterable_element : clause.getArgs()) {
 			if(iterable_element.isVariable()){
-				this.addVariable(iterable_element.getName());
-				this.putRuleToBaseVarMapEntry(iterable_element.getName(), iterable_element.getName());
+//				this.addVariable(iterable_element.getName());
+//				this.putRuleToBaseVarMapEntry(iterable_element.getName(), iterable_element.getName());
 			}
 		}
 	}
 	
-	private String mapNode(Map<String,String> varmap, Node node){
-		String nodeString = this.stringifyNode(node);
-		String mappedString;
-		return node.isVariable()
-				? (mappedString = varmap.get(nodeString)) == null
-					? "VAR"
-					: mappedString
-				: nodeString;
-	}
-	@Override
-	public String identifier(Map<String, String> varmap) {
-		StringBuilder obj = new StringBuilder();
-		obj.append(this.clause.getName()).append("(")
-		   .append(this.mapNode(varmap, this.clause.getArgs()[0]));
-		for (int i = 1; i < this.clause.getArgLength(); i++){
-			obj.append(",").append(this.mapNode(varmap, this.clause.getArgs()[i]));
-		}
-		obj.append(")");
-		return obj.toString();
-	}
-	
-	private String stringifyNode(Node node){
-		return node.isVariable() ? "?"+this.indexOfVar(node.getName()) : node.toString();
-	}
-	@Override
-	public String identifier() {
-		StringBuilder obj = new StringBuilder();
-		obj.append(this.clause.getName()).append("(")
-		   .append(this.stringifyNode(this.clause.getArgs()[0]));
-		for (int i = 1; i < this.clause.getArgLength(); i++){
-			obj.append(",").append(this.stringifyNode(this.clause.getArgs()[i]));
-		}
-		obj.append(")");
-		return obj.toString();
-	}
+//	private String mapNode(Map<String,String> varmap, Node node){
+//		String nodeString = this.stringifyNode(node);
+//		String mappedString;
+//		return node.isVariable()
+//				? (mappedString = varmap.get(nodeString)) == null
+//					? "VAR"
+//					: mappedString
+//				: nodeString;
+//	}
+//	@Override
+//	public String identifier(Map<String, String> varmap) {
+//		StringBuilder obj = new StringBuilder();
+//		obj.append(this.clause.getName()).append("(")
+//		   .append(this.mapNode(varmap, this.clause.getArgs()[0]));
+//		for (int i = 1; i < this.clause.getArgLength(); i++){
+//			obj.append(",").append(this.mapNode(varmap, this.clause.getArgs()[i]));
+//		}
+//		obj.append(")");
+//		return obj.toString();
+//	}
+//	
+//	private String stringifyNode(Node node){
+//		return node.isVariable() ? "?"+this.indexOfVar(node.getName()) : node.toString();
+//	}
+//	@Override
+//	public String identifier() {
+//		StringBuilder obj = new StringBuilder();
+//		obj.append(this.clause.getName()).append("(")
+//		   .append(this.stringifyNode(this.clause.getArgs()[0]));
+//		for (int i = 1; i < this.clause.getArgLength(); i++){
+//			obj.append(",").append(this.stringifyNode(this.clause.getArgs()[i]));
+//		}
+//		obj.append(")");
+//		return obj.toString();
+//	}
 	
 	protected Map<String, Node> bToMap(BindingVector be) {
 		return BindingsUtils.bindingsToMap(be, ruleVariables);

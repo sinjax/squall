@@ -1,4 +1,4 @@
-package org.openimaj.squall.orchestrate.greedy;
+package org.openimaj.squall.orchestrate.rete;
 
 import java.util.concurrent.TimeUnit;
 
@@ -7,6 +7,7 @@ import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.orchestrate.NamedSourceNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
+import org.openimaj.squall.orchestrate.greedy.CombinedISource;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
@@ -14,21 +15,21 @@ import org.openimaj.util.stream.Stream;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public class CombinedSourceGreedyOrchestrator extends GreedyOrchestrator {
+public class CombinedSourceTPLOReteOrchestrator extends TPLOReteOrchestrator {
 	
 	/**
 	 * @param capacity
 	 * @param duration
 	 * @param time
 	 */
-	public CombinedSourceGreedyOrchestrator(int capacity, long duration, TimeUnit time) {
+	public CombinedSourceTPLOReteOrchestrator(int capacity, long duration, TimeUnit time) {
 		super(capacity, duration, time);
 	}
 	
 	/**
 	 * 
 	 */
-	public CombinedSourceGreedyOrchestrator() {
+	public CombinedSourceTPLOReteOrchestrator() {
 		super();
 	}
 

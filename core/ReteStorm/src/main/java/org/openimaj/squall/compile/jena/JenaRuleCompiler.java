@@ -2,7 +2,6 @@ package org.openimaj.squall.compile.jena;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
@@ -10,15 +9,13 @@ import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.compile.data.jena.CombinedIVFunction;
 import org.openimaj.squall.compile.data.jena.FunctorConsequence;
 import org.openimaj.squall.compile.data.jena.FunctorFunction;
-import org.openimaj.squall.compile.data.jena.TripleConsequence;
-import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
 import org.openimaj.squall.data.ISource;
+import org.openimaj.squall.functions.rif.consequences.RIFTripleConsequence;
+import org.openimaj.squall.functions.rif.filters.BaseTripleFilterFunction;
+import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.reasoner.TriplePattern;
 import com.hp.hpl.jena.reasoner.rulesys.ClauseEntry;
 import com.hp.hpl.jena.reasoner.rulesys.Functor;
@@ -69,10 +66,16 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 				for (int i = 0; i < rule.bodyLength(); i++) {
 					ClauseEntry clause = rule.getBodyElement(i);
 					if (clause instanceof TriplePattern) {
-						ruleret.addJoinComponent(new TripleFilterFunction(rule, (TriplePattern)clause));
+						TriplePattern tp = (TriplePattern) clause;
+						ruleret.addJoinComponent(BaseTripleFilterFunction.ruleWrapped(tp));
 					} 
 					else if (clause instanceof Functor){
-						ruleret.addPredicate(new FunctorFunction(rule,(Functor) clause));
+						try {
+							ruleret.addPredicate(FunctorFunction.ruleWrapped(rule, (Functor) clause));
+						} catch (RIFPredicateException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 				}
 				
@@ -81,10 +84,10 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 				for (int i = 0; i < rule.headLength(); i++) {
 					ClauseEntry clause = rule.getHeadElement(i);
 					if (clause instanceof TriplePattern) {
-						ruleret.addConsequence(new TripleConsequence(rule, (TriplePattern)clause));
+						ruleret.addConsequence(RIFTripleConsequence.ruleWrapped((TriplePattern)clause, rule.getName()));
 					} 
 					else if (clause instanceof Functor){
-						ruleret.addConsequence(new FunctorConsequence(rule, (Functor)clause));
+						ruleret.addConsequence(FunctorConsequence.ruleWrapped(rule, (Functor)clause));
 					}	
 				}
 			}
