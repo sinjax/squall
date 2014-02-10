@@ -1,12 +1,8 @@
 package org.openimaj.squall.functions.calculators;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.compile.data.VariableHolder;
 import org.openimaj.squall.functions.predicates.BasePredicateFunction;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -37,6 +33,11 @@ public abstract class BaseValueFunction extends BasePredicateFunction {
 	public BaseValueFunction(Node[] ns, Node_Variable rn, Map<Node, BaseValueFunction> funcs) throws RIFPredicateException {
 		super(ns, funcs);
 		this.result = rn;
+	}
+	
+	@Override
+	public BaseValueFunction clone() throws CloneNotSupportedException {
+		return (BaseValueFunction) super.clone();
 	}
 	
 	@Override
@@ -100,6 +101,12 @@ public abstract class BaseValueFunction extends BasePredicateFunction {
 			this.resultName = nr.getName();
 			super.addVariable(this.resultName);
 			super.putRuleToBaseVarMapEntry(this.resultName, this.resultName);
+		}
+		
+		@Override
+		public RuleWrappedValueFunction<T> clone()
+				throws CloneNotSupportedException {
+			return (RuleWrappedValueFunction<T>) super.clone();
 		}
 	
 		@Override

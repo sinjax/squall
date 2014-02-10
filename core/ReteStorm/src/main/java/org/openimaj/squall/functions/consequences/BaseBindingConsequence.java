@@ -52,6 +52,16 @@ public class BaseBindingConsequence extends BaseConsequenceFunction {
 	}
 	
 	@Override
+	protected BaseBindingConsequence clone() throws CloneNotSupportedException {
+		BaseBindingConsequence bbc = (BaseBindingConsequence) super.clone();
+		if (bbc.inVars != null){
+			bbc.inVars = bbc.inVars.clone();
+		}
+		bbc.outVars = bbc.outVars.clone();
+		return bbc;
+	}
+	
+	@Override
 	public void mapVarNames(Map<String, String> varMap) {
 		this.inVars = new String[this.outVars.length];
 		

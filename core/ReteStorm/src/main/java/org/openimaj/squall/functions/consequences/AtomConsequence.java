@@ -46,6 +46,13 @@ public class AtomConsequence extends BaseConsequenceFunction {
 		this.clause = tp;
 	}
 	
+	@Override
+	public AtomConsequence clone() throws CloneNotSupportedException {
+		AtomConsequence ac = (AtomConsequence) super.clone();
+		ac.clause = new Functor(ac.clause.getName(), ac.clause.getArgs().clone());
+		return ac;
+	}
+	
 	protected Functor getClause(){
 		return this.clause;
 	}

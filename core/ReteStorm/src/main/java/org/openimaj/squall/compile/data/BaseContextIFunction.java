@@ -6,7 +6,7 @@ import org.openimaj.util.data.Context;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public abstract class BaseContextIFunction implements IFunction<Context, Context> {
+public abstract class BaseContextIFunction implements IFunction<Context, Context>, Cloneable {
 
 	/**
 	 * 

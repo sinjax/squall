@@ -25,6 +25,7 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
+ * @author David Monks (dm11g08@ecs.soton.ac.uk)
  * Given a binding environment, output a binding environment
  *
  */
@@ -58,6 +59,15 @@ public class FunctorFunction extends BasePredicateFunction {
 			this.ruleVariables = BindingsUtils.extractRuleVariables(r);
 		}
 		this.rule = r;
+	}
+	
+	@Override
+	public BasePredicateFunction clone() {
+		try {
+			return new FunctorFunction(this.rule, this.clause);
+		} catch (RIFPredicateException e) {
+			throw new RuntimeException("Clone of valid function should not be invalid.", e);
+		}
 	}
 
 	protected Map<String, Node> bToMap(BindingVector be) {

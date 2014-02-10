@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.rif.providers.predicates;
+package org.openimaj.squall.providers.predicates;
 
 import org.openimaj.squall.compile.data.RuleWrappedFunction;
 import org.openimaj.squall.functions.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;

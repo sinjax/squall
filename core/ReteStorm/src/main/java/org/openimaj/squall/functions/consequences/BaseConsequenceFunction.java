@@ -9,17 +9,18 @@ import org.openimaj.squall.compile.data.BaseContextIFunction;
 import org.openimaj.squall.compile.data.IConsequence;
 import org.openimaj.squall.compile.data.InheritsVariables;
 import org.openimaj.squall.compile.data.RuleWrappedFunction;
+import org.openimaj.squall.data.RuleWrapped;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.hp.hpl.jena.graph.Node;
-import com.hp.hpl.jena.graph.NodeFactory;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
+@SuppressWarnings("serial")
 public abstract class BaseConsequenceFunction extends BaseContextIFunction implements IConsequence {
 
 	private String ruleID;
@@ -80,6 +81,14 @@ public abstract class BaseConsequenceFunction extends BaseContextIFunction imple
 		public RuleWrappedConsequenceFunction(ConsequenceARVH arvh) {
 			super(arvh);
 			this.varHolder = arvh;
+		}
+		
+		@Override
+		public RuleWrappedConsequenceFunction<T> clone() throws CloneNotSupportedException {
+			RuleWrappedConsequenceFunction<T> clone = (RuleWrappedConsequenceFunction<T>) super.clone();
+			clone.varHolder = (ConsequenceARVH) clone.getVariableHolder();
+			clone.wrap((T) clone.getWrapped().clone());
+			return clone;
 		}
 		
 		@Override

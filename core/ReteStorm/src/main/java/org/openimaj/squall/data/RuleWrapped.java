@@ -11,7 +11,7 @@ import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
  *
  * @param <T>
  */
-public class RuleWrapped<T> extends AnonimisedRuleVariableHolder {
+public class RuleWrapped<T> extends AnonimisedRuleVariableHolder implements Cloneable {
 
 	private T wrapped;
 	private AnonimisedRuleVariableHolder arvh;
@@ -21,6 +21,13 @@ public class RuleWrapped<T> extends AnonimisedRuleVariableHolder {
 	 */
 	public RuleWrapped(AnonimisedRuleVariableHolder arvh){
 		this.arvh = arvh;
+	}
+	
+	@Override
+	public RuleWrapped<T> clone() throws CloneNotSupportedException {
+		RuleWrapped<T> clone = (RuleWrapped<T>) super.clone();
+		clone.arvh = clone.arvh.clone();
+		return clone;
 	}
 	
 	/**

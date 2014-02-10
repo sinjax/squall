@@ -116,7 +116,8 @@ public class VisRIFReteRule {
 	public static void main(String[] args) {
 		ExternalLoader.loadExternals();
 		
-		String ruleSource = "file:///Users/davidlmonks/squall/core/ReteStorm/src/test/resources/lsbench/queries/rif/query-7.5-with-small-test-data.rif";
+//		String ruleSource = "file:///Users/davidlmonks/squall/core/ReteStorm/src/test/resources/lsbench/queries/rif/query-7.5-with-small-test-data.rif";
+		String ruleSource = "file:///Users/davidlmonks/squall/core/ReteStorm/src/test/resources/test.multiunion.rule.rif";
 		
 		RIFRuleSet rules = RifUtils.readRules(ruleSource);
 		

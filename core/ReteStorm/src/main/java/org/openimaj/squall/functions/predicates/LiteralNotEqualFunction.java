@@ -65,6 +65,15 @@ public class LiteralNotEqualFunction extends BasePredicateFunction {
 	}
 	
 	@Override
+	public LiteralNotEqualFunction clone() {
+		try {
+			return new LiteralNotEqualFunction(super.getNodes(), super.getFuncMap());
+		} catch (RIFPredicateException e) {
+			throw new RuntimeException("Clone of valid function should not be invalid.", e);
+		}
+	}
+	
+	@Override
 	public List<Context> applyRoot(Context in){
 		logger .debug(String.format("Context(%s) sent to Predicate(neq(%s))" , in, Arrays.toString(super.getNodes())));
 		Map<String,Node> binds = in.getTyped(ContextKey.BINDINGS_KEY.toString());

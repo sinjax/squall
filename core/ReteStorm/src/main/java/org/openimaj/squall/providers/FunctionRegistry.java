@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.openimaj.squall.compile.data.RuleWrappedFunction;
-import org.openimaj.squall.compile.rif.providers.predicates.PredicateFunctionProvider;
+import org.openimaj.squall.providers.predicates.PredicateFunctionProvider;
 
 /**
  * @author David Monks <dm11g08@ecs.soton.ac.uk>

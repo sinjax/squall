@@ -48,6 +48,17 @@ public class TripleConsequence extends BaseConsequenceFunction {
 		this.clause = clause;
 	}
 	
+	@Override
+	public TripleConsequence clone() throws CloneNotSupportedException {
+		TripleConsequence clone = (TripleConsequence) super.clone();
+		clone.clause = new TriplePattern(
+							clone.clause.getSubject(),
+							clone.clause.getPredicate(),
+							clone.clause.getObject()
+						);
+		return clone;
+	}
+	
 	private Node getMappedNode(Node node, Map<String, String> varmap){
 		if (node.isVariable()){
 			return NodeFactory.createVariable(

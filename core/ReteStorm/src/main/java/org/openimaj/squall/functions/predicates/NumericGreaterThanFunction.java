@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.openimaj.squall.functions.calculators.BaseValueFunction;
 import org.openimaj.squall.functions.calculators.BaseValueFunction.RuleWrappedValueFunction;
+import org.openimaj.squall.functions.predicates.BasePredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
 
@@ -22,6 +23,10 @@ import com.hp.hpl.jena.graph.NodeFactory;
  */
 public class NumericGreaterThanFunction extends NumericPredicateFunction {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7935891899097417140L;
 	private static final Logger logger = Logger.getLogger(NumericGreaterThanFunction.class);
 	
 	/**
@@ -54,11 +59,15 @@ public class NumericGreaterThanFunction extends NumericPredicateFunction {
 				new HashMap<Node, BaseValueFunction>()
 		);
 	}
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -7935891899097417140L;
+	
+	@Override
+	public NumericGreaterThanFunction clone() {
+		try {
+			return new NumericGreaterThanFunction(super.getNodes(), super.getFuncMap());
+		} catch (RIFPredicateException e) {
+			throw new RuntimeException("Clone of valid function should not be invalid.", e);
+		}
+	}
 
 	@Override
 	public List<Context> applyRoot(Context in) {

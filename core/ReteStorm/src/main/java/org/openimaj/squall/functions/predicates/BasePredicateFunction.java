@@ -89,6 +89,18 @@ public abstract class BasePredicateFunction extends BaseContextIFunction {
 		return this.nodes.length;
 	}
 	
+	@Override
+	public BasePredicateFunction clone() throws CloneNotSupportedException {
+		BasePredicateFunction bpf = (BasePredicateFunction) super.clone();
+		bpf.nodes = bpf.nodes.clone();
+		Map<Node, BaseValueFunction> map = new HashMap<Node, BaseValueFunction>();
+		for (Node key : bpf.funcs.keySet()){
+			map.put(key, bpf.funcs.get(key).clone());
+		}
+		bpf.funcs = map;
+		return bpf;
+	}
+	
 	/**
 	 * @param directVarMap
 	 * @return 
@@ -206,6 +218,14 @@ public abstract class BasePredicateFunction extends BaseContextIFunction {
 			this.varHolder = (PredFuncARVH) super.getVariableHolder();
 		}
 		
+		@Override
+		public RuleWrappedPredicateFunction<T> clone() throws CloneNotSupportedException {
+			RuleWrappedPredicateFunction<T> clone = (RuleWrappedPredicateFunction<T>) super.clone();
+			clone.varHolder = (PredFuncARVH) clone.getVariableHolder();
+			clone.wrap((T) clone.getWrapped().clone());
+			return clone;
+		}
+		
 		protected Map<Node, BaseValueFunction> getRulelessFuncMap(){
 			return this.varHolder.getRulelessFuncMap();
 		}
@@ -251,9 +271,9 @@ public abstract class BasePredicateFunction extends BaseContextIFunction {
 		protected static class PredFuncARVH extends ARVHComponent implements InheritsVariables {
 
 			private AnonimisedRuleVariableHolder sourceVarHolder;
-			private final String functionName;
-			private final Node[] nodes;
-			private final Map<Node, RuleWrappedValueFunction<?>> funcMap;
+			private String functionName;
+			private Node[] nodes;
+			private Map<Node, RuleWrappedValueFunction<?>> funcMap;
 			
 			protected PredFuncARVH(String fn, Node[] ns, Map<Node, RuleWrappedValueFunction<?>> funcMap){
 				this.sourceVarHolder = null;
@@ -275,6 +295,19 @@ public abstract class BasePredicateFunction extends BaseContextIFunction {
 						super.putRuleToBaseVarMapEntry(rVar, bVar);
 					}
 				}
+			}
+			
+			@Override
+			public PredFuncARVH clone()
+					throws CloneNotSupportedException {
+				PredFuncARVH clone = (PredFuncARVH) super.clone();
+				clone.nodes = clone.nodes.clone();
+				Map<Node, RuleWrappedValueFunction<?>> map = new HashMap<Node, RuleWrappedValueFunction<?>>();
+				for (Node key : clone.funcMap.keySet()){
+					map.put(key, clone.funcMap.get(key).clone());
+				}
+				clone.funcMap = map;
+				return clone;
 			}
 			
 			protected Map<Node, BaseValueFunction> getRulelessFuncMap(){
@@ -377,6 +410,10 @@ public abstract class BasePredicateFunction extends BaseContextIFunction {
 			
 		}
 		
+	}
+
+	protected Map<Node, BaseValueFunction> getFuncMap() {
+		return this.funcs;
 	}
 	
 }

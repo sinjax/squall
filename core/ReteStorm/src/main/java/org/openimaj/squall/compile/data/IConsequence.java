@@ -4,7 +4,7 @@ package org.openimaj.squall.compile.data;
  * @author David Monks <dm11g08@ecs.soton.ac.uk>
  *
  */
-public interface IConsequence {
+public interface IConsequence extends Cloneable {
 	
 	/**
 	 * @return

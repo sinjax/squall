@@ -12,6 +12,7 @@ import org.openimaj.rifcore.conditions.data.RIFExpr;
 import org.openimaj.rifcore.conditions.data.RIFExternalExpr;
 import org.openimaj.rifcore.conditions.data.RIFFunction;
 import org.openimaj.squall.functions.calculators.BaseValueFunction.RuleWrappedValueFunction;
+import org.openimaj.squall.providers.predicates.PredicateFunctionProvider;
 import org.openimaj.util.pair.IndependentPair;
 
 import com.hp.hpl.jena.graph.Node;

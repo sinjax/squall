@@ -15,7 +15,7 @@ import com.hp.hpl.jena.graph.NodeFactory;
  * @param <T>
  */
 public class RuleWrappedFunction<T extends IFunction<Context, Context>> extends
-		RuleWrapped<T> {
+		RuleWrapped<T> implements Cloneable {
 
 	/**
 	 * @param arvh

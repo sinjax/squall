@@ -51,6 +51,14 @@ public class FunctorConsequence extends AtomConsequence {
 		}
 	}
 	
+	@Override
+	public FunctorConsequence clone() throws CloneNotSupportedException {
+		FunctorConsequence clone = (FunctorConsequence) super.clone();
+		clone.rule = clone.rule.cloneRule();
+		clone.ruleVariables = clone.ruleVariables.clone();
+		return clone;
+	}
+	
 	protected Map<String, Node> bToMap(BindingVector be) {
 		return BindingsUtils.bindingsToMap(be, ruleVariables);
 	}

@@ -25,6 +25,17 @@ public abstract class AnonimisedRuleVariableHolder extends VariableHolder {
 		this.ruleToVarMap = new HashMap<String, String>();
 	}
 	
+	@Override
+	public AnonimisedRuleVariableHolder clone() throws CloneNotSupportedException {
+		AnonimisedRuleVariableHolder clone = (AnonimisedRuleVariableHolder) super.clone();
+		Map<String, String> map = new HashMap<String, String>();
+		for (String key : clone.ruleToVarMap.keySet()){
+			map.put(key, clone.ruleToVarMap.get(key));
+		}
+		clone.ruleToVarMap = map;
+		return clone;
+	}
+	
 	/**
 	 * @return the variables used in the current rule's use of this function, ordered by appearance in the function output.
 	 */

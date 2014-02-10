@@ -10,7 +10,7 @@ import org.openimaj.util.function.Function;
  * Also provide a method to access an anonimised representation of the {@Link VariableHolder} (e.g. present an underlying {@link Function} as
  * an implementation and rule independent string), as well as a method to access the list of contributing atomic {@link VariableHolder}s.
  */
-public abstract class VariableHolder{
+public abstract class VariableHolder implements Cloneable{
 	
 	private List<String> variables;
 	
@@ -19,6 +19,17 @@ public abstract class VariableHolder{
 	 */
 	public VariableHolder(){
 		this.variables = new ArrayList<String>();
+	}
+	
+	@Override
+	protected VariableHolder clone() throws CloneNotSupportedException {
+		VariableHolder clone = (VariableHolder) super.clone();
+		List<String> vars = new ArrayList<String>();
+		for (String var : clone.variables){
+			vars.add(var);
+		}
+		clone.variables = vars;
+		return clone;
 	}
 	
 	/**

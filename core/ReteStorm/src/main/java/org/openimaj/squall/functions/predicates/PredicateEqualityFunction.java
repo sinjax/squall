@@ -64,6 +64,15 @@ public class PredicateEqualityFunction extends BasePredicateFunction {
 			throw new RIFPredicateException("RIF translator: Predicate must compare at least one variable.");
 		}
 	}
+	
+	@Override
+	public PredicateEqualityFunction clone() {
+		try {
+			return new PredicateEqualityFunction(this.getNodes(), this.getFuncMap());
+		} catch (RIFPredicateException e) {
+			throw new RuntimeException("Clone of valid function should not be invalid.", e);
+		}
+	}
 
 	@Override
 	protected List<Context> applyRoot(Context in) {

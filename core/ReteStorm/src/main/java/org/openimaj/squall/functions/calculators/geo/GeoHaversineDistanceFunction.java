@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import org.openimaj.squall.functions.calculators.BaseValueFunction;
 import org.openimaj.squall.functions.calculators.NumericValueFunction;
 import org.openimaj.squall.functions.calculators.BaseValueFunction.RuleWrappedValueFunction;
+import org.openimaj.squall.functions.predicates.BasePredicateFunction;
 import org.openimaj.squall.functions.predicates.NumericPredicateFunction;
 import org.openimaj.squall.functions.predicates.BasePredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
@@ -71,6 +72,15 @@ public class GeoHaversineDistanceFunction extends NumericValueFunction {
 			(Node_Variable) NodeFactory.createVariable(DEFAULT_RESULT_VAR),
 			new HashMap<Node, BaseValueFunction>()
 		);
+	}
+	
+	@Override
+	public GeoHaversineDistanceFunction clone() {
+		try {
+			return new GeoHaversineDistanceFunction(super.getNodes(), super.getResultVarNode(), super.getFuncMap());
+		} catch (RIFPredicateException e) {
+			throw new RuntimeException("Clone of valid function should not be invalid.", e);
+		}
 	}
 
 	private double haversin(double pheta){

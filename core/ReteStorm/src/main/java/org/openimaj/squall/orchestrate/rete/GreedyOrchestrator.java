@@ -1,23 +1,16 @@
 package org.openimaj.squall.orchestrate.rete;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.openimaj.rifcore.RIFRuleSet;
-import org.openimaj.rifcore.imports.profiles.RIFEntailmentImportProfiles;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.JoinComponent;
 import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IOperation;
-import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
 import org.openimaj.squall.data.ISource;
 import org.openimaj.squall.data.RuleWrapped;
 import org.openimaj.squall.functions.consequences.BaseConsequenceFunction;
@@ -38,21 +31,10 @@ import org.openimaj.squall.orchestrate.exception.CompleteCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.MultiConsequenceSubCPSPlanningException;
 import org.openimaj.squall.orchestrate.exception.PlanningException;
 import org.openimaj.squall.orchestrate.rete.StreamAwareFixedJoinFunction.RuleWrappedStreamAwareFixedJoinFunction;
-import org.openimaj.squall.utils.JenaUtils;
-import org.openimaj.squall.utils.OPSDisplayUtils;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.data.ContextKey;
-import org.openimaj.util.data.ContextWrapper;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.pair.IndependentPair;
-import org.openimaj.util.stream.CollectionStream;
 import org.openimaj.util.stream.Stream;
-import org.xml.sax.SAXException;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-import com.hp.hpl.jena.graph.Triple;
 
 /**
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
@@ -248,9 +230,25 @@ public class GreedyOrchestrator implements Orchestrator{
 							// ... construct the new list of predicates for this new option from the predicates of the subCPS's current processing option
 							// and those of the current prior processing option for the current CPS.
 							List<RuleWrappedPredicateFunction<? extends BasePredicateFunction>> newPreds =
-									new ArrayList<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>(); 
-								newPreds.addAll(combinedCPS.getSecondObject());
-								newPreds.addAll(jCPS.getSecondObject());
+									new ArrayList<RuleWrappedPredicateFunction<? extends BasePredicateFunction>>();
+							for (RuleWrappedPredicateFunction<? extends BasePredicateFunction> pred : combinedCPS.getSecondObject()){
+								RuleWrappedPredicateFunction<? extends BasePredicateFunction> clonedPred;
+								try {
+									clonedPred = pred.clone();
+								} catch (CloneNotSupportedException e) {
+									throw new RuntimeException(e);
+								}
+								newPreds.add(clonedPred);
+							}
+							for (RuleWrappedPredicateFunction<? extends BasePredicateFunction> pred : jCPS.getSecondObject()){
+								RuleWrappedPredicateFunction<? extends BasePredicateFunction> clonedPred;
+								try {
+									clonedPred = pred.clone();
+								} catch (CloneNotSupportedException e) {
+									throw new RuntimeException(e);
+								}
+								newPreds.add(clonedPred);
+							}
 							// ... add the combinations of join components and predicates of the two CPS processing options to the list of new, combined
 							// processing options
 							newJoinedCPSs.add(newJoinComps, newPreds);
@@ -298,32 +296,38 @@ public class GreedyOrchestrator implements Orchestrator{
 		CompleteCPSResult consequencesList = new CompleteCPSResult();
 		List<RuleWrapped<? extends NamedNode<? extends IFunction<Context, Context>>>> bodies = orchestratePredicates(root, partialCPS);
 		for (RuleWrappedConsequenceFunction<? extends BaseConsequenceFunction> function : functions){
-			function.setSourceVariables(bodies.get(0).getVariableHolder());
-			RuleWrapped<NNIFunction> consequenceNode =
-					new RuleWrapped<NNIFunction>(
-							function.getVariableHolder(),
-							new NNIFunction(
-									root,
-									nextConsequenceName(), 
-									function.getWrapped()
-							)
-					);
-			
-			if (isReentrant && function.getWrapped().isReentrant()){
-				try{
-					consequenceNode.getWrapped().connectOutgoingEdge(root.reentrant);
-				} catch (NullPointerException e) {
-					root.reentrant = new NamedStream(GreedyOrchestrator.REENTRANT_STREAM);
-					consequenceNode.getWrapped().connectOutgoingEdge(root.reentrant);
+			for (RuleWrapped<? extends NamedNode<? extends IFunction<Context, Context>>> body : bodies){
+				RuleWrappedConsequenceFunction<? extends BaseConsequenceFunction> clonedFunc;
+				try {
+					clonedFunc = function.clone();
+				} catch (CloneNotSupportedException e1) {
+					throw new RuntimeException(e1);
 				}
-			}
-			
-			for (RuleWrapped<? extends NamedNode<? extends IFunction<Context, Context>>> body : bodies) {
+				clonedFunc.setSourceVariables(bodies.get(0).getVariableHolder());
+				RuleWrapped<NNIFunction> consequenceNode =
+						new RuleWrapped<NNIFunction>(
+								function.getVariableHolder(),
+								new NNIFunction(
+										root,
+										nextConsequenceName(), 
+										clonedFunc.getWrapped()
+								)
+						);
+				
+				if (isReentrant && clonedFunc.getWrapped().isReentrant()){
+					try{
+						consequenceNode.getWrapped().connectOutgoingEdge(root.reentrant);
+					} catch (NullPointerException e) {
+						root.reentrant = new NamedStream(GreedyOrchestrator.REENTRANT_STREAM);
+						consequenceNode.getWrapped().connectOutgoingEdge(root.reentrant);
+					}
+				}
 				NamedStream str = new NamedStream(body.getWrapped().getName());
 				body.getWrapped().connectOutgoingEdge(str);
 				consequenceNode.getWrapped().connectIncomingEdge(str);
+				
+				consequencesList.add(consequenceNode);
 			}
-			consequencesList.add(consequenceNode);
 		}
 		return consequencesList;
 	}
