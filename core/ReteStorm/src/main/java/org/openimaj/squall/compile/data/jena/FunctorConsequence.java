@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
-import org.openimaj.squall.functions.rif.consequences.RIFAtomConsequence;
+import org.openimaj.squall.functions.consequences.AtomConsequence;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
 
@@ -25,7 +25,7 @@ import com.hp.hpl.jena.reasoner.rulesys.impl.BindingVector;
  * @author Sina Samangooei (ss@ecs.soton.ac.uk)
  *
  */
-public class FunctorConsequence extends RIFAtomConsequence {
+public class FunctorConsequence extends AtomConsequence {
 
 	/**
 	 * @param r

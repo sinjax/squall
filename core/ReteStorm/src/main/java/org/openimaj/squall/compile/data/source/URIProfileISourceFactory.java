@@ -12,7 +12,7 @@ import org.openimaj.rifcore.imports.schemes.HTTPSchemeFunction;
 import org.openimaj.rifcore.imports.schemes.JavaSchemeFunction;
 import org.openimaj.rifcore.imports.schemes.FileSchemeFunction;
 import org.openimaj.squall.data.ISource;
-import org.openimaj.squall.functions.rif.sources.NTriplesISourceFactory;
+import org.openimaj.squall.functions.sources.NTriplesISourceFactory;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.function.Function;
 import org.openimaj.util.stream.Stream;

@@ -12,9 +12,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
-import org.openimaj.squall.functions.rif.calculators.BaseValueFunction.RuleWrappedValueFunction;
-import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RIFPredicateException;
-import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;
+import org.openimaj.squall.functions.calculators.BaseValueFunction.RuleWrappedValueFunction;
+import org.openimaj.squall.functions.predicates.BasePredicateFunction;
+import org.openimaj.squall.functions.predicates.PredicateEqualityFunction;
+import org.openimaj.squall.functions.predicates.BasePredicateFunction.RIFPredicateException;
+import org.openimaj.squall.functions.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;

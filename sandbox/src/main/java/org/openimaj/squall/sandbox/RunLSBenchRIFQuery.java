@@ -11,7 +11,7 @@ import org.openimaj.squall.build.storm.StormStreamBuilder;
 import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.rif.RIFCoreRuleCompiler;
-import org.openimaj.squall.functions.rif.external.ExternalLoader;
+import org.openimaj.squall.compile.rif.providers.predicates.ExternalLoader;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.squall.orchestrate.greedy.CombinedSourceGreedyOrchestrator;
 import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;

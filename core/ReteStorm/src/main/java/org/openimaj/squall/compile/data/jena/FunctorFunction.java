@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.openimaj.rdf.storm.topology.rules.ReteTopologyRuleContext;
-import org.openimaj.squall.functions.rif.calculators.BaseValueFunction;
-import org.openimaj.squall.functions.rif.calculators.BaseValueFunction.RuleWrappedValueFunction;
-import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction;
+import org.openimaj.squall.functions.calculators.BaseValueFunction;
+import org.openimaj.squall.functions.calculators.BaseValueFunction.RuleWrappedValueFunction;
+import org.openimaj.squall.functions.predicates.BasePredicateFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
 

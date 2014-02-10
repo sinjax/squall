@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import java.util.Map;
 
 import org.junit.Test;
-import org.openimaj.squall.compile.data.rif.BindingsUtils;
+import org.openimaj.squall.compile.data.BindingsUtils;
 
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;

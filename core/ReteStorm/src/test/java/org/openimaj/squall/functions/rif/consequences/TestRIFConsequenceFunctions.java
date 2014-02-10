@@ -14,6 +14,9 @@ import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.InheritsVariables;
 import org.openimaj.squall.compile.data.RuleWrappedFunction;
+import org.openimaj.squall.functions.consequences.AtomConsequence;
+import org.openimaj.squall.functions.consequences.BaseBindingConsequence;
+import org.openimaj.squall.functions.consequences.TripleConsequence;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -89,7 +92,7 @@ public class TestRIFConsequenceFunctions {
 				NodeFactory.createVariable("bar")
 		);
 		
-		this.func = RIFTripleConsequence.ruleWrapped(tp, "Fake_Rule");
+		this.func = TripleConsequence.ruleWrapped(tp, "Fake_Rule");
 	}
 	
 	/**
@@ -105,7 +108,7 @@ public class TestRIFConsequenceFunctions {
 				}
 		);
 		
-		this.func = RIFAtomConsequence.ruleWrapped(f, "Fake_Rule");
+		this.func = AtomConsequence.ruleWrapped(f, "Fake_Rule");
 	}
 	
 	/**

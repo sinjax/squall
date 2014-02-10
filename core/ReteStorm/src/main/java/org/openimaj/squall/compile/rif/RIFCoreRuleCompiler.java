@@ -33,23 +33,23 @@ import org.openimaj.squall.compile.CompiledProductionSystem;
 import org.openimaj.squall.compile.Compiler;
 import org.openimaj.squall.compile.ContextCPS;
 import org.openimaj.squall.compile.data.source.URIProfileISourceFactory;
-import org.openimaj.squall.compile.rif.provider.consequences.RIFForAllBindingConsequenceProvider;
-import org.openimaj.squall.compile.rif.provider.filters.RIFMemberFunctionProvider;
-import org.openimaj.squall.compile.rif.provider.predicates.RIFCoreExprFunctionRegistry;
-import org.openimaj.squall.compile.rif.provider.predicates.RIFEqualFunctionProvider;
-import org.openimaj.squall.compile.rif.provider.predicates.RIFExprFunctionRegistry;
-import org.openimaj.squall.compile.rif.provider.predicates.RIFExternalFunctionRegistry;
-import org.openimaj.squall.compile.rif.provider.predicates.ValueFunctionResultEqualityFunctionProvider;
+import org.openimaj.squall.compile.rif.providers.consequences.RIFForAllBindingConsequenceProvider;
+import org.openimaj.squall.compile.rif.providers.filters.RIFMemberFunctionProvider;
+import org.openimaj.squall.compile.rif.providers.predicates.RIFCoreExprFunctionRegistry;
+import org.openimaj.squall.compile.rif.providers.predicates.RIFEqualFunctionProvider;
+import org.openimaj.squall.compile.rif.providers.predicates.RIFExprFunctionRegistry;
+import org.openimaj.squall.compile.rif.providers.predicates.RIFExternalFunctionRegistry;
+import org.openimaj.squall.compile.rif.providers.predicates.ValueFunctionResultEqualityFunctionProvider;
 import org.openimaj.squall.compile.OptionalProductionSystems;
 import org.openimaj.squall.data.ISource;
-import org.openimaj.squall.functions.rif.calculators.BaseValueFunction.RuleWrappedValueFunction;
-import org.openimaj.squall.functions.rif.consequences.RIFAtomConsequence;
-import org.openimaj.squall.functions.rif.consequences.RIFTripleConsequence;
-import org.openimaj.squall.functions.rif.filters.BaseAtomFilterFunction;
-import org.openimaj.squall.functions.rif.filters.BaseTripleFilterFunction;
-import org.openimaj.squall.functions.rif.predicates.PredicateEqualityFunction;
-import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RIFPredicateException;
-import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;
+import org.openimaj.squall.functions.calculators.BaseValueFunction.RuleWrappedValueFunction;
+import org.openimaj.squall.functions.consequences.AtomConsequence;
+import org.openimaj.squall.functions.consequences.TripleConsequence;
+import org.openimaj.squall.functions.filters.AtomFilterFunction;
+import org.openimaj.squall.functions.filters.TripleFilterFunction;
+import org.openimaj.squall.functions.predicates.PredicateEqualityFunction;
+import org.openimaj.squall.functions.predicates.BasePredicateFunction.RIFPredicateException;
+import org.openimaj.squall.functions.predicates.BasePredicateFunction.RuleWrappedPredicateFunction;
 import org.openimaj.squall.util.MD5Utils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
@@ -151,9 +151,9 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 			List<ClauseEntry> triples = translate((RIFAtomic) formula, ccps);
 			for (ClauseEntry tp : triples){
 				if (tp instanceof TriplePattern)
-					ccps.addJoinComponent(BaseTripleFilterFunction.ruleWrapped((TriplePattern) tp));
+					ccps.addJoinComponent(TripleFilterFunction.ruleWrapped((TriplePattern) tp));
 				else if (tp instanceof Functor)
-					ccps.addJoinComponent(BaseAtomFilterFunction.ruleWrapped((Functor) tp));
+					ccps.addJoinComponent(AtomFilterFunction.ruleWrapped((Functor) tp));
 			}
 		} else if (formula instanceof RIFAnd){
 			for (RIFFormula f : (RIFAnd) formula){
@@ -198,9 +198,9 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 			List<ClauseEntry> triples = translate((RIFAtomic) formula, ccps);
 			for (ClauseEntry tp : triples){
 				if (tp instanceof TriplePattern)
-					ccps.addConsequence(RIFTripleConsequence.ruleWrapped((TriplePattern) tp, ruleID));
+					ccps.addConsequence(TripleConsequence.ruleWrapped((TriplePattern) tp, ruleID));
 				else if (tp instanceof Functor)
-					ccps.addConsequence(RIFAtomConsequence.ruleWrapped((Functor) tp, ruleID));
+					ccps.addConsequence(AtomConsequence.ruleWrapped((Functor) tp, ruleID));
 				ccps.setReentrant(true);
 			}
 		} else if (formula instanceof RIFAnd){

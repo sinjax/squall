@@ -9,6 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.RuleWrappedFunction;
+import org.openimaj.squall.functions.filters.AtomFilterFunction;
+import org.openimaj.squall.functions.filters.TripleFilterFunction;
 import org.openimaj.util.data.Context;
 
 import com.hp.hpl.jena.graph.Node;
@@ -51,7 +53,7 @@ public class TestRIFFilterFunctions {
 				NodeFactory.createLiteral("bar")
 		);
 		
-		this.filter = BaseTripleFilterFunction.ruleWrapped(tp);
+		this.filter = TripleFilterFunction.ruleWrapped(tp);
 		
 		this.context.put("triple",t);
 	}
@@ -77,7 +79,7 @@ public class TestRIFFilterFunctions {
 				}
 		);
 		
-		this.filter = BaseAtomFilterFunction.ruleWrapped(fp);
+		this.filter = AtomFilterFunction.ruleWrapped(fp);
 		
 		this.context.put("atom",f);
 	}

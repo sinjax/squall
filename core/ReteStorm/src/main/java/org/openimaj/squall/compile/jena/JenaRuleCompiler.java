@@ -10,9 +10,9 @@ import org.openimaj.squall.compile.data.jena.CombinedIVFunction;
 import org.openimaj.squall.compile.data.jena.FunctorConsequence;
 import org.openimaj.squall.compile.data.jena.FunctorFunction;
 import org.openimaj.squall.data.ISource;
-import org.openimaj.squall.functions.rif.consequences.RIFTripleConsequence;
-import org.openimaj.squall.functions.rif.filters.BaseTripleFilterFunction;
-import org.openimaj.squall.functions.rif.predicates.BasePredicateFunction.RIFPredicateException;
+import org.openimaj.squall.functions.consequences.TripleConsequence;
+import org.openimaj.squall.functions.filters.TripleFilterFunction;
+import org.openimaj.squall.functions.predicates.BasePredicateFunction.RIFPredicateException;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.stream.Stream;
 
@@ -67,7 +67,7 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 					ClauseEntry clause = rule.getBodyElement(i);
 					if (clause instanceof TriplePattern) {
 						TriplePattern tp = (TriplePattern) clause;
-						ruleret.addJoinComponent(BaseTripleFilterFunction.ruleWrapped(tp));
+						ruleret.addJoinComponent(TripleFilterFunction.ruleWrapped(tp));
 					} 
 					else if (clause instanceof Functor){
 						try {
@@ -84,7 +84,7 @@ public class JenaRuleCompiler implements Compiler<SourceRulePair>{
 				for (int i = 0; i < rule.headLength(); i++) {
 					ClauseEntry clause = rule.getHeadElement(i);
 					if (clause instanceof TriplePattern) {
-						ruleret.addConsequence(RIFTripleConsequence.ruleWrapped((TriplePattern)clause, rule.getName()));
+						ruleret.addConsequence(TripleConsequence.ruleWrapped((TriplePattern)clause, rule.getName()));
 					} 
 					else if (clause instanceof Functor){
 						ruleret.addConsequence(FunctorConsequence.ruleWrapped(rule, (Functor)clause));
