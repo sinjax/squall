@@ -1,14 +1,12 @@
 package org.openimaj.squall.orchestrate.greedy;
 
-import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.IOperation;
 import org.openimaj.squall.compile.data.Initialisable;
-import org.openimaj.squall.compile.data.VariableHolder;
+import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
 import org.openimaj.util.data.Context;
-import org.openimaj.util.function.Operation;
 import org.openimaj.util.function.Source;
 import org.openimaj.util.stream.Stream;
 
@@ -93,7 +91,7 @@ public class NGNOperation extends NamedNode<IFunction<Context, Context>>{
 	public boolean isStateless() {
 		return this.op.isStateless();
 	}
-
+	
 	@Override
 	public boolean forcedUnique() {
 		return this.op.forcedUnique();

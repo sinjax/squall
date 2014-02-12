@@ -1,4 +1,4 @@
-package org.openimaj.squall.orchestrate.rete;
+package org.openimaj.squall.orchestrate.greedy;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,7 +14,6 @@ import org.openimaj.rdf.storm.utils.OverflowHandler.CapacityOverflowHandler;
 import org.openimaj.rdf.storm.utils.OverflowHandler.DurationOverflowHandler;
 import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.WindowInformation;
-import org.openimaj.squall.orchestrate.greedy.FixedHashSteM;
 import org.openimaj.squall.compile.data.AnonimisedRuleVariableHolder;
 import org.openimaj.squall.compile.data.IFunction;
 import org.openimaj.squall.compile.data.RuleWrappedFunction;

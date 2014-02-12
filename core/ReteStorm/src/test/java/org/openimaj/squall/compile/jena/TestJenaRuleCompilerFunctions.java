@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.openimaj.squall.compile.data.jena.TripleFilterFunction;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.WindowInformation;
-import org.openimaj.squall.orchestrate.rete.StreamAwareFixedJoinFunction;
+import org.openimaj.squall.orchestrate.greedy.StreamAwareFixedJoinFunction;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.JoinStream;
 import org.openimaj.util.function.Function;

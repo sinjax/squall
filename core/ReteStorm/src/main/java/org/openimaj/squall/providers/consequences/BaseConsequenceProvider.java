@@ -1,4 +1,4 @@
-package org.openimaj.squall.compile.rif.providers.consequences;
+package org.openimaj.squall.providers.consequences;
 
 import org.openimaj.squall.providers.FunctionProvider;
 

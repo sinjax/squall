@@ -11,7 +11,9 @@ import org.openimaj.squall.orchestrate.NamedNode;
 import org.openimaj.squall.orchestrate.NamedSourceNode;
 import org.openimaj.squall.orchestrate.NamedStream;
 import org.openimaj.squall.orchestrate.OrchestratedProductionSystem;
-import org.openimaj.squall.orchestrate.rete.StreamAwareFixedJoinFunction.RuleWrappedStreamAwareFixedJoinFunction;
+import org.openimaj.squall.orchestrate.greedy.GreedyOrchestrator;
+import org.openimaj.squall.orchestrate.greedy.StreamAwareFixedJoinFunction;
+import org.openimaj.squall.orchestrate.greedy.StreamAwareFixedJoinFunction.RuleWrappedStreamAwareFixedJoinFunction;
 import org.openimaj.util.data.Context;
 
 /**

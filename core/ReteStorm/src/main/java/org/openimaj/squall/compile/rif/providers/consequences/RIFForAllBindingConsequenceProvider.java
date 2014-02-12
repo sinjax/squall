@@ -7,6 +7,7 @@ import org.openimaj.rifcore.rules.RIFForAll;
 import org.openimaj.squall.functions.consequences.BaseBindingConsequence;
 import org.openimaj.squall.functions.consequences.BaseBindingConsequence.RuleWrappedBaseBindingConsequence;
 import org.openimaj.squall.functions.consequences.BaseConsequenceFunction.RuleWrappedConsequenceFunction;
+import org.openimaj.squall.providers.consequences.BaseConsequenceProvider;
 
 import com.hp.hpl.jena.graph.Node_Variable;
 
