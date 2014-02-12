@@ -130,55 +130,55 @@ public class BaseBindingConsequence extends BaseConsequenceFunction {
 			this.wrap(new BaseBindingConsequence(vars, rid));
 		}
 		
-		protected static class BindingConsARVH extends ConsequenceARVH {
-			
-			protected BindingConsARVH(List<Node_Variable> vars, String rID) {
-				super(rID);
-				Count count = new Count();
-				for (Node_Variable var : vars){
-					super.registerVariable(var, count);
-				}
-			}
-
-			@Override
-			public String identifier(Map<String, String> varmap) {
-				StringBuilder ident = super.getRuleBody();
-				
-				Map<String, String> r2BVarMap = super.ruleToBaseVarMap();
-				int i = 0;
-				ident.append(r2BVarMap.get(super.getVariable(i)))
-					 .append(" as ")
-					 .append(varmap.get(super.getVariable(i)));
-				for (i++; i < super.varCount(); i++){
-					ident.append(", ")
-						 .append(r2BVarMap.get(super.getVariable(i)))
-						 .append(" as ")
-						 .append(varmap.get(super.getVariable(i)));
-				}
-				
-				return ident.toString();
-			}
-
-			@Override
-			public String identifier() {
-				StringBuilder ident = super.getRuleBody();
-				
-				Map<String, String> r2BVarMap = super.ruleToBaseVarMap();
-				int i = 0;
-				ident.append(r2BVarMap.get(super.getVariable(i)))
-					 .append(" as ")
-					 .append(super.getVariable(i));
-				for (i++; i < super.varCount(); i++){
-					ident.append(", ")
-						 .append(r2BVarMap.get(super.getVariable(i)))
-						 .append(" as ")
-						 .append(super.getVariable(i));
-				}
-				
-				return ident.toString();
+	}
+	
+	protected static class BindingConsARVH extends ConsequenceARVH {
+		
+		protected BindingConsARVH(List<Node_Variable> vars, String rID) {
+			super(rID);
+			Count count = new Count();
+			for (Node_Variable var : vars){
+				super.registerVariable(var, count);
 			}
 		}
-		
+
+		@Override
+		public String identifier(Map<String, String> varmap) {
+			StringBuilder ident = super.getRuleBody();
+			
+			Map<String, String> r2BVarMap = super.ruleToBaseVarMap();
+			int i = 0;
+			ident.append(r2BVarMap.get(super.getVariable(i)))
+				 .append(" as ")
+				 .append(varmap.get(super.getVariable(i)));
+			for (i++; i < super.varCount(); i++){
+				ident.append(", ")
+					 .append(r2BVarMap.get(super.getVariable(i)))
+					 .append(" as ")
+					 .append(varmap.get(super.getVariable(i)));
+			}
+			
+			return ident.toString();
+		}
+
+		@Override
+		public String identifier() {
+			StringBuilder ident = super.getRuleBody();
+			
+			Map<String, String> r2BVarMap = super.ruleToBaseVarMap();
+			int i = 0;
+			ident.append(r2BVarMap.get(super.getVariable(i)))
+				 .append(" as ")
+				 .append(super.getVariable(i));
+			for (i++; i < super.varCount(); i++){
+				ident.append(", ")
+					 .append(r2BVarMap.get(super.getVariable(i)))
+					 .append(" as ")
+					 .append(super.getVariable(i));
+			}
+			
+			return ident.toString();
+		}
 	}
 
 }

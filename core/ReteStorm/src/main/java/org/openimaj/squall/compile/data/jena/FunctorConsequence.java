@@ -122,7 +122,7 @@ public class FunctorConsequence extends AtomConsequence {
 	protected static class RuleWrappedFunctorConsequence extends RuleWrappedRIFAtomConsequence {
 
 		protected RuleWrappedFunctorConsequence(Rule r, Functor clause) {
-			super(clause, r.getName());
+			super(new AtomConsARVH(clause, r.getName()));
 			super.wrap(new FunctorConsequence(r, clause));
 		}
 		

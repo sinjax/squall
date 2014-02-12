@@ -9,6 +9,7 @@ import org.openimaj.squall.compile.data.BaseContextIFunction;
 import org.openimaj.squall.compile.data.IConsequence;
 import org.openimaj.squall.compile.data.InheritsVariables;
 import org.openimaj.squall.compile.data.RuleWrappedFunction;
+import org.openimaj.squall.compile.data.RuleWrappedFunction.ARVHComponent;
 import org.openimaj.squall.data.RuleWrapped;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -127,74 +128,85 @@ public abstract class BaseConsequenceFunction extends BaseContextIFunction imple
 			
 			return this.varHolder.setSourceVariables(arvh);
 		}
-		
-		protected static abstract class ConsequenceARVH extends ARVHComponent implements InheritsVariables {
-			
-			private final String ruleID;
-			private AnonimisedRuleVariableHolder sourceVarHolder;
-			
-			protected ConsequenceARVH(String rID){
-				this.ruleID = rID;
-			}
-			
-			protected Node registerVariable(Node n, Count count){
-				if(n.isVariable()){
-					this.addVariable(n.getName());
-					this.putRuleToBaseVarMapEntry(n.getName(), n.getName());
-				}
-				return n;
-			}
-			
-			@Override
-			public boolean areSourceVariablesSet() {
-				return this.sourceVarHolder != null;
-			}
-			
-			@Override
-			public boolean setSourceVariables(AnonimisedRuleVariableHolder arvh) {
-				Map<String, String> arvhVarMap = arvh.ruleToBaseVarMap();
-				for (String ruleVar : super.variables()){
-					String baseVar = arvhVarMap.get(ruleVar);
-					super.putRuleToBaseVarMapEntry(ruleVar, baseVar);
-				}
-				
-				this.sourceVarHolder = arvh;
-				return true;
-			}
-			
-			@Override
-			public String getSourceVarHolderIdent() {
-				return this.areSourceVariablesSet() ? this.sourceVarHolder.identifier() : "No Source";
-			}
-			
-			@Override
-			public String getSourceVarHolderIdent(Map<String, String> varMap) {
-				return this.areSourceVariablesSet() ? this.sourceVarHolder.identifier(varMap) : "No Source";
-			}
-			
-			/**
-			 * @return
-			 */
-			public StringBuilder getRuleBody(){
-				return new StringBuilder(this.ruleID)
-						.append(": ")
-						.append(this.getSourceVarHolderIdent())
-						.append(" -> ");
-			}
-			
-			/**
-			 * @param varmap
-			 * @return
-			 */
-			public StringBuilder getRuleBody(Map<String, String> varmap){
-				return new StringBuilder(this.ruleID)
-						.append(": ")
-						.append(this.getSourceVarHolderIdent(varmap))
-						.append(" -> ");
-			}
-			
-		}
 
+	}
+	
+	protected static abstract class ConsequenceARVH extends ARVHComponent implements InheritsVariables {
+		
+		private final String ruleID;
+		private AnonimisedRuleVariableHolder sourceVarHolder;
+		
+		public ConsequenceARVH(String rID){
+			this.ruleID = rID;
+		}
+		
+		@Override
+		public ConsequenceARVH clone() throws CloneNotSupportedException {
+			ConsequenceARVH clone = (ConsequenceARVH) super.clone();
+			clone.sourceVarHolder = clone.sourceVarHolder.clone();
+			return clone;
+		}
+		
+		public String getRuleID(){
+			return this.ruleID;
+		}
+		
+		protected Node registerVariable(Node n, Count count){
+			if(n.isVariable()){
+				this.addVariable(n.getName());
+				this.putRuleToBaseVarMapEntry(n.getName(), n.getName());
+			}
+			return n;
+		}
+		
+		@Override
+		public boolean areSourceVariablesSet() {
+			return this.sourceVarHolder != null;
+		}
+		
+		@Override
+		public boolean setSourceVariables(AnonimisedRuleVariableHolder arvh) {
+			Map<String, String> arvhVarMap = arvh.ruleToBaseVarMap();
+			for (String ruleVar : super.variables()){
+				String baseVar = arvhVarMap.get(ruleVar);
+				super.putRuleToBaseVarMapEntry(ruleVar, baseVar);
+			}
+			
+			this.sourceVarHolder = arvh;
+			return true;
+		}
+		
+		@Override
+		public String getSourceVarHolderIdent() {
+			return this.areSourceVariablesSet() ? this.sourceVarHolder.identifier() : "No Source";
+		}
+		
+		@Override
+		public String getSourceVarHolderIdent(Map<String, String> varMap) {
+			return this.areSourceVariablesSet() ? this.sourceVarHolder.identifier(varMap) : "No Source";
+		}
+		
+		/**
+		 * @return
+		 */
+		public StringBuilder getRuleBody(){
+			return new StringBuilder(this.ruleID)
+					.append(": ")
+					.append(this.getSourceVarHolderIdent())
+					.append(" -> ");
+		}
+		
+		/**
+		 * @param varmap
+		 * @return
+		 */
+		public StringBuilder getRuleBody(Map<String, String> varmap){
+			return new StringBuilder(this.ruleID)
+					.append(": ")
+					.append(this.getSourceVarHolderIdent(varmap))
+					.append(" -> ");
+		}
+		
 	}
 
 }

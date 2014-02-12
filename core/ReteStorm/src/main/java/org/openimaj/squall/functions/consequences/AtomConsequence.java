@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.squall.compile.data.BindingsUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
@@ -32,7 +31,7 @@ public class AtomConsequence extends BaseConsequenceFunction {
 	 * @return
 	 */
 	public static RuleWrappedRIFAtomConsequence ruleWrapped(Functor clause, String rID){
-		return new RuleWrappedRIFAtomConsequence(clause, rID);
+		return new RuleWrappedRIFAtomConsequence(new AtomConsARVH(clause, rID));
 	}
 	
 	private Functor clause;
@@ -116,41 +115,47 @@ public class AtomConsequence extends BaseConsequenceFunction {
 	 */
 	public static class RuleWrappedRIFAtomConsequence extends RuleWrappedConsequenceFunction<AtomConsequence> {
 		
-		protected RuleWrappedRIFAtomConsequence(Functor clause, String rID){
-			super(new AtomConsARVH(clause, rID));
-			this.wrap(new AtomConsequence(((AtomConsARVH) super.getVariableHolder()).clause, rID));
+		protected RuleWrappedRIFAtomConsequence(AtomConsARVH arvh){
+			super(arvh);
+			this.wrap(new AtomConsequence(arvh.clause, arvh.getRuleID()));
 		}
 		
-		/**
-		 * @author davidlmonks
-		 *
-		 */
-		public static class AtomConsARVH extends ConsequenceARVH {
+	}
+	
+	protected static class AtomConsARVH extends ConsequenceARVH {
 
-			private final Functor clause;
-			
-			protected AtomConsARVH(Functor clause, String rID) {
-				super(rID);
-				this.clause = clause;
-			}
-			
-			@Override
-			public String identifier(Map<String, String> varmap) {
-				// TODO Auto-generated method stub
-				return null;
-			}
+		private Functor clause;
+		
+		public AtomConsARVH(Functor clause, String rID) {
+			super(rID);
+			this.clause = clause;
+		}
+		
+		@Override
+		public AtomConsARVH clone() throws CloneNotSupportedException {
+			AtomConsARVH clone = (AtomConsARVH) super.clone();
+			clone.clause = new Functor(
+								clone.clause.getName(),
+								clone.clause.getArgs().clone()
+							);
+			return clone;
+		}
+		
+		@Override
+		public String identifier(Map<String, String> varmap) {
+			// TODO Auto-generated method stub
+			return null;
+		}
 
-			@Override
-			public String identifier() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-			
-			@Override
-			public String toString() {
-				return String.format("CONSEQUENCE: clause %s",this.clause.toString());
-			}
-			
+		@Override
+		public String identifier() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+		@Override
+		public String toString() {
+			return String.format("CONSEQUENCE: clause %s",this.clause.toString());
 		}
 		
 	}

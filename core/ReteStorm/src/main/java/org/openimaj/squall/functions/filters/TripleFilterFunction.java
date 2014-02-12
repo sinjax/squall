@@ -47,6 +47,17 @@ public class TripleFilterFunction extends BaseFilterFunction {
 	}
 	
 	@Override
+	protected TripleFilterFunction clone() throws CloneNotSupportedException {
+		TripleFilterFunction clone = (TripleFilterFunction) super.clone();
+		clone.clause = new TriplePattern(
+							clone.clause.getSubject(),
+							clone.clause.getPredicate(),
+							clone.clause.getObject()
+						);
+		return clone;
+	}
+	
+	@Override
 	public List<Context> apply(Context inc) {
 		List<Context> ctxs = new ArrayList<Context>();
 		Triple in = inc.getTyped(ContextKey.TRIPLE_KEY.toString());

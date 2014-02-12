@@ -34,7 +34,7 @@ public class TripleConsequence extends BaseConsequenceFunction {
 	 * @return
 	 */
 	public static RuleWrappedRIFTripleConsequence ruleWrapped(TriplePattern clause, String rID){
-		return new RuleWrappedRIFTripleConsequence(clause, rID);
+		return new RuleWrappedRIFTripleConsequence(new TripleConsARVH(clause, rID));
 	}
 	
 	private TriplePattern clause;
@@ -98,9 +98,8 @@ public class TripleConsequence extends BaseConsequenceFunction {
 		}
 		return ctxs;
 	}
-	
-	@SuppressWarnings("unused") // required for deserialisation by reflection
-	private TripleConsequence(){
+
+	private TripleConsequence(){ // required for deserialisation by reflection
 		super("No Rule Name");
 	}
 
@@ -127,56 +126,67 @@ public class TripleConsequence extends BaseConsequenceFunction {
 	 */
 	public static class RuleWrappedRIFTripleConsequence extends RuleWrappedConsequenceFunction<TripleConsequence> {
 		
-		protected RuleWrappedRIFTripleConsequence(TriplePattern clause, String rID) {
-			super(new TripleConsARVH(clause, rID));
-			super.wrap(new TripleConsequence(((TripleConsARVH) super.getVariableHolder()).clause, rID));
+		protected RuleWrappedRIFTripleConsequence(TripleConsARVH arvh) {
+			super(arvh);
+			super.wrap(new TripleConsequence(arvh.clause, arvh.getRuleID()));
 		}
 		
-		protected static class TripleConsARVH extends ConsequenceARVH {
+	}
+	
+	protected static class TripleConsARVH extends ConsequenceARVH {
 
-			private final TriplePattern clause;
-			
-			protected TripleConsARVH(TriplePattern clause, String rID) {
-				super(rID);
-				Count count = new Count();
-				this.clause = new TriplePattern(
-					registerVariable(clause.getSubject(), count),
-					registerVariable(clause.getPredicate(), count),
-					registerVariable(clause.getObject(), count)
-				);
-			}
-			
-			@Override
-			protected Node registerVariable(Node n, Count count) {
-				n = super.registerVariable(n, count);
-				if(Functor.isFunctor(n)){
-					Functor f = (Functor)n.getLiteralValue();
-					Node[] newArgs = new Node[f.getArgLength()];
-					for (int i = 0; i < f.getArgs().length; i++){
-						newArgs[i] = super.registerVariable(f.getArgs()[i], count);
-					}
-					return Functor.makeFunctorNode(f.getName(), newArgs);
+		private TriplePattern clause;
+		
+		public TripleConsARVH(TriplePattern clause, String rID) {
+			super(rID);
+			Count count = new Count();
+			this.clause = new TriplePattern(
+				registerVariable(clause.getSubject(), count),
+				registerVariable(clause.getPredicate(), count),
+				registerVariable(clause.getObject(), count)
+			);
+		}
+		
+		@Override
+		public TripleConsARVH clone() throws CloneNotSupportedException {
+			TripleConsARVH clone = (TripleConsARVH) super.clone();
+			clone.clause = new TriplePattern(
+								clone.clause.getSubject(),
+								clone.clause.getPredicate(),
+								clone.clause.getObject()
+							);
+			return clone;
+		}
+		
+		@Override
+		protected Node registerVariable(Node n, Count count) {
+			n = super.registerVariable(n, count);
+			if(Functor.isFunctor(n)){
+				Functor f = (Functor)n.getLiteralValue();
+				Node[] newArgs = new Node[f.getArgLength()];
+				for (int i = 0; i < f.getArgs().length; i++){
+					newArgs[i] = super.registerVariable(f.getArgs()[i], count);
 				}
-				return n;
+				return Functor.makeFunctorNode(f.getName(), newArgs);
 			}
+			return n;
+		}
 
-			@Override
-			public String identifier(Map<String, String> varmap) {
-				// TODO Auto-generated method stub
-				return null;
-			}
+		@Override
+		public String identifier(Map<String, String> varmap) {
+			// TODO Auto-generated method stub
+			return null;
+		}
 
-			@Override
-			public String identifier() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-			
-			@Override
-			public String toString() {
-				return String.format("CONSEQUENCE: clause %s",this.clause.toString());
-			}
-			
+		@Override
+		public String identifier() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+		@Override
+		public String toString() {
+			return String.format("CONSEQUENCE: clause %s",this.clause.toString());
 		}
 		
 	}

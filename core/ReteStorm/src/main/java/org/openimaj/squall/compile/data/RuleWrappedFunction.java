@@ -24,7 +24,11 @@ public class RuleWrappedFunction<T extends IFunction<Context, Context>> extends
 		super(arvh);
 	}
 	
-	protected static abstract class ARVHComponent extends AnonimisedRuleVariableHolder {
+	/**
+	 * @author David Monks <dm11g08@ecs.soton.ac.uk>
+	 *
+	 */
+	public static abstract class ARVHComponent extends AnonimisedRuleVariableHolder {
 		
 		protected Node registerVariable(Node n, Count count){
 			if(n.isVariable()){

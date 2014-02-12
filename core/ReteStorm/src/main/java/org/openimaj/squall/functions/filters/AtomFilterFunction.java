@@ -43,6 +43,16 @@ public class AtomFilterFunction extends BaseFilterFunction {
 	public AtomFilterFunction(Functor clause) {
 		this.clause = clause;
 	}
+	
+	@Override
+	protected AtomFilterFunction clone() throws CloneNotSupportedException {
+		AtomFilterFunction clone = (AtomFilterFunction) super.clone();
+		clone.clause = new Functor(
+							clone.clause.getName(),
+							clone.clause.getArgs().clone()
+						);
+		return clone;
+	}
 
 	@Override
 	public List<Context> apply(Context inc) {
