@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.openimaj.rdf.storm.utils.Count;
 import org.openimaj.squall.compile.data.BindingsUtils;
 import org.openimaj.util.data.Context;
 import org.openimaj.util.data.ContextKey;
@@ -128,7 +129,14 @@ public class AtomConsequence extends BaseConsequenceFunction {
 		
 		public AtomConsARVH(Functor clause, String rID) {
 			super(rID);
-			this.clause = clause;
+			Count count = new Count();
+			Node[] args = clause.getArgs();
+			for (int i = 0; i < args.length; i++){
+				if (args[i].isVariable()){
+					args[i] = super.registerVariable(args[i], count);
+				}
+			}
+			this.clause = new Functor(clause.getName(), args);
 		}
 		
 		@Override
