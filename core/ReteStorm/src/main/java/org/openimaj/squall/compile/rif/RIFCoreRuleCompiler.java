@@ -128,12 +128,12 @@ public class RIFCoreRuleCompiler implements Compiler<RIFRuleSet> {
 			translate((RIFRule) fa.getStatement(), ccps); 
 		}
 		
-		RIFForAllBindingConsequenceProvider consequenceProvider;
-		if (fa.getID() == null)
-			consequenceProvider = new RIFForAllBindingConsequenceProvider(MD5Utils.md5Hex(fa.toString()));
-		else
-			consequenceProvider = new RIFForAllBindingConsequenceProvider(fa.getID().getNode().getURI());
-		ccps.addConsequence(consequenceProvider.apply(fa));
+//		RIFForAllBindingConsequenceProvider consequenceProvider;
+//		if (fa.getID() == null)
+//			consequenceProvider = new RIFForAllBindingConsequenceProvider(MD5Utils.md5Hex(fa.toString()));
+//		else
+//			consequenceProvider = new RIFForAllBindingConsequenceProvider(fa.getID().getNode().getURI());
+//		ccps.addConsequence(consequenceProvider.apply(fa));
 	}
 	
 	protected void translate(RIFRule r, ContextCPS ccps) throws RIFPredicateException, UnsupportedOperationException {
