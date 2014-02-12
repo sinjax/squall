@@ -143,7 +143,9 @@ public abstract class BaseConsequenceFunction extends BaseContextIFunction imple
 		@Override
 		public ConsequenceARVH clone() throws CloneNotSupportedException {
 			ConsequenceARVH clone = (ConsequenceARVH) super.clone();
-			clone.sourceVarHolder = clone.sourceVarHolder.clone();
+			if (clone.sourceVarHolder != null){
+				clone.sourceVarHolder = clone.sourceVarHolder.clone();
+			}
 			return clone;
 		}
 		
