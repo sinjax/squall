@@ -73,6 +73,18 @@ public abstract class BasePredicateFunction extends BaseContextIFunction {
 		this.funcs = funcs;
 	}
 	
+	@Override
+	public BasePredicateFunction clone() throws CloneNotSupportedException {
+		BasePredicateFunction bpf = (BasePredicateFunction) super.clone();
+		bpf.nodes = bpf.nodes.clone();
+		Map<Node, BaseValueFunction> map = new HashMap<Node, BaseValueFunction>();
+		for (Node key : bpf.funcs.keySet()){
+			map.put(key, bpf.funcs.get(key).clone());
+		}
+		bpf.funcs = map;
+		return bpf;
+	}
+	
 	protected Node getNode(int index){
 		return this.nodes[index];
 	}
@@ -87,18 +99,6 @@ public abstract class BasePredicateFunction extends BaseContextIFunction {
 	
 	protected int getNodeCount(){
 		return this.nodes.length;
-	}
-	
-	@Override
-	public BasePredicateFunction clone() throws CloneNotSupportedException {
-		BasePredicateFunction bpf = (BasePredicateFunction) super.clone();
-		bpf.nodes = bpf.nodes.clone();
-		Map<Node, BaseValueFunction> map = new HashMap<Node, BaseValueFunction>();
-		for (Node key : bpf.funcs.keySet()){
-			map.put(key, bpf.funcs.get(key).clone());
-		}
-		bpf.funcs = map;
-		return bpf;
 	}
 	
 	/**
