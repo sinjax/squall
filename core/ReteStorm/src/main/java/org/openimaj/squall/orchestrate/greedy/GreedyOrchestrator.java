@@ -453,12 +453,12 @@ public class GreedyOrchestrator implements Orchestrator{
 		List<String> rsv = join.getWrapped().rightSharedVars();
 		String[] rightSharedVars = rsv.toArray(new String[rsv.size()]);
 		
-		NamedStream leftStream = new NamedStream(left.getVariableHolder().identifier(), leftSharedVars);
+		NamedStream leftStream = new NamedStream(left.getWrapped().getName(), leftSharedVars);
 		left.getWrapped().connectOutgoingEdge(leftStream);
 		join.getWrapped().setLeftStream(leftStream.identifier(), this.wi);
 		joined.getWrapped().connectIncomingEdge(leftStream);
 		
-		NamedStream rightStream = new NamedStream(right.getVariableHolder().identifier(), rightSharedVars);
+		NamedStream rightStream = new NamedStream(right.getWrapped().getName(), rightSharedVars);
 		right.getWrapped().connectOutgoingEdge(rightStream);
 		join.getWrapped().setRightStream(rightStream.identifier(), this.wi);
 		joined.getWrapped().connectIncomingEdge(rightStream);

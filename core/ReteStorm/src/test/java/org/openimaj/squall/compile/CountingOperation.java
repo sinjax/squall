@@ -55,7 +55,7 @@ import com.esotericsoftware.kryo.io.Output;
 
 		@Override
 		public void perform(Context object) {
-//			System.out.println(object);
+			System.out.println(object);
 			this.count ++;
 		}
 

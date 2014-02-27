@@ -51,7 +51,7 @@ public class FunctorFunction extends BasePredicateFunction {
 	 * @throws RIFPredicateException 
 	 */
 	public FunctorFunction(Rule r, Functor clause) throws RIFPredicateException {
-		super(clause.getArgs(), new HashMap<Node, BaseValueFunction>());
+		super(clause.getArgs().clone(), new HashMap<Node, BaseValueFunction>());
 		if (clause != null){
 			this.clause = clause;
 		}
@@ -60,7 +60,7 @@ public class FunctorFunction extends BasePredicateFunction {
 		}
 		this.rule = r;
 	}
-	
+		
 	@Override
 	public BasePredicateFunction clone() {
 		try {
@@ -74,8 +74,9 @@ public class FunctorFunction extends BasePredicateFunction {
 		return BindingsUtils.bindingsToMap(be, ruleVariables);
 	}
 
-	protected BindingVector mapToB(Map<String, Node> in) { 
-		return BindingsUtils.mapToBindings(in, ruleVariables);
+	protected BindingVector mapToB(Map<String, Node> in) {
+		
+		return BindingsUtils.mapToBindings(in, this.ruleVariables);
 	}
 	
 	@Override
@@ -93,7 +94,19 @@ public class FunctorFunction extends BasePredicateFunction {
 	@Override
 	public int mapNodeVarNames(Map<String, String> directVarMap) {
 		int ret = super.mapNodeVarNames(directVarMap);
-		this.clause = new Functor(this.clause.getName(), super.getNodes());
+		for (int i = 0; i < this.ruleVariables.length; i++) {
+			this.ruleVariables[i] = new Node_RuleVariable(directVarMap.get(this.ruleVariables[i].getName()), i);
+		}
+		Node[] newArgs = new Node[this.clause.getArgLength()];
+		for (int i = 0; i < newArgs.length; i++) {
+			if (this.clause.getArgs()[i].isVariable()){
+				newArgs[i] = new Node_RuleVariable(directVarMap.get(this.clause.getArgs()[i].getName()),
+						((Node_RuleVariable)this.clause.getArgs()[i]).getIndex());
+			} else {
+				newArgs[i] = this.clause.getArgs()[i];
+			}
+		}
+		this.clause = new Functor(this.clause.getName(), newArgs);
 		return ret;
 	}
 

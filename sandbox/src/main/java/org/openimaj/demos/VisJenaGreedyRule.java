@@ -116,7 +116,7 @@ public class VisJenaGreedyRule {
 	}
 	
 	public static void main(String[] args) {
-		SourceRulePair allRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.two.rules"));
+		SourceRulePair allRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.rules"));
 		JenaRuleCompiler jrc = new JenaRuleCompiler();
 		ContextCPS comp = jrc.compile(allRules);
 		GreedyOrchestrator go = new GreedyOrchestrator();
