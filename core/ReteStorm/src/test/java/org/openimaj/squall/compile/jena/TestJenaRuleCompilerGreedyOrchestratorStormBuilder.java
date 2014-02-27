@@ -33,11 +33,62 @@ import com.hp.hpl.jena.reasoner.rulesys.Rule;
  */
 public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	
+	private static final class TestISource implements ISource<Stream<Context>> {
+		private InputStream nTripleStream;
+
+		@Override
+		public Stream<Context> apply(Stream<Context> in) {
+			return apply();
+		}
+
+		@Override
+		public Stream<Context> apply() {
+			return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
+			.map(new ContextWrapper("triple"));
+		}
+
+		@Override
+		public void setup() { 
+			nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
+		}
+
+		@Override
+		public void cleanup() {
+			try {
+				this.nTripleStream.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			this.nTripleStream = null;
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output) {
+			System.out.println("writing jena test isource");
+		}
+
+		@Override
+		public void read(Kryo kryo, Input input) {
+			System.out.println("reading");
+		}
+
+		@Override
+		public boolean isStateless() {
+			return false;
+		}
+
+		@Override
+		public boolean forcedUnique() {
+			return true;
+		}
+	}
+
 	private SourceRulePair nojoinRules;
 	
 	
 	@org.junit.Rule
-	private TemporaryFolder folder = new TemporaryFolder();
+	public TemporaryFolder folder = new TemporaryFolder();
 	private SourceRulePair singlejoinRules;
 
 
@@ -58,52 +109,7 @@ public class TestJenaRuleCompilerGreedyOrchestratorStormBuilder {
 	@Before
 	public void before() throws IOException{
 		
-		ISource<Stream<Context>> tripleContextStream = new ISource<Stream<Context>>() {
-			
-			private InputStream nTripleStream;
-
-			@Override
-			public Stream<Context> apply(Stream<Context> in) {
-				return apply();
-			}
-			
-			@Override
-			public Stream<Context> apply() {
-				return new CollectionStream<Triple>(JenaUtils.readNTriples(nTripleStream))
-				.map(new ContextWrapper("triple"));
-			}
-			
-			@Override
-			public void setup() { 
-				nTripleStream = ReteTopologyTest.class.getResourceAsStream("/test.rdfs");
-			}
-			
-			@Override
-			public void cleanup() {
-				try {
-					this.nTripleStream.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				this.nTripleStream = null;
-			}
-
-			@Override
-			public void write(Kryo kryo, Output output) {}
-			@Override
-			public void read(Kryo kryo, Input input) {}
-
-			@Override
-			public boolean isStateless() {
-				return false;
-			}
-
-			@Override
-			public boolean forcedUnique() {
-				return true;
-			}
-		};
+		ISource<Stream<Context>> tripleContextStream = new TestISource();
 		
 		nojoinRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.nojoin.rules"));
 		singlejoinRules = SourceRulePair.simplePair(tripleContextStream,loadRules("/test.singlejoin.rules"));

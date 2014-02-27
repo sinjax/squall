@@ -42,6 +42,8 @@ public class OIStreamSpout extends NamedNodeComponent implements IRichSpout{
 		super(namedNode);
 		if(namedNode.isSource()) {
 			this.serializedStreamSource = StormUtils.serialiseFunction(JenaStormUtils.kryo(),namedNode.getSource());
+			Object wang = StormUtils.deserialiseFunction(JenaStormUtils.kryo(),serializedStreamSource);
+			System.out.println(wang);
 		}
 		else{
 			throw new Exception("Inappropriate node");
